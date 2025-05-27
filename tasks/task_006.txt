@@ -3,169 +3,18 @@
 # Status: pending
 # Dependencies: 2
 # Priority: high
-# Description: Create a service that wraps the claude-task-master CLI tool to generate tasks from PRD content.
+# Description: Create a service that implements the taskmaster-interface to generate tasks from PRD content using the claude-task-master CLI tool.
 # Details:
-Create the task generation service in `src/modules/task-generation/`:
+1. Implement the `GenerateTasksF` interface defined in the taskmaster-interface package
+2. Create wrapper around the claude-task-master CLI tool
+3. Implement file system operations for temporary files
+4. Add proper error handling and cleanup
+5. Implement validation of generated tasks using the existing schemas
+6. Create unit tests with mocked dependencies
+7. Add logging for debugging and monitoring
+8. Implement resource cleanup using AsyncDisposable pattern
 
-1. Create `src/modules/task-generation/service.ts`:
-```typescript
-import { exec } from 'child_process';
-import fs from 'fs/promises';
-import path from 'path';
-import { validateTasksFile } from '../../utils/validation';
-import { TasksFileContent } from '../../types/tasks';
-
-export type TaskGeneratorDeps = {
-  tempDir: string;
-  claudeTaskMasterPath: string;
-};
-
-export const createTaskGenerator = ({ tempDir, claudeTaskMasterPath }: TaskGeneratorDeps) => {
-  return {
-    generateTasks: async (prdContent: string): Promise<TasksFileContent> => {
-      // Create a unique directory for this operation
-      const operationId = Date.now().toString();
-      const operationDir = path.join(tempDir, operationId);
-      
-      await fs.mkdir(operationDir, { recursive: true });
-      
-      try {
-        // Write PRD content to file
-        const prdFilePath = path.join(operationDir, 'prd.txt');
-        await fs.writeFile(prdFilePath, prdContent, 'utf-8');
-        
-        // Define output path
-        const tasksFilePath = path.join(operationDir, 'tasks.json');
-        
-        // Execute claude-task-master CLI
-        await new Promise<void>((resolve, reject) => {
-          exec(
-            `${claudeTaskMasterPath} ${prdFilePath} ${tasksFilePath}`,
-            (error) => {
-              if (error) {
-                reject(new Error(`Failed to execute claude-task-master: ${error.message}`));
-              } else {
-                resolve();
-              }
-            }
-          );
-        });
-        
-        // Read and validate the generated tasks file
-        const tasksFileContent = await fs.readFile(tasksFilePath, 'utf-8');
-        const parsedContent = JSON.parse(tasksFileContent);
-        
-        // Validate the tasks file structure
-        const validatedTasks = validateTasksFile(parsedContent);
-        
-        return validatedTasks;
-      } catch (error) {
-        console.error('Task generation error:', error);
-        throw new Error(`Failed to generate tasks: ${(error as Error).message}`);
-      } finally {
-        // Clean up temporary files
-        try {
-          await fs.rm(operationDir, { recursive: true, force: true });
-        } catch (cleanupError) {
-          console.error('Failed to clean up temporary files:', cleanupError);
-        }
-      }
-    }
-  };
-};
-```
-
-2. Create a file system abstraction for better testability in `src/utils/file-system.ts`:
-```typescript
-import fs from 'fs/promises';
-import path from 'path';
-
-export type FileSystem = {
-  readFile: (path: string, encoding: string) => Promise<string>;
-  writeFile: (path: string, data: string, encoding: string) => Promise<void>;
-  mkdir: (path: string, options?: { recursive?: boolean }) => Promise<void>;
-  rm: (path: string, options?: { recursive?: boolean, force?: boolean }) => Promise<void>;
-};
-
-export const createFileSystem = (): FileSystem => {
-  return {
-    readFile: (filePath, encoding) => fs.readFile(filePath, encoding),
-    writeFile: (filePath, data, encoding) => fs.writeFile(filePath, data, encoding),
-    mkdir: (dirPath, options) => fs.mkdir(dirPath, options),
-    rm: (dirPath, options) => fs.rm(dirPath, options)
-  };
-};
-```
-
-3. Update the task generator to use the file system abstraction:
-```typescript
-export type TaskGeneratorDeps = {
-  tempDir: string;
-  claudeTaskMasterPath: string;
-  fileSystem: FileSystem;
-  execCommand: (command: string) => Promise<void>;
-};
-
-export const createTaskGenerator = ({ tempDir, claudeTaskMasterPath, fileSystem, execCommand }: TaskGeneratorDeps) => {
-  return {
-    generateTasks: async (prdContent: string): Promise<TasksFileContent> => {
-      // Create a unique directory for this operation
-      const operationId = Date.now().toString();
-      const operationDir = path.join(tempDir, operationId);
-      
-      await fileSystem.mkdir(operationDir, { recursive: true });
-      
-      try {
-        // Write PRD content to file
-        const prdFilePath = path.join(operationDir, 'prd.txt');
-        await fileSystem.writeFile(prdFilePath, prdContent, 'utf-8');
-        
-        // Define output path
-        const tasksFilePath = path.join(operationDir, 'tasks.json');
-        
-        // Execute claude-task-master CLI
-        await execCommand(`${claudeTaskMasterPath} ${prdFilePath} ${tasksFilePath}`);
-        
-        // Read and validate the generated tasks file
-        const tasksFileContent = await fileSystem.readFile(tasksFilePath, 'utf-8');
-        const parsedContent = JSON.parse(tasksFileContent);
-        
-        // Validate the tasks file structure
-        const validatedTasks = validateTasksFile(parsedContent);
-        
-        return validatedTasks;
-      } catch (error) {
-        console.error('Task generation error:', error);
-        throw new Error(`Failed to generate tasks: ${(error as Error).message}`);
-      } finally {
-        // Clean up temporary files
-        try {
-          await fileSystem.rm(operationDir, { recursive: true, force: true });
-        } catch (cleanupError) {
-          console.error('Failed to clean up temporary files:', cleanupError);
-        }
-      }
-    }
-  };
-};
-```
-
-4. Create a utility for executing commands in `src/utils/exec.ts`:
-```typescript
-import { exec } from 'child_process';
-
-export const execCommand = (command: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    exec(command, (error) => {
-      if (error) {
-        reject(new Error(`Command execution failed: ${error.message}`));
-      } else {
-        resolve();
-      }
-    });
-  });
-};
-```
+The implementation should follow the interface contract and leverage the existing type system.
 
 # Test Strategy:
 1. Mock file system operations to test task generation without actual file I/O
@@ -175,3 +24,4 @@ export const execCommand = (command: string): Promise<void> => {
 5. Test error handling for various failure scenarios (file write errors, CLI execution errors, validation errors)
 6. Test with various PRD content inputs
 7. Verify atomic transaction behavior
+8. Verify conformance to the GenerateTasksF interface

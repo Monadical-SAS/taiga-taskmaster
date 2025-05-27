@@ -5,145 +5,16 @@
 # Priority: high
 # Description: Create the main Express application server that integrates all modules and handles HTTP requests.
 # Details:
-Create the main application server:
+1. Implement Express application with proper middleware
+2. Create dependency injection container for all services
+3. Connect webhook receiver to the core business logic
+4. Add health check endpoint
+5. Implement error handling middleware
+6. Add request logging
+7. Implement graceful shutdown
+8. Create server startup and initialization logic
 
-1. Create `src/app.ts`:
-```typescript
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import { createWebhookRoutes } from './modules/webhook-receiver/routes';
-import { validateJWT } from './modules/webhook-receiver/middleware';
-import { logger } from './utils/logger';
-import { config } from './config';
-
-export type AppDeps = {
-  webhookController: {
-    taigaClient: any;
-    taskGenerator: any;
-  };
-};
-
-export const createApp = ({ webhookController }: AppDeps) => {
-  const app = express();
-  
-  // Middleware
-  app.use(helmet()); // Security headers
-  app.use(cors()); // CORS handling
-  app.use(express.json()); // Parse JSON bodies
-  
-  // Request logging
-  app.use((req, res, next) => {
-    logger.http(`${req.method} ${req.url}`);
-    next();
-  });
-  
-  // Health check endpoint
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
-  });
-  
-  // Webhook routes with JWT validation
-  app.use(
-    '/api',
-    validateJWT(config.WEBHOOK_SECRET),
-    createWebhookRoutes(webhookController)
-  );
-  
-  // 404 handler
-  app.use((req, res) => {
-    res.status(404).json({ error: 'Not found' });
-  });
-  
-  // Error handler
-  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    logger.error('Express error handler:', { error: err });
-    
-    res.status(err.status || 500).json({
-      error: {
-        message: err.message || 'Internal server error',
-        code: err.code || 'UNKNOWN_ERROR'
-      }
-    });
-  });
-  
-  return app;
-};
-```
-
-2. Create `src/index.ts` as the application entry point:
-```typescript
-import { createApp } from './app';
-import { config, logConfig } from './config';
-import { logger } from './utils/logger';
-import { setupGlobalErrorHandlers } from './utils/error-handler';
-import { createHttpClient } from './utils/http-client';
-import { createTaigaClient } from './config/taiga-client';
-import { createTaskGenerator } from './modules/task-generation/service';
-import { createFileSystem } from './utils/file-system';
-import { execCommand } from './utils/exec';
-
-// Setup global error handlers
-setupGlobalErrorHandlers();
-
-// Log application configuration
-logConfig();
-
-// Create dependencies
-const httpClient = createHttpClient(config.TAIGA_API_URL);
-const fileSystem = createFileSystem();
-
-const taigaClient = createTaigaClient({
-  http: httpClient,
-  auth: {
-    token: config.TAIGA_AUTH_TOKEN,
-    tokenType: config.TAIGA_TOKEN_TYPE
-  }
-});
-
-const taskGenerator = createTaskGenerator({
-  tempDir: config.TEMP_DIR,
-  claudeTaskMasterPath: config.CLAUDE_TASK_MASTER_PATH,
-  fileSystem,
-  execCommand
-});
-
-// Create and start the application
-const app = createApp({
-  webhookController: {
-    taigaClient,
-    taskGenerator
-  }
-});
-
-const server = app.listen(config.PORT, () => {
-  logger.info(`Server running on port ${config.PORT} in ${config.NODE_ENV} mode`);
-});
-
-// Handle graceful shutdown
-const shutdown = () => {
-  logger.info('Shutting down server...');
-  server.close(() => {
-    logger.info('Server closed');
-    process.exit(0);
-  });
-  
-  // Force close after 10 seconds
-  setTimeout(() => {
-    logger.error('Forced shutdown after timeout');
-    process.exit(1);
-  }, 10000);
-};
-
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
-```
-
-3. Install the required packages:
-```bash
-npm install express cors helmet
-npm install @types/express @types/cors --save-dev
-```
+The implementation should integrate all the existing modules through their interfaces and follow the established architecture.
 
 # Test Strategy:
 1. Test application setup with various dependency configurations
@@ -154,3 +25,4 @@ npm install @types/express @types/cors --save-dev
 6. Test error handler with various error types
 7. Verify graceful shutdown behavior
 8. Test CORS and security headers
+9. Verify integration with all modules through their interfaces

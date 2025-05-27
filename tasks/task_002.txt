@@ -1,116 +1,27 @@
 # Task ID: 2
 # Title: Implement Core Types and Interfaces
-# Status: pending
+# Status: done
 # Dependencies: 1
 # Priority: high
 # Description: Define TypeScript interfaces and types for the system based on the PRD requirements.
 # Details:
-Create a types directory with the following files:
-
-1. `src/types/webhook.ts`:
-```typescript
-export type WebhookPayload = {
-  project: number;
-  ref: number;
-  content: string;
-};
-```
-
-2. `src/types/auth.ts`:
-```typescript
-export type AuthConfig = {
-  token: string;
-  tokenType: 'Bearer';
-};
-```
-
-3. `src/types/taiga.ts`:
-```typescript
-export enum TaskStatus {
-  NEW = 'New',
-  IN_PROGRESS = 'In progress',
-  READY_FOR_TEST = 'Ready for test',
-  CLOSED = 'Closed',
-  NEEDS_INFO = 'Needs info'
-}
-
-export type TaigaTask = {
-  id: number;
-  ref: number;
-  title: string;
-  description: string;
-  status: string;
-  tags: string[];
-  project: number;
-  swimlane?: number;
-};
-
-export type TaigaClientDeps = {
-  http: {
-    get: (url: string, config?: any) => Promise<any>;
-    post: (url: string, body: unknown, config?: any) => Promise<any>;
-    patch: (url: string, body: unknown, config?: any) => Promise<any>;
-  };
-  auth: AuthConfig;
-};
-```
-
-4. `src/types/tasks.ts`:
-```typescript
-export type SubtaskFileContent = {
-  id: number;
-  title: string;
-  description?: string;
-  status: string;
-  details?: string;
-  dependencies?: number[];
-};
-
-export type TasksFileContent = {
-  tasks: SubtaskFileContent[];
-};
-
-export type TrackerTask = {
-  masterId: number;
-  title: string;
-  description: string;
-  status: string;
-  details?: string;
-  dependencies: number[];
-};
-```
-
-5. Create schema validation using Zod in `src/utils/validation.ts`:
-```typescript
-import { z } from 'zod';
-import { TaskStatus } from '../types/taiga';
-
-export const webhookPayloadSchema = z.object({
-  project: z.number(),
-  ref: z.number(),
-  content: z.string()
-});
-
-export const subtaskSchema = z.object({
-  id: z.number().positive(),
-  title: z.string().min(1),
-  description: z.string().optional(),
-  status: z.nativeEnum(TaskStatus),
-  details: z.string().optional(),
-  dependencies: z.array(z.number()).optional().default([])
-});
-
-export const tasksFileSchema = z.object({
-  tasks: z.array(subtaskSchema)
-});
-
-export const validateWebhookPayload = (data: unknown) => webhookPayloadSchema.parse(data);
-export const validateTasksFile = (data: unknown) => tasksFileSchema.parse(data);
-```
+1. Implement Effect Schema integration in `/packages/common/src/index.ts` and `/packages/common/src/tasks.ts`
+2. Create comprehensive type system with branded types:
+   - TaskId, TaskText, TrackerTask, PrdText, NonEmptyString
+3. Implement TasksFileContent schema with dependency validation and filter logic
+4. Add SubtaskId handling with string parsing for taskmaster CLI compatibility
+5. Create robust test suite validating schema edge cases and dependency validation
+6. Implement runtime validation with Effect Schema decode/encode patterns
+7. Define interfaces for task generation and synchronization in separate packages
+8. Establish dependency injection architecture with proper typing
+9. Implement AsyncDisposable pattern for resource management
 
 # Test Strategy:
 1. Create unit tests for each type definition
-2. Test Zod schema validation with valid and invalid inputs
+2. Test schema validation with valid and invalid inputs
 3. Verify that type constraints are enforced correctly
 4. Test enum values match expected Taiga task statuses
 5. Ensure optional fields are handled correctly
+6. Verify dependency validation logic works correctly
+7. Test branded types enforce proper constraints
+8. Verify interface contracts are properly typed

@@ -5,123 +5,16 @@
 # Priority: low
 # Description: Create Docker configuration for containerized deployment of the application.
 # Details:
-Set up Docker containerization:
+1. Create Dockerfile for the application
+2. Set up multi-stage build for optimization
+3. Create docker-compose.yml for local development
+4. Add volume mounts for persistent data
+5. Configure environment variables
+6. Set up health checks
+7. Implement graceful shutdown handling
+8. Create Docker-specific documentation
 
-1. Create `Dockerfile`:
-```dockerfile
-# Use Node.js LTS as base image
-FROM node:18-alpine
-
-# Set working directory
-WORKDIR /app
-
-# Install dependencies for claude-task-master (assuming it's a Python tool)
-RUN apk add --no-cache python3 py3-pip
-
-# Install claude-task-master (replace with actual installation method)
-RUN pip3 install claude-task-master
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy application code
-COPY dist/ ./dist/
-
-# Create directories for data persistence
-RUN mkdir -p /app/temp /app/sync-failures /app/logs
-
-# Expose port
-EXPOSE 3000
-
-# Set environment variables
-ENV NODE_ENV=production \
-    TEMP_DIR=/app/temp \
-    FAILURES_DIR=/app/sync-failures \
-    LOGS_DIR=/app/logs \
-    CLAUDE_TASK_MASTER_PATH=claude-task-master
-
-# Run the application
-CMD ["node", "dist/index.js"]
-```
-
-2. Create `.dockerignore`:
-```
-node_modules
-npm-debug.log
-yarn-debug.log
-yarn-error.log
-.git
-.github
-.vscode
-coverage
-temp
-sync-failures
-logs
-.env
-.env.*
-```
-
-3. Create `docker-compose.yml`:
-```yaml
-version: '3.8'
-
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - TAIGA_API_URL=${TAIGA_API_URL}
-      - TAIGA_AUTH_TOKEN=${TAIGA_AUTH_TOKEN}
-      - TAIGA_TOKEN_TYPE=${TAIGA_TOKEN_TYPE}
-      - PROJECT_ID=${PROJECT_ID}
-      - PROJECT_SLUG=${PROJECT_SLUG}
-      - PRD_SWIMLANE_ID=${PRD_SWIMLANE_ID}
-      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
-    volumes:
-      - app-temp:/app/temp
-      - app-failures:/app/sync-failures
-      - app-logs:/app/logs
-    restart: unless-stopped
-
-volumes:
-  app-temp:
-  app-failures:
-  app-logs:
-```
-
-4. Create build scripts in `package.json`:
-```json
-{
-  "scripts": {
-    "build": "tsc",
-    "docker:build": "npm run build && docker build -t taiga-task-master .",
-    "docker:run": "docker run -p 3000:3000 --env-file .env taiga-task-master"
-  }
-}
-```
-
-5. Create `.dockerignore`:
-```
-node_modules
-npm-debug.log
-yarn-debug.log
-yarn-error.log
-.git
-.github
-.vscode
-coverage
-temp
-sync-failures
-logs
-.env
-.env.*
-```
+The Docker configuration should support both development and production environments.
 
 # Test Strategy:
 1. Verify Docker image builds successfully

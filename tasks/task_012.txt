@@ -5,122 +5,19 @@
 # Priority: low
 # Description: Create a command-line interface for manual task generation and synchronization.
 # Details:
-Create a CLI interface for manual operations:
+1. Implement CLI using Commander or a similar library
+2. Create commands for:
+   - Generating tasks from a PRD file
+   - Syncing tasks with Taiga
+   - Validating task files
+   - Managing configuration
+3. Add proper error handling and logging
+4. Implement help text and documentation
+5. Create progress indicators for long-running operations
+6. Add validation of command arguments
+7. Implement colorized output for better readability
 
-1. Create `src/cli/index.ts`:
-```typescript
-import { Command } from 'commander';
-import fs from 'fs/promises';
-import path from 'path';
-import { config } from '../config';
-import { createHttpClient } from '../utils/http-client';
-import { createTaigaClient } from '../config/taiga-client';
-import { createTaskGenerator } from '../modules/task-generation/service';
-import { createTaigaSynchronizer } from '../modules/taiga-sync/service';
-import { createFileSystem } from '../utils/file-system';
-import { execCommand } from '../utils/exec';
-import { logger } from '../utils/logger';
-
-const program = new Command();
-
-// Setup dependencies
-const httpClient = createHttpClient(config.TAIGA_API_URL);
-const fileSystem = createFileSystem();
-
-const taigaClient = createTaigaClient({
-  http: httpClient,
-  auth: {
-    token: config.TAIGA_AUTH_TOKEN,
-    tokenType: config.TAIGA_TOKEN_TYPE
-  }
-});
-
-const taskGenerator = createTaskGenerator({
-  tempDir: config.TEMP_DIR,
-  claudeTaskMasterPath: config.CLAUDE_TASK_MASTER_PATH,
-  fileSystem,
-  execCommand
-});
-
-const taigaSynchronizer = createTaigaSynchronizer({
-  taigaClient,
-  fileSystem,
-  failuresDir: config.FAILURES_DIR
-});
-
-// Setup CLI commands
-program
-  .name('taiga-task-master')
-  .description('CLI for Taiga Task Master')
-  .version('1.0.0');
-
-// Generate tasks command
-program
-  .command('generate')
-  .description('Generate tasks from a PRD file')
-  .argument('<prdFile>', 'Path to the PRD file')
-  .option('-o, --output <outputFile>', 'Output file path', 'tasks.json')
-  .action(async (prdFile, options) => {
-    try {
-      logger.info(`Generating tasks from ${prdFile}`);
-      
-      // Read PRD file
-      const prdContent = await fs.readFile(path.resolve(prdFile), 'utf-8');
-      
-      // Generate tasks
-      const tasks = await taskGenerator.generateTasks(prdContent);
-      
-      // Write to output file
-      await fs.writeFile(path.resolve(options.output), JSON.stringify(tasks, null, 2), 'utf-8');
-      
-      logger.info(`Tasks generated and saved to ${options.output}`);
-    } catch (error) {
-      logger.error('Failed to generate tasks:', { error });
-      process.exit(1);
-    }
-  });
-
-// Sync tasks command
-program
-  .command('sync')
-  .description('Sync tasks with Taiga')
-  .argument('<tasksFile>', 'Path to the tasks JSON file')
-  .option('-p, --project <projectId>', 'Taiga project ID', config.PROJECT_ID.toString())
-  .action(async (tasksFile, options) => {
-    try {
-      logger.info(`Syncing tasks from ${tasksFile} to project ${options.project}`);
-      
-      // Read tasks file
-      const tasksContent = await fs.readFile(path.resolve(tasksFile), 'utf-8');
-      const tasks = JSON.parse(tasksContent);
-      
-      // Sync tasks
-      await taigaSynchronizer.syncTasks(tasks, parseInt(options.project, 10));
-      
-      logger.info('Tasks synced successfully');
-    } catch (error) {
-      logger.error('Failed to sync tasks:', { error });
-      process.exit(1);
-    }
-  });
-
-// Parse arguments and execute
-program.parse();
-```
-
-2. Create a script entry in `package.json`:
-```json
-{
-  "scripts": {
-    "cli": "ts-node src/cli/index.ts"
-  }
-}
-```
-
-3. Install the required package:
-```bash
-npm install commander
-```
+The implementation should leverage the existing modules through their interfaces.
 
 # Test Strategy:
 1. Test CLI command parsing with various arguments
@@ -129,4 +26,5 @@ npm install commander
 4. Test task synchronization with sample tasks files
 5. Verify error handling for invalid inputs
 6. Test with missing or invalid arguments
-7. Verify integration with task generator and synchronizer modules
+7. Verify integration with task generator and synchronizer modules through their interfaces
+8. Test help text and documentation accuracy

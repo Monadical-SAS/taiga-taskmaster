@@ -1,172 +1,23 @@
 # Task ID: 3
 # Title: Implement Authentication and HTTP Client
-# Status: pending
+# Status: in-progress
 # Dependencies: 1, 2
 # Priority: high
-# Description: Create a reusable HTTP client with Taiga authentication handling and token management.
+# Description: Create a reusable HTTP client with Taiga authentication handling and token management that implements the existing interfaces.
 # Details:
-1. Create `src/utils/http-client.ts`:
-```typescript
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { AuthConfig } from '../types/auth';
+1. Implement the HTTP client based on the existing interfaces in the core package
+2. Create authentication utilities for Taiga API:
+   - Bearer token authentication
+   - Token refresh mechanism
+   - Auth header generation
+3. Implement retry logic with exponential backoff
+4. Add proper error handling and logging
+5. Create HTTP client factory function with dependency injection
+6. Implement request/response interceptors for authentication
+7. Add rate limiting protection
+8. Create unit tests with mocked responses
 
-export const createHttpClient = (baseURL: string): AxiosInstance => {
-  return axios.create({
-    baseURL,
-    timeout: 10000,
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-};
-```
-
-2. Create `src/utils/auth.ts`:
-```typescript
-import { AuthConfig } from '../types/auth';
-import { AxiosInstance } from 'axios';
-
-export const getAuthHeader = ({token, tokenType}: AuthConfig) => {
-  return {'Authorization': `${tokenType} ${token}`};
-};
-
-export const refreshToken = async (httpClient: AxiosInstance, currentToken: string): Promise<string> => {
-  try {
-    const response = await httpClient.post('/auth/refresh', {}, {
-      headers: {
-        'Authorization': `Bearer ${currentToken}`
-      }
-    });
-    return response.data.auth_token;
-  } catch (error) {
-    console.error('Failed to refresh token:', error);
-    throw new Error('Token refresh failed');
-  }
-};
-
-// Setup token rotation every hour
-export const setupTokenRotation = (
-  httpClient: AxiosInstance,
-  initialToken: string,
-  onNewToken: (token: string) => void
-) => {
-  let currentToken = initialToken;
-  
-  // Refresh token every hour
-  const intervalId = setInterval(async () => {
-    try {
-      const newToken = await refreshToken(httpClient, currentToken);
-      currentToken = newToken;
-      onNewToken(newToken);
-    } catch (error) {
-      console.error('Token rotation failed:', error);
-    }
-  }, 60 * 60 * 1000); // 1 hour
-  
-  return () => clearInterval(intervalId); // Return cleanup function
-};
-```
-
-3. Create `src/config/taiga-client.ts`:
-```typescript
-import { AxiosInstance } from 'axios';
-import { AuthConfig } from '../types/auth';
-import { TaigaClientDeps, TaigaTask } from '../types/taiga';
-import { getAuthHeader } from '../utils/auth';
-import { createTags } from '../utils/tags';
-
-export const createTaigaClient = ({http, auth}: TaigaClientDeps) => {
-  const authHeader = getAuthHeader(auth);
-  
-  return {
-    createTask: async (task: Omit<TaigaTask, 'id' | 'ref'> & { masterId: number }): Promise<TaigaTask> => {
-      const { masterId, ...taskData } = task;
-      const response = await http.post('/tasks', {
-        ...taskData,
-        tags: createTags(masterId)
-      }, { headers: authHeader });
-      return response.data;
-    },
-    
-    getTask: async (taskId: number): Promise<TaigaTask> => {
-      const response = await http.get(`/tasks/${taskId}`, { headers: authHeader });
-      return response.data;
-    },
-    
-    updateTask: async (taskId: number, data: Partial<TaigaTask>): Promise<TaigaTask> => {
-      const response = await http.patch(`/tasks/${taskId}`, data, { headers: authHeader });
-      return response.data;
-    },
-    
-    getTasksByTag: async (tag: string): Promise<TaigaTask[]> => {
-      const response = await http.get('/tasks', { 
-        headers: authHeader,
-        params: { tags: tag }
-      });
-      return response.data;
-    },
-    
-    createSwimlane: async (projectId: number, name: string): Promise<any> => {
-      const response = await http.post('/swimlanes', {
-        project: projectId,
-        name
-      }, { headers: authHeader });
-      return response.data;
-    },
-    
-    getSwimlanes: async (projectId: number): Promise<any[]> => {
-      const response = await http.get('/swimlanes', {
-        headers: authHeader,
-        params: { project: projectId }
-      });
-      return response.data;
-    }
-  };
-};
-```
-
-4. Create `src/utils/retry.ts` for implementing retry logic:
-```typescript
-export type RetryOptions = {
-  times: number;
-  delay: 'fixed' | 'exponential';
-  initialDelay?: number;
-  jitter?: boolean;
-};
-
-export const retry = <T>(
-  fn: () => Promise<T>,
-  options: RetryOptions
-): Promise<T> => {
-  const { times, delay, initialDelay = 1000, jitter = false } = options;
-  
-  return new Promise<T>((resolve, reject) => {
-    const attempt = (attemptNumber: number) => {
-      fn()
-        .then(resolve)
-        .catch((error) => {
-          if (attemptNumber >= times) {
-            reject(error);
-            return;
-          }
-          
-          let nextDelay = initialDelay;
-          if (delay === 'exponential') {
-            nextDelay = initialDelay * Math.pow(2, attemptNumber);
-          }
-          
-          if (jitter) {
-            nextDelay = nextDelay * (0.5 + Math.random());
-          }
-          
-          setTimeout(() => attempt(attemptNumber + 1), nextDelay);
-        });
-    };
-    
-    attempt(0);
-  });
-};
-```
+The implementation should follow the interface-driven approach established in the project architecture.
 
 # Test Strategy:
 1. Unit test the HTTP client creation with different base URLs
@@ -176,3 +27,30 @@ export const retry = <T>(
 5. Verify exponential backoff calculations
 6. Test jitter randomization is within expected bounds
 7. Mock Taiga API responses for client method tests
+8. Verify the implementation conforms to the established interfaces
+
+# Subtasks:
+## 3.1. Implement HTTP client factory [done]
+### Dependencies: None
+### Description: Create a factory function that returns an HTTP client instance with proper configuration
+### Details:
+
+
+## 3.2. Implement authentication utilities [in-progress]
+### Dependencies: None
+### Description: Create utilities for generating auth headers and refreshing tokens
+### Details:
+
+
+## 3.3. Implement retry mechanism [pending]
+### Dependencies: None
+### Description: Add retry logic with exponential backoff and jitter
+### Details:
+
+
+## 3.4. Create unit tests [pending]
+### Dependencies: None
+### Description: Write comprehensive tests for the HTTP client implementation
+### Details:
+
+
