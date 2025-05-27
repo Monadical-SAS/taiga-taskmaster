@@ -68,7 +68,7 @@ const SubtaskFileContent = Schema.Struct({
   dependencies: Schema.optionalWith(Schema.Array(SubtaskId), { default: () => [] }),
   details: Schema.optional(Schema.String),
   testStrategy: Schema.optional(Schema.String)
-})
+});
 
 const TaskFileContentBase = Schema.Struct({
   id: TaskId,
@@ -94,11 +94,13 @@ const TaskFileContent = TaskFileContentBase.pipe(
 )
 
 // mix https://github.com/eyaltoledano/claude-task-master/blob/main/docs/task-structure.md and real data that are different from each other
-const TasksFileContentBase = Schema.Struct({
+export const TasksFilesContent = Schema.Struct({
   tasks: Schema.Array(TaskFileContent)
-})
+});
 
-export const TasksFileContent = TasksFileContentBase.pipe(
+export type TasksFilesContent = typeof TasksFilesContent.Type
+
+export const TasksFileContent = TasksFilesContent.pipe(
   Schema.filter((input) => {
     // Extract all task IDs
     const taskIds = new Set(input.tasks.map(task => task.id));
