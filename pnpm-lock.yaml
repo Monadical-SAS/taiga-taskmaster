@@ -28,7 +28,14 @@ importers:
         specifier: ^8.0.0
         version: 8.32.1(eslint@9.27.0)(typescript@5.8.3)
 
-  packages/common: {}
+  packages/common:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.17.50
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.17.50)
 
   packages/core:
     devDependencies:
