@@ -1,4 +1,4 @@
-import { Url, TaskId, NonEmptyString } from '@taiga-task-master/common';
+import { TaskId, NonEmptyString } from '@taiga-task-master/common';
 import { pipe, Schema, Tuple } from 'effect';
 import { partition } from 'effect/Array';
 
@@ -41,5 +41,5 @@ export const syncTasks: SyncTasksF = (di) => async (tasks) => {
   const currentIdsS = new Set((await di.getTasks(newIdsS)).map(t => t.masterId));
   const [toAdd, toUpdate] = pipe(tasks, partition(t => currentIdsS.has(t.masterId)));
   const renderTasks = (tasks: TrackerTask[]) => tasks.map(t => Tuple.make(t.masterId, di.renderTask(t)))
-  const _: [void, void] = await Promise.all([di.addTasks(renderTasks(toAdd)), di.updateTasks(renderTasks(toUpdate))]);
+  await Promise.all([di.addTasks(renderTasks(toAdd)), di.updateTasks(renderTasks(toUpdate))]);
 }

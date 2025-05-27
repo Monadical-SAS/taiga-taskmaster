@@ -1,5 +1,5 @@
 import { ParseResult, Redacted, Schema } from "effect"
-import { bang, castPositiveInteger, PositiveInteger, type Prettify } from './index.js';
+import { bang, PositiveInteger } from './index.js';
 import { Unexpected } from "effect/ParseResult";
 
 export const TaskId = PositiveInteger.pipe(

@@ -2,10 +2,12 @@ import functional from "eslint-plugin-functional";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
+  {
+    ignores: ["**/dist/**", "**/node_modules/**"]
+  },
   ...tseslint.configs.recommended,
   {
     files: ["**/*.ts", "**/*.tsx"],
-    ignores: ["**/dist/**", "**/node_modules/**"],
     extends: [
       functional.configs.externalTypeScriptRecommended,
       functional.configs.recommended,
@@ -20,7 +22,7 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "warn",
-        { "argsIgnorePattern": "^_" }
+        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
       ],
     },
   },
