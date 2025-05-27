@@ -101,7 +101,73 @@
       "priority": "high",
       "details": "1. Implement the `GenerateTasksF` interface defined in the taskmaster-interface package\n2. Create wrapper around the claude-task-master CLI tool\n3. Implement file system operations for temporary files\n4. Add proper error handling and cleanup\n5. Implement validation of generated tasks using the existing schemas\n6. Create unit tests with mocked dependencies\n7. Add logging for debugging and monitoring\n8. Implement resource cleanup using AsyncDisposable pattern\n\nThe implementation should follow the interface contract and leverage the existing type system.",
       "testStrategy": "1. Mock file system operations to test task generation without actual file I/O\n2. Test handling of claude-task-master CLI execution with mocked exec function\n3. Verify proper cleanup of temporary files\n4. Test validation of generated tasks file\n5. Test error handling for various failure scenarios (file write errors, CLI execution errors, validation errors)\n6. Test with various PRD content inputs\n7. Verify atomic transaction behavior\n8. Verify conformance to the GenerateTasksF interface",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement Task Generation Service Interface",
+          "description": "Define and implement the core interface for the Task Generation Service with all required methods and properties.",
+          "dependencies": [],
+          "details": "Create an interface ITaskGenerationService with methods for generating tasks. Implement a concrete TaskGenerationService class that realizes this interface. Include method signatures for task generation, configuration options, and any required event handlers. Ensure the implementation follows SOLID principles and is ready for dependency injection.",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Develop CLI Tool Wrapper with Execution Handling",
+          "description": "Create a wrapper around the CLI tool that handles process execution, command-line arguments, and output parsing.",
+          "dependencies": [
+            1
+          ],
+          "details": "Implement a CLI tool wrapper class that manages process creation, execution, and termination. Handle command-line argument formatting, environment variables, and working directory configuration. Implement robust error handling for process failures, timeouts, and unexpected outputs. Parse and transform the CLI output into the required task data structures.",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Implement File System Operations for Temporary Files",
+          "description": "Create utilities to manage temporary files needed during the task generation process.",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Develop methods to create, write to, read from, and delete temporary files. Implement path generation for temporary files with unique identifiers. Ensure thread safety for file operations. Handle file system exceptions appropriately. Create helper methods for common file operations used in the task generation workflow.",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Implement Validation of Generated Tasks",
+          "description": "Create validation logic to ensure generated tasks meet the required format and content specifications.",
+          "dependencies": [
+            1,
+            3
+          ],
+          "details": "Implement validators for task structure, content, and relationships. Create validation rules for task properties such as title, description, and dependencies. Implement error collection and reporting mechanisms. Add support for custom validation rules that can be injected by consumers of the service. Ensure validation failures provide clear, actionable error messages.",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Implement Resource Cleanup with AsyncDisposable Pattern",
+          "description": "Implement the AsyncDisposable pattern to ensure proper cleanup of resources used by the service.",
+          "dependencies": [
+            2,
+            3
+          ],
+          "details": "Implement IAsyncDisposable interface in the TaskGenerationService. Create cleanup logic for temporary files, process handles, and other resources. Implement both synchronous Dispose() and asynchronous DisposeAsync() methods. Add safeguards to prevent resource leaks in error scenarios. Document the disposal requirements for consumers of the service.",
+          "status": "pending"
+        },
+        {
+          "id": 6,
+          "title": "Create Unit Tests with Mocked Dependencies",
+          "description": "Develop comprehensive unit tests for the Task Generation Service using mocked dependencies.",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "details": "Create test fixtures for the TaskGenerationService with mocked dependencies. Implement tests for successful task generation scenarios. Add tests for error handling, validation failures, and edge cases. Create mocks for file system, CLI tool execution, and other external dependencies. Implement tests for the AsyncDisposable pattern to verify proper resource cleanup.",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 7,
@@ -130,7 +196,81 @@
       "priority": "high",
       "details": "1. Implement the `SyncTasksF` interface defined in the tasktracker-interface package\n2. Create functions for:\n   - Finding existing tasks by master ID\n   - Creating new tasks in Taiga\n   - Updating existing tasks\n   - Managing swimlanes\n   - Handling batch operations\n3. Implement retry logic for API failures\n4. Add dead letter queue for failed operations\n5. Implement proper error handling and logging\n6. Create unit tests with mocked dependencies\n7. Add rate limiting protection\n\nThe implementation should follow the interface contract and leverage the existing HTTP client and type system.",
       "testStrategy": "1. Test task mapping from file content to tracker tasks\n2. Mock Taiga client to test finding existing tasks\n3. Test swimlane management (getting and creating)\n4. Verify batch processing with different batch sizes\n5. Test retry mechanism for failed operations\n6. Verify dead letter queue functionality for persistently failing tasks\n7. Test full synchronization workflow with various scenarios (new tasks, existing tasks, mixed)\n8. Test handling of API rate limits\n9. Verify conflict resolution strategy\n10. Verify conformance to the SyncTasksF interface",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Implement SyncTasksF Interface Structure",
+          "description": "Define and implement the core structure of the SyncTasksF interface that will handle task synchronization with Taiga.",
+          "dependencies": [],
+          "details": "Create the base interface with methods for synchronization operations. Implement the concrete class with dependency injection for Taiga API client, configuration settings, and logging. Define the main synchronization method signature that will orchestrate the entire process.",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Develop Task Finding and Matching Logic",
+          "description": "Create algorithms to find and match tasks between the local system and Taiga.",
+          "dependencies": [
+            1
+          ],
+          "details": "Implement logic to query Taiga for existing tasks. Develop matching algorithms based on unique identifiers, titles, or other metadata. Create a mapping structure to maintain relationships between local and Taiga tasks. Handle edge cases like duplicate tasks or partially matched tasks.",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Implement Task Creation and Update Operations",
+          "description": "Build functionality to create new tasks in Taiga and update existing ones based on local changes.",
+          "dependencies": [
+            2
+          ],
+          "details": "Implement methods to transform local task models to Taiga-compatible formats. Create operations for task creation with all required fields. Develop update logic that identifies changed fields and only updates necessary data. Implement conflict resolution strategies for concurrent modifications.",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Develop Swimlane Management",
+          "description": "Create functionality to manage Taiga swimlanes for organized task visualization.",
+          "dependencies": [
+            3
+          ],
+          "details": "Implement methods to query existing swimlanes in Taiga. Create operations to create new swimlanes when needed. Develop logic to assign tasks to appropriate swimlanes based on task metadata or status. Handle swimlane updates when task properties change.",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Implement Batch Processing with Rate Limiting",
+          "description": "Build a system for processing tasks in batches while respecting Taiga API rate limits.",
+          "dependencies": [
+            3
+          ],
+          "details": "Create a batch processing mechanism that groups tasks for efficient API calls. Implement rate limiting logic to prevent API throttling. Develop monitoring for API response headers to dynamically adjust request rates. Create a queuing system for pending operations when rate limits are reached.",
+          "status": "pending"
+        },
+        {
+          "id": 6,
+          "title": "Implement Retry Logic and Dead Letter Queue",
+          "description": "Create robust error handling with retry mechanisms and a dead letter queue for failed synchronizations.",
+          "dependencies": [
+            5
+          ],
+          "details": "Implement exponential backoff retry logic for transient failures. Create a dead letter queue to store tasks that repeatedly fail synchronization. Develop monitoring and alerting for DLQ items. Implement manual retry capabilities for administrators. Create detailed error logging for troubleshooting.",
+          "status": "pending"
+        },
+        {
+          "id": 7,
+          "title": "Create Unit Tests for Synchronization Scenarios",
+          "description": "Develop comprehensive unit tests covering various synchronization scenarios and edge cases.",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "details": "Create tests for successful task creation and updates. Implement tests for error handling and retry logic. Develop tests for rate limiting behavior. Create tests for conflict resolution scenarios. Implement integration tests with mocked Taiga API responses. Create performance tests for batch processing.",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 9,
@@ -210,7 +350,69 @@
       "priority": "medium",
       "details": "1. Implement unit tests for all modules\n2. Create integration tests for key workflows\n3. Add end-to-end tests for complete system\n4. Implement test utilities and mocks\n5. Set up test coverage reporting\n6. Create test fixtures and sample data\n7. Implement property-based testing for critical components\n8. Add performance tests for key operations\n\nThe tests should verify both the interfaces and implementations, ensuring the system works correctly as a whole.",
       "testStrategy": "1. Create unit tests for all utility functions\n2. Test each module in isolation with mocked dependencies\n3. Create integration tests for key workflows\n4. Test error handling and edge cases\n5. Verify code coverage meets thresholds\n6. Test with both valid and invalid inputs\n7. Create end-to-end tests for complete workflows\n8. Test performance with large datasets\n9. Verify interface conformance for all implementations",
-      "subtasks": []
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Set up test utilities and mock creation",
+          "description": "Develop reusable test utilities, fixtures, and mock objects to support all testing efforts",
+          "dependencies": [],
+          "details": "Create a comprehensive test utilities package that includes: mock data generators, test fixtures, assertion helpers, and mock implementations of external dependencies. Set up the testing framework configuration and establish patterns for creating consistent mocks across all test suites.",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Implement unit tests for core utilities and functions",
+          "description": "Create thorough unit tests for all core utility functions and isolated components",
+          "dependencies": [
+            1
+          ],
+          "details": "Write unit tests for all core utility functions, ensuring high code coverage. Test edge cases, error handling, and normal operation paths. Focus on testing each function in isolation with appropriate mocks. Include tests for data transformations, validation logic, and helper functions.",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Develop integration tests for key workflows",
+          "description": "Create integration tests that verify interactions between multiple components",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Implement integration tests for key workflows that span multiple components. Test the interaction between components, ensuring they work together correctly. Focus on critical paths through the system, including data flow between modules, state transitions, and component interactions.",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Create end-to-end tests for complete system",
+          "description": "Develop comprehensive end-to-end tests that verify the entire system works correctly",
+          "dependencies": [
+            1,
+            3
+          ],
+          "details": "Build end-to-end tests that exercise the complete system from user input to final output. Create test scenarios that mimic real user workflows. Include tests for UI interactions, API calls, database operations, and any external service integrations. Ensure tests run in an environment that closely resembles production.",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Implement property-based testing for critical components",
+          "description": "Use property-based testing to verify invariants and properties of critical system components",
+          "dependencies": [
+            2
+          ],
+          "details": "Apply property-based testing techniques to critical components where traditional example-based testing is insufficient. Define properties that should hold true for all valid inputs. Generate random test cases to verify these properties. Focus on components with complex logic, data transformations, or algorithmic implementations.",
+          "status": "pending"
+        },
+        {
+          "id": 6,
+          "title": "Set up performance testing for key operations",
+          "description": "Create performance tests to ensure system meets performance requirements",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "Develop performance tests for key operations and critical paths. Establish performance baselines and thresholds. Test system behavior under various load conditions. Measure response times, throughput, and resource utilization. Implement automated performance regression testing to catch performance degradations early.",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 14,
