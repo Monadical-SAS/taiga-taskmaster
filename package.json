@@ -1,0 +1,23 @@
+{
+  "name": "taiga-task-master",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r run dev",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit",
+    "test": "pnpm -r run test"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "eslint-plugin-functional": "^7.0.0",
+    "typescript-eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}
