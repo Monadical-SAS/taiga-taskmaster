@@ -94,18 +94,14 @@ const TaskFileContent = TaskFileContentBase.pipe(
 )
 
 // mix https://github.com/eyaltoledano/claude-task-master/blob/main/docs/task-structure.md and real data that are different from each other
-export const TasksFilesContent = Schema.Struct({
+export const TasksFileContent = Schema.Struct({
   tasks: Schema.Array(TaskFileContent)
-});
-
-export type TasksFilesContent = typeof TasksFilesContent.Type
-
-export const TasksFileContent = TasksFilesContent.pipe(
+}).pipe(
   Schema.filter((input) => {
     // Extract all task IDs
     const taskIds = new Set(input.tasks.map(task => task.id));
     
-    // Check each task's dependencies using functional approach
+    // Check each task's dependencies are present
     return input.tasks.every(task => 
       task.dependencies.every(depId => taskIds.has(depId))
     );
@@ -113,3 +109,5 @@ export const TasksFileContent = TasksFilesContent.pipe(
     message: () => "Task dependency validation failed: one or more tasks depend on non-existent tasks"
   })
 )
+
+export type TasksFileContent = typeof TasksFileContent.Type;

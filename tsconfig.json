@@ -2,7 +2,7 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "es2022",
+    "target": "es2023",
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
@@ -18,11 +18,15 @@
     "composite": true,
     "declarationMap": true,
     "incremental": true,
-    "lib": ["es2022"]
+    "lib": ["es2023"]
   },
   "exclude": ["eslint.config.js"],
   "references": [
     { "path": "./packages/core" },
-    { "path": "./packages/common" }
+    { "path": "./packages/common" },
+    { "path": "./packages/taskmaster-interface" },
+    { "path": "./packages/taskmaster" },
+    { "path": "./packages/tasktracker-interface" },
+    { "path": "./packages/tasktracker" }
   ]
 }

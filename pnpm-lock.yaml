@@ -46,6 +46,57 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.17.50)
 
+  packages/taskmaster:
+    dependencies:
+      '@taiga-task-master/taskmaster-interface':
+        specifier: workspace:*
+        version: link:../taskmaster-interface
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.17.50
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.17.50)
+
+  packages/taskmaster-interface:
+    dependencies:
+      '@taiga-task-master/common':
+        specifier: workspace:*
+        version: link:../common
+      '@taiga-task-master/tasktracker-interface':
+        specifier: workspace:*
+        version: link:../tasktracker-interface
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.17.50
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.17.50)
+
+  packages/tasktracker:
+    dependencies:
+      '@taiga-task-master/tasktracker-interface':
+        specifier: workspace:*
+        version: link:../tasktracker-interface
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.17.50
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.17.50)
+
+  packages/tasktracker-interface:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.17.50
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.17.50)
+
 packages:
 
   '@esbuild/aix-ppc64@0.21.5':
