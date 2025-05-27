@@ -1,0 +1,192 @@
+# Task ID: 8
+# Title: Implement Taiga Synchronizer Module
+# Status: pending
+# Dependencies: 3, 4, 6, 7
+# Priority: high
+# Description: Create a service that synchronizes generated tasks with Taiga, handling creation, updates, and conflict resolution.
+# Details:
+Create the Taiga synchronizer module in `src/modules/taiga-sync/`:
+
+1. Create `src/modules/taiga-sync/service.ts`:
+```typescript
+import { TaigaTask } from '../../types/taiga';
+import { SubtaskFileContent, TasksFileContent, TrackerTask } from '../../types/tasks';
+import { findMasterIdInTags, getProjectTag } from '../../utils/tags';
+import { renderTaskMarkdown } from '../../utils/markdown-renderer';
+import { retry } from '../../utils/retry';
+import fs from 'fs/promises';
+import path from 'path';
+
+// Chunk utility for batch processing
+const chunk = <T>(array: T[], size: number): T[][] => {
+  return Array.from(
+    { length: Math.ceil(array.length / size) },
+    (_, i) => array.slice(i * size, i * size + size)
+  );
+};
+
+// Sequential execution utility
+const sequential = <T>(fns: (() => Promise<T>)[]): Promise<T[]> => {
+  return fns.reduce(
+    (promise, fn) => promise.then(results => fn().then(result => [...results, result])),
+    Promise.resolve<T[]>([])
+  );
+};
+
+export type TaigaSyncDeps = {
+  taigaClient: {
+    createTask: (task: any) => Promise<TaigaTask>;
+    getTask: (taskId: number) => Promise<TaigaTask>;
+    updateTask: (taskId: number, data: any) => Promise<TaigaTask>;
+    getTasksByTag: (tag: string) => Promise<TaigaTask[]>;
+    createSwimlane: (projectId: number, name: string) => Promise<any>;
+    getSwimlanes: (projectId: number) => Promise<any[]>;
+  };
+  fileSystem: {
+    writeFile: (path: string, data: string, encoding: string) => Promise<void>;
+    mkdir: (path: string, options?: { recursive?: boolean }) => Promise<void>;
+  };
+  failuresDir: string;
+};
+
+export const createTaigaSynchronizer = ({ taigaClient, fileSystem, failuresDir }: TaigaSyncDeps) => {
+  // Ensure failures directory exists
+  fileSystem.mkdir(failuresDir, { recursive: true }).catch(err => {
+    console.error('Failed to create failures directory:', err);
+  });
+  
+  // Convert file content tasks to tracker tasks
+  const mapToTrackerTasks = (tasksFile: TasksFileContent): TrackerTask[] => {
+    return tasksFile.tasks.map(task => ({
+      masterId: task.id,
+      title: task.title,
+      description: task.description || '',
+      status: task.status,
+      details: task.details,
+      dependencies: task.dependencies || []
+    }));
+  };
+  
+  // Find existing Taiga task by master ID
+  const findExistingTask = async (masterId: number): Promise<TaigaTask | null> => {
+    try {
+      const tasks = await taigaClient.getTasksByTag(`taskmaster-${masterId}`);
+      return tasks.length > 0 ? tasks[0] : null;
+    } catch (error) {
+      console.error(`Failed to find existing task for master ID ${masterId}:`, error);
+      return null;
+    }
+  };
+  
+  // Get or create the Master Managed swimlane
+  const getMasterManagedSwimlane = async (projectId: number): Promise<number> => {
+    try {
+      const swimlanes = await taigaClient.getSwimlanes(projectId);
+      const masterSwimlane = swimlanes.find(s => s.name === 'Master Managed');
+      
+      if (masterSwimlane) {
+        return masterSwimlane.id;
+      }
+      
+      // Create the swimlane if it doesn't exist
+      const newSwimlane = await taigaClient.createSwimlane(projectId, 'Master Managed');
+      return newSwimlane.id;
+    } catch (error) {
+      console.error('Failed to get or create Master Managed swimlane:', error);
+      throw error;
+    }
+  };
+  
+  // Process a single task
+  const processTask = async (task: TrackerTask, allTasks: SubtaskFileContent[], projectId: number, swimlaneId: number): Promise<void> => {
+    try {
+      // Find if task already exists
+      const existingTask = await findExistingTask(task.masterId);
+      
+      // Generate markdown content
+      const markdownContent = renderTaskMarkdown(
+        allTasks.find(t => t.id === task.masterId) as SubtaskFileContent,
+        allTasks
+      );
+      
+      if (existingTask) {
+        // Update existing task
+        await taigaClient.updateTask(existingTask.id, {
+          subject: task.title,
+          description: markdownContent,
+          status: task.status
+        });
+      } else {
+        // Create new task
+        await taigaClient.createTask({
+          project: projectId,
+          subject: task.title,
+          description: markdownContent,
+          status: task.status,
+          swimlane: swimlaneId,
+          masterId: task.masterId
+        });
+      }
+    } catch (error) {
+      console.error(`Failed to process task ${task.masterId}:`, error);
+      
+      // Save failed task to dead letter queue
+      const failureFile = path.join(failuresDir, `task-${task.masterId}-${Date.now()}.json`);
+      await fileSystem.writeFile(
+        failureFile,
+        JSON.stringify(task, null, 2),
+        'utf-8'
+      );
+      
+      throw error;
+    }
+  };
+  
+  // Process a batch of tasks
+  const processBatch = async (tasks: TrackerTask[], allTasks: SubtaskFileContent[], projectId: number, swimlaneId: number): Promise<void> => {
+    await Promise.all(
+      tasks.map(task =>
+        retry(
+          () => processTask(task, allTasks, projectId, swimlaneId),
+          { times: 3, delay: 'exponential', initialDelay: 1000, jitter: true }
+        ).catch(error => {
+          console.error(`Failed to process task ${task.masterId} after retries:`, error);
+        })
+      )
+    );
+  };
+  
+  return {
+    syncTasks: async (tasksFile: TasksFileContent, projectId: number): Promise<void> => {
+      // Convert file tasks to tracker tasks
+      const trackerTasks = mapToTrackerTasks(tasksFile);
+      
+      // Get or create the Master Managed swimlane
+      const swimlaneId = await getMasterManagedSwimlane(projectId);
+      
+      // Process tasks in batches to avoid API rate limits
+      const batches = chunk(trackerTasks, 10);
+      
+      await sequential(
+        batches.map(batch => () => processBatch(batch, tasksFile.tasks, projectId, swimlaneId))
+      );
+    }
+  };
+};
+```
+
+2. Create `src/modules/taiga-sync/index.ts` for easier importing:
+```typescript
+export { createTaigaSynchronizer } from './service';
+```
+
+# Test Strategy:
+1. Test task mapping from file content to tracker tasks
+2. Mock Taiga client to test finding existing tasks
+3. Test swimlane management (getting and creating)
+4. Verify batch processing with different batch sizes
+5. Test retry mechanism for failed operations
+6. Verify dead letter queue functionality for persistently failing tasks
+7. Test full synchronization workflow with various scenarios (new tasks, existing tasks, mixed)
+8. Test handling of API rate limits
+9. Verify conflict resolution strategy

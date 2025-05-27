@@ -1,0 +1,108 @@
+# Task ID: 5
+# Title: Implement PRD Webhook Receiver Module
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Create the webhook endpoint that receives PRD updates from Taiga and initiates the task generation process.
+# Details:
+Create the webhook receiver module in `src/modules/webhook-receiver/`:
+
+1. Create `src/modules/webhook-receiver/controller.ts`:
+```typescript
+import { Request, Response } from 'express';
+import { validateWebhookPayload } from '../../utils/validation';
+import { WebhookPayload } from '../../types/webhook';
+import { TaigaTask } from '../../types/taiga';
+
+export type WebhookControllerDeps = {
+  taigaClient: {
+    getTask: (taskId: number) => Promise<TaigaTask>;
+  };
+  taskGenerator: {
+    generateTasks: (prdContent: string) => Promise<void>;
+  };
+};
+
+export const createWebhookController = ({ taigaClient, taskGenerator }: WebhookControllerDeps) => {
+  return async (req: Request, res: Response) => {
+    try {
+      // Validate the incoming webhook payload
+      const payload = validateWebhookPayload(req.body) as WebhookPayload;
+      
+      // Get the task details to verify it's in the PRD swimlane
+      const task = await taigaClient.getTask(payload.ref);
+      
+      // Check if the task is in a PRD swimlane (this would need to be configured)
+      // This is a placeholder - actual implementation would check swimlane name or other criteria
+      const isPRD = task.swimlane === parseInt(process.env.PRD_SWIMLANE_ID || '0', 10);
+      
+      if (!isPRD) {
+        return res.status(400).json({ error: 'Task is not in PRD swimlane' });
+      }
+      
+      // Generate tasks from the PRD content
+      await taskGenerator.generateTasks(payload.content);
+      
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Webhook processing error:', error);
+      return res.status(500).json({ error: 'Failed to process webhook' });
+    }
+  };
+};
+```
+
+2. Create `src/modules/webhook-receiver/routes.ts`:
+```typescript
+import { Router } from 'express';
+import { createWebhookController, WebhookControllerDeps } from './controller';
+
+export const createWebhookRoutes = (deps: WebhookControllerDeps) => {
+  const router = Router();
+  const controller = createWebhookController(deps);
+  
+  router.post('/api/prd-webhook', controller);
+  
+  return router;
+};
+```
+
+3. Create JWT validation middleware in `src/modules/webhook-receiver/middleware.ts`:
+```typescript
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+
+export const validateJWT = (secret: string) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    try {
+      jwt.verify(token, secret);
+      next();
+    } catch (error) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+  };
+};
+```
+
+4. Install the required JWT package:
+```bash
+npm install jsonwebtoken
+npm install @types/jsonwebtoken --save-dev
+```
+
+# Test Strategy:
+1. Test webhook endpoint with valid and invalid payloads
+2. Mock Taiga client to test swimlane validation
+3. Test JWT validation middleware with valid and invalid tokens
+4. Verify error handling for various failure scenarios
+5. Test integration with task generator
+6. Verify correct HTTP status codes are returned
+7. Test handling of edge cases like malformed JSON

@@ -15,6 +15,7 @@ export const castPositiveInteger = (n: number): PositiveInteger => {
 }
 
 export const bang = <T>(v: T | undefined): T => {
+  // eslint-disable-next-line functional/no-throw-statements
   if (typeof v === "undefined") throw new Error(`panic! ${v} is undefined`);
   return v as T;
 };

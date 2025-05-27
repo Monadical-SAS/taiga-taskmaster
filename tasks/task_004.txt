@@ -1,0 +1,79 @@
+# Task ID: 4
+# Title: Implement Tag Management System
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Create utilities for generating, validating, and extracting information from Taiga task tags according to the PRD specifications.
+# Details:
+Create `src/utils/tags.ts` with the following implementation:
+
+```typescript
+// Regular expression for validating taskmaster tags
+const TASKMASTER_TAG_REGEX = /^taskmaster-(\d+)$/;
+
+/**
+ * Creates the tags array for a task with the given master ID
+ * @param taskId The master task ID from the tasks.json file
+ * @returns Array of tags for the Taiga task
+ */
+export const createTags = (taskId: number): string[] => [
+  `project-tm:${process.env.PROJECT_SLUG}`,
+  `taskmaster-${taskId}`
+];
+
+/**
+ * Extracts the master task ID from a taskmaster tag
+ * @param tag The tag to extract from (format: 'taskmaster-123')
+ * @returns The extracted ID or null if the tag doesn't match the pattern
+ */
+export const extractMasterIdFromTag = (tag: string): number | null => {
+  const match = tag.match(TASKMASTER_TAG_REGEX);
+  if (!match) return null;
+  
+  const id = parseInt(match[1], 10);
+  return isNaN(id) ? null : id;
+};
+
+/**
+ * Finds the taskmaster tag in an array of tags and extracts the ID
+ * @param tags Array of tags to search through
+ * @returns The master ID or null if not found
+ */
+export const findMasterIdInTags = (tags: string[]): number | null => {
+  for (const tag of tags) {
+    const id = extractMasterIdFromTag(tag);
+    if (id !== null) return id;
+  }
+  return null;
+};
+
+/**
+ * Creates the project tag for filtering tasks by project
+ * @returns The project tag string
+ */
+export const getProjectTag = (): string => {
+  const projectSlug = process.env.PROJECT_SLUG;
+  if (!projectSlug) {
+    throw new Error('PROJECT_SLUG environment variable is not set');
+  }
+  return `project-tm:${projectSlug}`;
+};
+
+/**
+ * Validates if a tag follows the taskmaster tag pattern
+ * @param tag The tag to validate
+ * @returns True if the tag is a valid taskmaster tag
+ */
+export const isTaskmasterTag = (tag: string): boolean => {
+  return TASKMASTER_TAG_REGEX.test(tag);
+};
+```
+
+# Test Strategy:
+1. Test tag creation with various task IDs
+2. Verify project tag format is correct
+3. Test extraction of master IDs from valid and invalid tags
+4. Test finding master IDs in arrays of mixed tags
+5. Verify validation of taskmaster tags
+6. Test error handling when PROJECT_SLUG is not set
+7. Test with edge cases like very large IDs or special characters in project slugs

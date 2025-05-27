@@ -1,0 +1,115 @@
+# Task ID: 10
+# Title: Implement Configuration Management
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Create a centralized configuration system to manage environment variables and application settings.
+# Details:
+Create a configuration management system:
+
+1. Create `src/config/index.ts`:
+```typescript
+import dotenv from 'dotenv';
+import path from 'path';
+import { z } from 'zod';
+import { logger } from '../utils/logger';
+
+// Load environment variables from .env file
+dotenv.config();
+
+// Define configuration schema
+const configSchema = z.object({
+  // Server configuration
+  PORT: z.string().transform(val => parseInt(val, 10)).default('3000'),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  
+  // Taiga API configuration
+  TAIGA_API_URL: z.string().url(),
+  TAIGA_AUTH_TOKEN: z.string().min(1),
+  TAIGA_TOKEN_TYPE: z.literal('Bearer').default('Bearer'),
+  
+  // Project configuration
+  PROJECT_ID: z.string().transform(val => parseInt(val, 10)),
+  PROJECT_SLUG: z.string().min(1),
+  PRD_SWIMLANE_ID: z.string().transform(val => parseInt(val, 10)).optional(),
+  
+  // Webhook configuration
+  WEBHOOK_SECRET: z.string().min(1),
+  
+  // Task generation configuration
+  CLAUDE_TASK_MASTER_PATH: z.string().min(1),
+  TEMP_DIR: z.string().default(path.join(process.cwd(), 'temp')),
+  
+  // Error handling configuration
+  FAILURES_DIR: z.string().default(path.join(process.cwd(), 'sync-failures')),
+  LOGS_DIR: z.string().default(path.join(process.cwd(), 'logs'))
+});
+
+// Parse and validate configuration
+const parseConfig = () => {
+  try {
+    return configSchema.parse(process.env);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const missingVars = error.errors
+        .filter(err => err.code === 'invalid_type' && err.received === 'undefined')
+        .map(err => err.path.join('.'));
+      
+      if (missingVars.length > 0) {
+        console.error(`Missing required environment variables: ${missingVars.join(', ')}`);
+      } else {
+        console.error('Configuration validation failed:', error.errors);
+      }
+    } else {
+      console.error('Failed to parse configuration:', error);
+    }
+    
+    process.exit(1);
+  }
+};
+
+// Export the validated configuration
+export const config = parseConfig();
+
+// Log configuration on startup (excluding sensitive values)
+export const logConfig = () => {
+  const sanitizedConfig = { ...config };
+  
+  // Remove sensitive values
+  delete sanitizedConfig.TAIGA_AUTH_TOKEN;
+  delete sanitizedConfig.WEBHOOK_SECRET;
+  
+  logger.info('Application configuration:', sanitizedConfig);
+};
+```
+
+2. Create a configuration loader for tests in `src/config/test-config.ts`:
+```typescript
+import { config as appConfig } from '.';
+
+// Default test configuration
+export const testConfig = {
+  ...appConfig,
+  NODE_ENV: 'test',
+  TEMP_DIR: '/tmp/taiga-task-master-test/temp',
+  FAILURES_DIR: '/tmp/taiga-task-master-test/failures',
+  LOGS_DIR: '/tmp/taiga-task-master-test/logs'
+};
+
+// Helper to override config for tests
+export const createTestConfig = (overrides: Partial<typeof appConfig>) => {
+  return {
+    ...testConfig,
+    ...overrides
+  };
+};
+```
+
+# Test Strategy:
+1. Test configuration validation with valid and invalid environment variables
+2. Verify default values are applied correctly
+3. Test type transformations (string to number)
+4. Verify error handling for missing required variables
+5. Test configuration overrides for test environment
+6. Verify sensitive values are properly sanitized in logs
+7. Test with various environment configurations

@@ -1,0 +1,135 @@
+# Task ID: 7
+# Title: Implement Markdown Rendering Engine
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Create a service to transform task data into formatted Markdown content for Taiga task descriptions.
+# Details:
+Create the Markdown rendering engine in `src/utils/markdown-renderer.ts`:
+
+```typescript
+import { SubtaskFileContent } from '../types/tasks';
+
+/**
+ * Renders a subtask as Markdown content
+ * @param subtask The subtask to render
+ * @returns Formatted Markdown string
+ */
+export const renderSubtask = (subtask: SubtaskFileContent): string => {
+  let markdown = `### ${subtask.title} [${subtask.status}]\n`;
+  
+  if (subtask.description) {
+    markdown += `${subtask.description}\n\n`;
+  }
+  
+  if (subtask.details) {
+    markdown += `**Details**:\n${subtask.details}\n\n`;
+  }
+  
+  return markdown;
+};
+
+/**
+ * Generates a Mermaid diagram showing task dependencies
+ * @param tasks Array of tasks with dependencies
+ * @param currentTaskId ID of the current task being rendered
+ * @returns Mermaid diagram as a Markdown code block
+ */
+export const generateDependencyDiagram = (
+  tasks: SubtaskFileContent[],
+  currentTaskId: number
+): string => {
+  // Create a map of task IDs to titles for easy lookup
+  const taskMap = new Map(tasks.map(task => [task.id, task.title]));
+  
+  // Start the Mermaid graph
+  let diagram = '```mermaid\ngraph TD;\n';
+  
+  // Add nodes for all tasks that are either dependencies of the current task
+  // or have the current task as a dependency
+  const relevantTasks = tasks.filter(task => {
+    if (task.id === currentTaskId) return true;
+    if (task.dependencies?.includes(currentTaskId)) return true;
+    if (tasks.find(t => t.id === currentTaskId)?.dependencies?.includes(task.id)) return true;
+    return false;
+  });
+  
+  // Add nodes
+  relevantTasks.forEach(task => {
+    const title = taskMap.get(task.id) || `Task ${task.id}`;
+    // Truncate long titles
+    const shortTitle = title.length > 20 ? title.substring(0, 17) + '...' : title;
+    diagram += `  task${task.id}["#${task.id}: ${shortTitle}"]\n`;
+  });
+  
+  // Highlight current task
+  diagram += `  style task${currentTaskId} fill:#f9f,stroke:#333,stroke-width:2px\n`;
+  
+  // Add edges for dependencies
+  relevantTasks.forEach(task => {
+    if (task.dependencies) {
+      task.dependencies.forEach(depId => {
+        if (taskMap.has(depId)) {
+          diagram += `  task${depId} --> task${task.id}\n`;
+        }
+      });
+    }
+  });
+  
+  diagram += '```';
+  return diagram;
+};
+
+/**
+ * Renders a complete task with all its details and dependency diagram
+ * @param task The main task to render
+ * @param allTasks All tasks in the system (for dependency diagram)
+ * @returns Complete Markdown content for the task
+ */
+export const renderTaskMarkdown = (
+  task: SubtaskFileContent,
+  allTasks: SubtaskFileContent[]
+): string => {
+  let markdown = `# ${task.title}\n\n`;
+  
+  if (task.description) {
+    markdown += `${task.description}\n\n`;
+  }
+  
+  if (task.details) {
+    markdown += `## Implementation Details\n${task.details}\n\n`;
+  }
+  
+  // Add dependency information
+  if (task.dependencies && task.dependencies.length > 0) {
+    markdown += '## Dependencies\n';
+    markdown += 'This task depends on:\n\n';
+    
+    task.dependencies.forEach(depId => {
+      const depTask = allTasks.find(t => t.id === depId);
+      if (depTask) {
+        markdown += `- #${depId}: ${depTask.title}\n`;
+      } else {
+        markdown += `- #${depId} (Unknown task)\n`;
+      }
+    });
+    
+    markdown += '\n';
+  }
+  
+  // Add dependency diagram
+  markdown += '## Dependency Diagram\n';
+  markdown += generateDependencyDiagram(allTasks, task.id);
+  
+  return markdown;
+};
+```
+
+# Test Strategy:
+1. Test rendering of subtasks with various combinations of optional fields
+2. Verify dependency diagram generation with different dependency structures
+3. Test handling of missing tasks in dependency references
+4. Verify complete task rendering with all components
+5. Test with edge cases like very long titles or descriptions
+6. Verify Mermaid syntax is correctly generated
+7. Test with tasks that have no dependencies
