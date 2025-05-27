@@ -18,7 +18,10 @@ export default tseslint.config(
       },
     },
     rules: {
-      // Add any custom rule overrides here
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { "argsIgnorePattern": "^_" }
+      ],
     },
   },
   {

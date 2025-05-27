@@ -1,10 +1,10 @@
-import { Schema } from "effect";
+import { Schema, ParseResult, Either, Effect } from "effect";
+import type { FilterOutput } from 'effect/Schema';
+import { Unexpected } from 'effect/ParseResult';
 
 export const greet = (name: string): string => {
   return `Hello, ${name}!`;
 };
 
-export const GreetingSchema = Schema.Struct({
-  name: Schema.String,
-  message: Schema.String,
-});
+
+

@@ -22,6 +22,7 @@
   },
   "exclude": ["eslint.config.js"],
   "references": [
-    { "path": "./packages/core" }
+    { "path": "./packages/core" },
+    { "path": "./packages/common" }
   ]
 }
