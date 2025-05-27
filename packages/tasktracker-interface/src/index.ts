@@ -1,5 +1,5 @@
 import { Url, TaskId, NonEmptyString } from '@taiga-task-master/common';
-import { pipe, Schema } from 'effect';
+import { pipe, Schema, Tuple } from 'effect';
 import { partition } from 'effect/Array';
 
 export const TaskText = NonEmptyString.pipe(
@@ -28,8 +28,8 @@ export type TrackerTask = {
 
 export type SyncTasksDeps = {
   getTasks: (ids: Set<TaskId>) => Promise<TrackerTask[]>,
-  addTasks: (tasks: TrackerTask[]) => Promise<void>,
-  updateTasks: (tasks: TrackerTask[]) => Promise<void>,
+  addTasks: (tasks: [TaskId, TaskText][]) => Promise<void>,
+  updateTasks: (tasks: [TaskId, TaskText][]) => Promise<void>,
   renderTask: (task: TrackerTask) => TaskText
 }
 
@@ -40,5 +40,6 @@ export const syncTasks: SyncTasksF = (di) => async (tasks) => {
   // note that there's no concurrent modification guarantees
   const currentIdsS = new Set((await di.getTasks(newIdsS)).map(t => t.masterId));
   const [toAdd, toUpdate] = pipe(tasks, partition(t => currentIdsS.has(t.masterId)));
-  const _: [void, void] = await Promise.all([di.addTasks(toAdd), di.updateTasks(toUpdate)]);
+  const renderTasks = (tasks: TrackerTask[]) => tasks.map(t => Tuple.make(t.masterId, di.renderTask(t)))
+  const _: [void, void] = await Promise.all([di.addTasks(renderTasks(toAdd)), di.updateTasks(renderTasks(toUpdate))]);
 }

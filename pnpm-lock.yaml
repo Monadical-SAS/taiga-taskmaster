@@ -29,6 +29,10 @@ importers:
         version: 8.32.1(eslint@9.27.0)(typescript@5.8.3)
 
   packages/common:
+    dependencies:
+      effect:
+        specifier: ^3.10.0
+        version: 3.15.4
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -48,6 +52,9 @@ importers:
       '@taiga-task-master/tasktracker-interface':
         specifier: workspace:*
         version: link:../tasktracker-interface
+      effect:
+        specifier: ^3.10.0
+        version: 3.15.4
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -99,6 +106,13 @@ importers:
         version: 2.1.9(@types/node@20.17.50)
 
   packages/tasktracker-interface:
+    dependencies:
+      '@taiga-task-master/common':
+        specifier: workspace:*
+        version: link:../common
+      effect:
+        specifier: ^3.10.0
+        version: 3.15.4
     devDependencies:
       '@types/node':
         specifier: ^20.0.0

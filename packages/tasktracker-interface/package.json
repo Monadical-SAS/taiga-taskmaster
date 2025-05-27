@@ -11,7 +11,8 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-
+    "@taiga-task-master/common": "workspace:*",
+    "effect": "^3.10.0"
   },
   "devDependencies": {
     "vitest": "^2.0.0",
