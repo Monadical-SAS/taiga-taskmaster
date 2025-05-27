@@ -1,17 +1,21 @@
-import { Schema, ParseResult, Either, Effect } from "effect";
-import type { FilterOutput } from 'effect/Schema';
-import { Unexpected } from 'effect/ParseResult';
-
-export const greet = (name: string): string => {
-  return `Hello, ${name}!`;
-};
+import type { GenerateTasksF } from '@taiga-task-master/taskmaster-interface';
+import { generateTasks as generateTaskmasterTasks } from '@taiga-task-master/taskmaster-interface';
+import { syncTasks, type SyncTasksDeps, type SyncTasksF } from '@taiga-task-master/tasktracker-interface';
+import type { PrdText } from '@taiga-task-master/common';
+import { Option } from 'effect';
 
 
+export type GenerateTasksDeps = {
+  taskmaster: {
+    generateTasks: ReturnType<GenerateTasksF>
+  },
+  tasktracker: {
+    syncTasks: ReturnType<SyncTasksF>
+  }
+}
 
-// having PRD (TODO receival part is a separate, irrelevant now),
-
-// (DI: CLI) => (prd.txt, Optional<previous tasks.json>/*represents append*/) => tasks.json
-// () => tasks.json
-// rendering - one way, but TODO two-way
-// (tasks.json) => TrackerTask[]
-// sync(TrackerTask[]) (mind ids, statuses)
+// main happy flow after we got PRD from somewhere // TODO making this work is the first milestone
+export const generateTasks = (di: GenerateTasksDeps) => async (prd: PrdText) => {
+  const tasks = await di.taskmaster.generateTasks(prd, Option.none(/*for update*/));
+  await di.tasktracker.syncTasks(tasks);
+}

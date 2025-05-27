@@ -22,7 +22,7 @@ importers:
         specifier: ^3.0.0
         version: 3.5.3
       typescript:
-        specifier: ^5.0.0
+        specifier: ^5.8.3
         version: 5.8.3
       typescript-eslint:
         specifier: ^8.0.0
@@ -38,6 +38,16 @@ importers:
         version: 2.1.9(@types/node@20.17.50)
 
   packages/core:
+    dependencies:
+      '@taiga-task-master/common':
+        specifier: workspace:*
+        version: link:../common
+      '@taiga-task-master/taskmaster-interface':
+        specifier: workspace:*
+        version: link:../taskmaster-interface
+      '@taiga-task-master/tasktracker-interface':
+        specifier: workspace:*
+        version: link:../tasktracker-interface
     devDependencies:
       '@types/node':
         specifier: ^20.0.0

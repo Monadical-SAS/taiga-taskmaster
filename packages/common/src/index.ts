@@ -47,4 +47,7 @@ export type Prettify<T> = {
 export const castNonEmptyString = (s: string): NonEmptyString => {
   return Schema.decodeSync(NonEmptyString)(s)
 }
-  
+
+export const Url = NonEmptyString.pipe(
+  Schema.brand("Url")
+)

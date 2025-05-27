@@ -2,15 +2,17 @@ import { ParseResult, Redacted, Schema } from "effect"
 import { bang, castPositiveInteger, PositiveInteger, type Prettify } from './index.js';
 import { Unexpected } from "effect/ParseResult";
 
-const TaskId = PositiveInteger.pipe(
+export const TaskId = PositiveInteger.pipe(
   Schema.brand("TaskId")
 );
 
-const SubtaskId = PositiveInteger.pipe(
+export type TaskId = typeof TaskId.Type;
+
+export const SubtaskId = PositiveInteger.pipe(
   Schema.brand("SubtaskId")
 );
 
-const SubtaskIdFull = Schema.Tuple(
+export const SubtaskIdFull = Schema.Tuple(
   TaskId, SubtaskId
 );
 
