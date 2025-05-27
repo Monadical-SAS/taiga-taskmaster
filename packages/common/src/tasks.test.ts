@@ -1097,6 +1097,145 @@ describe("TasksFileContent", () => {
     expect(result._tag).toBe("Right");
   });
 
+  it("should validate task dependencies correctly", () => {
+    const tasksWithValidDeps = {
+      tasks: [
+        {
+          id: 1,
+          title: "Task 1",
+          description: "First task",
+          status: "pending",
+          dependencies: [],
+          details: "Details 1",
+          testStrategy: "Test 1",
+          subtasks: []
+        },
+        {
+          id: 2,
+          title: "Task 2", 
+          description: "Second task",
+          status: "pending",
+          dependencies: [1], // depends on task 1
+          details: "Details 2",
+          testStrategy: "Test 2",
+          subtasks: []
+        }
+      ]
+    };
+    
+    const result = Schema.decodeUnknownEither(TasksFileContent)(tasksWithValidDeps);
+    expect(result._tag).toBe("Right");
+  });
+
+  it("should reject invalid task dependencies", () => {
+    const tasksWithInvalidDeps = {
+      tasks: [
+        {
+          id: 1,
+          title: "Task 1",
+          description: "First task", 
+          status: "pending",
+          dependencies: [999], // depends on non-existent task
+          details: "Details 1",
+          testStrategy: "Test 1",
+          subtasks: []
+        }
+      ]
+    };
+    
+    const result = Schema.decodeUnknownEither(TasksFileContent)(tasksWithInvalidDeps);
+    expect(result._tag).toBe("Left");
+  });
+
+  it("should validate subtask dependencies correctly", () => {
+    const taskWithValidSubtaskDeps = {
+      tasks: [
+        {
+          id: 1,
+          title: "Task 1",
+          description: "First task",
+          status: "pending", 
+          dependencies: [],
+          details: "Details 1",
+          testStrategy: "Test 1",
+          subtasks: [
+            {
+              id: 1,
+              title: "Subtask 1",
+              status: "pending"
+            },
+            {
+              id: 2,
+              title: "Subtask 2", 
+              status: "pending",
+              dependencies: [1] // depends on subtask 1
+            }
+          ]
+        }
+      ]
+    };
+    
+    const result = Schema.decodeUnknownEither(TasksFileContent)(taskWithValidSubtaskDeps);
+    expect(result._tag).toBe("Right");
+  });
+
+  it("should reject invalid subtask dependencies", () => {
+    const taskWithInvalidSubtaskDeps = {
+      tasks: [
+        {
+          id: 1,
+          title: "Task 1",
+          description: "First task",
+          status: "pending",
+          dependencies: [],
+          details: "Details 1", 
+          testStrategy: "Test 1",
+          subtasks: [
+            {
+              id: 1,
+              title: "Subtask 1",
+              status: "pending",
+              dependencies: [999] // depends on non-existent subtask
+            }
+          ]
+        }
+      ]
+    };
+    
+    const result = Schema.decodeUnknownEither(TasksFileContent)(taskWithInvalidSubtaskDeps);
+    expect(result._tag).toBe("Left");
+  });
+
+  it("should provide default empty array for missing subtask dependencies", () => {
+    const taskWithMissingSubtaskDeps = {
+      tasks: [
+        {
+          id: 1,
+          title: "Task 1",
+          description: "First task",
+          status: "pending",
+          dependencies: [],
+          details: "Details 1",
+          testStrategy: "Test 1",
+          subtasks: [
+            {
+              id: 1,
+              title: "Subtask 1",
+              status: "pending"
+              // no dependencies field - should default to empty array
+            }
+          ]
+        }
+      ]
+    };
+    
+    const result = Schema.decodeUnknownEither(TasksFileContent)(taskWithMissingSubtaskDeps);
+    expect(result._tag).toBe("Right");
+    if (result._tag === "Right") {
+      expect(result.right.tasks[0]?.subtasks[0]?.dependencies).toEqual([]);
+    }
+  });
+
   it("should reject invalid structure missing tasks property", () => {
     const invalidData = { wrongProperty: [] };
     const result = Schema.decodeUnknownEither(TasksFileContent)(invalidData);

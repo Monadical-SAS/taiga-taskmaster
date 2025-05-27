@@ -16,8 +16,6 @@ const SubtaskIdFull = Schema.Tuple(
 
 export type SubtaskIdFull = Schema.Schema.Type<typeof SubtaskIdFull>;
 
-
-
 // task-master denotes subtasks ids in arbitrary way: it can be integer 1 or a string "2.1" - both equals to each other
 // we throw away the task number here in that case to conform to their docs
 const SubtaskIdFromString = Schema.transformOrFail(Schema.String, Schema.RedactedFromSelf(SubtaskId), {
@@ -67,12 +65,12 @@ const SubtaskFileContent = Schema.Struct({
   title: Schema.NonEmptyString,
   description: Schema.optional(Schema.String),
   status: TaskStatus,
-  dependencies: Schema.optional(Schema.Array(TaskId)),
+  dependencies: Schema.optionalWith(Schema.Array(SubtaskId), { default: () => [] }),
   details: Schema.optional(Schema.String),
   testStrategy: Schema.optional(Schema.String)
 })
 
-const TaskFileContent = Schema.Struct({
+const TaskFileContentBase = Schema.Struct({
   id: TaskId,
   title: Schema.NonEmptyString,
   description: Schema.String,
@@ -84,9 +82,32 @@ const TaskFileContent = Schema.Struct({
   subtasks: Schema.Array(SubtaskFileContent)
 })
 
+const TaskFileContent = TaskFileContentBase.pipe(
+  Schema.filter((input) => {
+    const subtaskIds = new Set(input.subtasks.map(subtask => Redacted.value(subtask.id)));
+    return input.subtasks.every(subtask =>
+      subtask.dependencies.every(depId => subtaskIds.has(depId))
+    );
+  }, {
+    message: () => "Subtask dependency validation failed: one or more subtasks depend on non-existent subtasks"
+  })
+)
+
 // mix https://github.com/eyaltoledano/claude-task-master/blob/main/docs/task-structure.md and real data that are different from each other
-export const TasksFileContent = Schema.Struct({
-  tasks: Schema.Array(
-    TaskFileContent
-  )
+const TasksFileContentBase = Schema.Struct({
+  tasks: Schema.Array(TaskFileContent)
 })
+
+export const TasksFileContent = TasksFileContentBase.pipe(
+  Schema.filter((input) => {
+    // Extract all task IDs
+    const taskIds = new Set(input.tasks.map(task => task.id));
+    
+    // Check each task's dependencies using functional approach
+    return input.tasks.every(task => 
+      task.dependencies.every(depId => taskIds.has(depId))
+    );
+  }, {
+    message: () => "Task dependency validation failed: one or more tasks depend on non-existent tasks"
+  })
+)
