@@ -291,7 +291,7 @@ export interface AuthService {
 }
 
 export interface TasksService {
-  list: (filters?: { project?: ProjectId; status?: StatusId; user_story?: UserStoryId }) => Promise<TaskDetail[]>;
+  list: (filters?: { project?: ProjectId; status?: StatusId; user_story?: UserStoryId }) => Promise<readonly TaskDetail[]>;
   create: (task: CreateTaskRequest) => Promise<TaskDetail>;
   get: (id: TaskId) => Promise<TaskDetail>;
   update: (id: TaskId, task: UpdateTaskRequest) => Promise<TaskDetail>;
@@ -299,7 +299,7 @@ export interface TasksService {
 }
 
 export interface UserStoriesService {
-  list: (filters?: { project?: ProjectId; status?: StatusId; milestone?: number }) => Promise<UserStoryDetail[]>;
+  list: (filters?: { project?: ProjectId; status?: StatusId; milestone?: number }) => Promise<readonly UserStoryDetail[]>;
   create: (userStory: CreateUserStoryRequest) => Promise<UserStoryDetail>;
   get: (id: UserStoryId) => Promise<UserStoryDetail>;
   update: (id: UserStoryId, userStory: UpdateUserStoryRequest) => Promise<UserStoryDetail>;
@@ -307,7 +307,7 @@ export interface UserStoriesService {
 }
 
 export interface TaskStatusesService {
-  list: (filters?: { project?: ProjectId }) => Promise<TaskStatus[]>;
+  list: (filters?: { project?: ProjectId }) => Promise<readonly TaskStatus[]>;
   create: (status: Omit<TaskStatus, 'id'>) => Promise<TaskStatus>;
   get: (id: StatusId) => Promise<TaskStatus>;
   update: (id: StatusId, status: Partial<Omit<TaskStatus, 'id'>>) => Promise<TaskStatus>;
@@ -315,7 +315,7 @@ export interface TaskStatusesService {
 }
 
 export interface TaskCustomAttributesService {
-  list: (filters?: { project?: ProjectId }) => Promise<TaskCustomAttribute[]>;
+  list: (filters?: { project?: ProjectId }) => Promise<readonly TaskCustomAttribute[]>;
   create: (attribute: CreateTaskCustomAttributeRequest) => Promise<TaskCustomAttribute>;
   get: (id: CustomAttributeId) => Promise<TaskCustomAttribute>;
   update: (id: CustomAttributeId, attribute: UpdateTaskCustomAttributeRequest) => Promise<TaskCustomAttribute>;

@@ -8,7 +8,8 @@
     "build": "tsc -b",
     "dev": "tsx src/index.ts",
     "test": "tsx src/index.ts",
-    "test:minimal": "tsx src/minimal-test.ts"
+    "test:minimal": "tsx src/minimal-test.ts",
+    "test:long-running": "tsx src/long-running-test.ts"
   },
   "dependencies": {
     "@taiga-task-master/common": "workspace:*",

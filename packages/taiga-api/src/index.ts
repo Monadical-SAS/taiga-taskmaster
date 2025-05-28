@@ -6,9 +6,9 @@ import {
   type HttpClientConfig,
   type HttpResponse,
   type RequestOptions,
-  type HeaderKey,
-  type HeaderValue,
-  type HttpStatus,
+  HeaderKey,
+  HeaderValue,
+  HttpStatus,
   type TaigaApi,
   type TaigaApiFactory,
   type AuthService,
@@ -17,17 +17,17 @@ import {
   type TaskStatusesService,
   type TaskCustomAttributesService,
   type AuthCredentials,
-  type AuthResponse,
+  AuthResponse,
   type RefreshRequest,
-  type RefreshResponse,
-  type TaskDetail,
+  RefreshResponse,
+  TaskDetail,
   type CreateTaskRequest,
   type UpdateTaskRequest,
-  type UserStoryDetail,
+  UserStoryDetail,
   type CreateUserStoryRequest,
   type UpdateUserStoryRequest,
-  type TaskStatus,
-  type TaskCustomAttribute,
+  TaskStatus,
+  TaskCustomAttribute,
   type CreateTaskCustomAttributeRequest,
   type UpdateTaskCustomAttributeRequest,
   type ProjectId,
@@ -71,8 +71,8 @@ const buildResponseHeaders = (headers: Record<string, string | string[] | undefi
     typeof value === "string"
       ? (() => {
           try {
-            const validKey = Schema.decodeUnknownSync(HeaderKey)(key);
-            const validValue = Schema.decodeUnknownSync(HeaderValue)(value);
+            const validKey = Schema.decodeSync(HeaderKey)(key);
+            const validValue = Schema.decodeSync(HeaderValue)(value);
             return { ...acc, [validKey]: validValue };
           } catch {
             // Skip invalid headers
@@ -94,6 +94,12 @@ const makeRequest = async (
   const url = buildUrl(baseUrl, path, options?.params);
   const headers = buildHeaders(defaultHeaders, options?.headers, !!data);
   
+  // Log outgoing request
+  console.log(`🌐 [${new Date().toISOString()}] ${method} ${url}`);
+  if (headers.Authorization) {
+    console.log(`🔐 [${new Date().toISOString()}] Using auth token: ${headers.Authorization.substring(0, 20)}...`);
+  }
+  
   const requestOptions: Parameters<typeof request>[1] = {
     method: method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
     headers,
@@ -103,7 +109,10 @@ const makeRequest = async (
 
   const response = await request(url, requestOptions);
   const responseHeaders = buildResponseHeaders(response.headers);
-  const status = Schema.decodeUnknownSync(HttpStatus)(response.statusCode);
+  const status = Schema.decodeSync(HttpStatus)(response.statusCode);
+  
+  // Log response status
+  console.log(`📥 [${new Date().toISOString()}] Response: ${response.statusCode} ${path}`);
   
   const rawResponseData = response.headers["content-type"]?.includes("application/json")
     ? await response.body.json()
@@ -133,8 +142,8 @@ const createHttpClient = (config: HttpClientConfig): HttpClient => ({
   patch: (path: string, data?: unknown, options?: RequestOptions) =>
     makeRequest(config.baseUrl, config.defaultHeaders, "PATCH", path, data, options),
   
-  delete: (path: string, options?: RequestOptions) =>
-    makeRequest(config.baseUrl, config.defaultHeaders, "DELETE", path, undefined, options)
+  delete: (path: string, options?: RequestOptions): Promise<HttpResponse<void>> =>
+    makeRequest(config.baseUrl, config.defaultHeaders, "DELETE", path, undefined, options).then(res => ({ ...res, data: undefined }))
 });
 
 // ============================================================================
@@ -153,7 +162,9 @@ const createAuthenticatedHttpClient = (
       return await operation();
     } catch (error) {
       if (error instanceof Error && error.message.includes("HTTP 401")) {
+        console.log(`🔄 [${new Date().toISOString()}] Token expired (401), attempting refresh...`);
         await refreshAuth();
+        console.log(`✅ [${new Date().toISOString()}] Token refresh completed, retrying original request`);
         return await operation();
       }
       throw error;
@@ -166,7 +177,7 @@ const createAuthenticatedHttpClient = (
       return options || {};
     }
     
-    const authHeader = { "Authorization": Schema.decodeUnknownSync(HeaderValue)(`Bearer ${authToken}`) };
+    const authHeader = { "Authorization": Schema.decodeSync(HeaderValue)(`Bearer ${authToken}`) };
     return {
       ...options,
       headers: {
@@ -189,8 +200,8 @@ const createAuthenticatedHttpClient = (
     patch: (path: string, data?: unknown, options?: RequestOptions) =>
       withAuthAndRetry(() => baseClient.patch(path, data, addAuthHeader(options))),
     
-    delete: (path: string, options?: RequestOptions) =>
-      withAuthAndRetry(() => baseClient.delete(path, addAuthHeader(options)))
+    delete: (path: string, options?: RequestOptions): Promise<HttpResponse<void>> =>
+      withAuthAndRetry(() => baseClient.delete(path, addAuthHeader(options))) as Promise<HttpResponse<void>>
   };
 };
 
@@ -216,8 +227,10 @@ const createAuthService = (client: HttpClient): [AuthService, () => Promise<void
     },
 
     refresh: async (refreshToken: RefreshRequest): Promise<RefreshResponse> => {
+      console.log(`🔄 [${new Date().toISOString()}] Refreshing auth token...`);
       const response = await client.post("/api/v1/auth/refresh", refreshToken);
       const refreshResponse = Schema.decodeUnknownSync(RefreshResponse)(response.data);
+      console.log(`✅ [${new Date().toISOString()}] Token refresh successful, new token received`);
       return {
         ...refreshResponse,
         refresh: (() => { state.currentRefreshToken = refreshResponse.refresh; return refreshResponse.refresh; })(),
@@ -243,7 +256,7 @@ const createAuthService = (client: HttpClient): [AuthService, () => Promise<void
 // ============================================================================
 
 const createTasksService = (client: HttpClient): TasksService => ({
-  list: async (filters?: { project?: ProjectId; status?: StatusId; user_story?: UserStoryId }): Promise<TaskDetail[]> => {
+  list: async (filters?: { project?: ProjectId; status?: StatusId; user_story?: UserStoryId }): Promise<readonly TaskDetail[]> => {
     const response = await client.get("/api/v1/tasks", { params: filters });
     return Schema.decodeUnknownSync(Schema.Array(TaskDetail))(response.data);
   },
@@ -273,7 +286,7 @@ const createTasksService = (client: HttpClient): TasksService => ({
 // ============================================================================
 
 const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
-  list: async (filters?: { project?: ProjectId; status?: StatusId; milestone?: number }): Promise<UserStoryDetail[]> => {
+  list: async (filters?: { project?: ProjectId; status?: StatusId; milestone?: number }): Promise<readonly UserStoryDetail[]> => {
     const response = await client.get("/api/v1/userstories", { params: filters });
     return Schema.decodeUnknownSync(Schema.Array(UserStoryDetail))(response.data);
   },
@@ -303,7 +316,7 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
 // ============================================================================
 
 const createTaskStatusesService = (client: HttpClient): TaskStatusesService => ({
-  list: async (filters?: { project?: ProjectId }): Promise<TaskStatus[]> => {
+  list: async (filters?: { project?: ProjectId }): Promise<readonly TaskStatus[]> => {
     const response = await client.get("/api/v1/task-statuses", { params: filters });
     return Schema.decodeUnknownSync(Schema.Array(TaskStatus))(response.data);
   },
@@ -333,7 +346,7 @@ const createTaskStatusesService = (client: HttpClient): TaskStatusesService => (
 // ============================================================================
 
 const createTaskCustomAttributesService = (client: HttpClient): TaskCustomAttributesService => ({
-  list: async (filters?: { project?: ProjectId }): Promise<TaskCustomAttribute[]> => {
+  list: async (filters?: { project?: ProjectId }): Promise<readonly TaskCustomAttribute[]> => {
     const response = await client.get("/api/v1/task-custom-attributes", { params: filters });
     return Schema.decodeUnknownSync(Schema.Array(TaskCustomAttribute))(response.data);
   },
