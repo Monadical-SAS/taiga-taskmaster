@@ -1,6 +1,6 @@
 import type { GenerateTasksF } from '@taiga-task-master/taskmaster-interface';
 import type { SyncTasksF } from '@taiga-task-master/tasktracker-interface';
-import type { PrdText } from '@taiga-task-master/common';
+import { PrdText } from '@taiga-task-master/common';
 import { Option } from 'effect';
 
 export const greet = (name: string): string => `Hello, ${name}!`;

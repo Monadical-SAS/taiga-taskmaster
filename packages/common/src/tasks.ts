@@ -1,6 +1,6 @@
 import { ParseResult, Redacted, Schema } from "effect"
-import { bang, PositiveInteger } from './index.js';
 import { Unexpected } from "effect/ParseResult";
+import { bang, PositiveInteger } from './common.js';
 
 export const TaskId = PositiveInteger.pipe(
   Schema.brand("TaskId")
