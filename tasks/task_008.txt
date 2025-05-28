@@ -37,7 +37,7 @@ The implementation should follow the interface contract and leverage the existin
 ### Dependencies: None
 ### Description: Define and implement the core structure of the SyncTasksF interface that will handle task synchronization with Taiga.
 ### Details:
-Create the base interface with methods for synchronization operations. Implement the concrete class with dependency injection for Taiga API client, configuration settings, and logging. Define the main synchronization method signature that will orchestrate the entire process.
+Implement the SyncTasksF interface with the required synchronization operations. Include necessary dependencies for Taiga API communication, configuration, and logging. Define the main synchronization method that will orchestrate the entire process.
 
 ## 2. Develop Task Finding and Matching Logic [pending]
 ### Dependencies: 8.1

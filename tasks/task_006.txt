@@ -12,7 +12,7 @@
 5. Implement validation of generated tasks using the existing schemas
 6. Create unit tests with mocked dependencies
 7. Add logging for debugging and monitoring
-8. Implement resource cleanup using AsyncDisposable pattern
+8. Implement resource cleanup for proper resource management
 
 The implementation should follow the interface contract and leverage the existing type system.
 
@@ -29,37 +29,37 @@ The implementation should follow the interface contract and leverage the existin
 # Subtasks:
 ## 1. Implement Task Generation Service Interface [pending]
 ### Dependencies: None
-### Description: Define and implement the core interface for the Task Generation Service with all required methods and properties.
+### Description: Implement the GenerateTasksF interface from the taskmaster-interface package.
 ### Details:
-Create an interface ITaskGenerationService with methods for generating tasks. Implement a concrete TaskGenerationService class that realizes this interface. Include method signatures for task generation, configuration options, and any required event handlers. Ensure the implementation follows SOLID principles and is ready for dependency injection.
+Implement the GenerateTasksF interface with all required methods and properties. Ensure the implementation correctly handles task generation from PRD content. Focus on meeting the interface contract requirements while allowing for flexible implementation approaches.
 
 ## 2. Develop CLI Tool Wrapper with Execution Handling [pending]
 ### Dependencies: 6.1
 ### Description: Create a wrapper around the CLI tool that handles process execution, command-line arguments, and output parsing.
 ### Details:
-Implement a CLI tool wrapper class that manages process creation, execution, and termination. Handle command-line argument formatting, environment variables, and working directory configuration. Implement robust error handling for process failures, timeouts, and unexpected outputs. Parse and transform the CLI output into the required task data structures.
+Implement functionality to execute the claude-task-master CLI tool. Handle command-line argument formatting, environment variables, and working directory configuration. Implement robust error handling for process failures, timeouts, and unexpected outputs. Parse and transform the CLI output into the required task data structures.
 
 ## 3. Implement File System Operations for Temporary Files [pending]
 ### Dependencies: 6.1, 6.2
 ### Description: Create utilities to manage temporary files needed during the task generation process.
 ### Details:
-Develop methods to create, write to, read from, and delete temporary files. Implement path generation for temporary files with unique identifiers. Ensure thread safety for file operations. Handle file system exceptions appropriately. Create helper methods for common file operations used in the task generation workflow.
+Develop functionality to create, write to, read from, and delete temporary files. Implement path generation for temporary files with unique identifiers. Handle file system exceptions appropriately. Create helper functions for common file operations used in the task generation workflow.
 
 ## 4. Implement Validation of Generated Tasks [pending]
 ### Dependencies: 6.1, 6.3
 ### Description: Create validation logic to ensure generated tasks meet the required format and content specifications.
 ### Details:
-Implement validators for task structure, content, and relationships. Create validation rules for task properties such as title, description, and dependencies. Implement error collection and reporting mechanisms. Add support for custom validation rules that can be injected by consumers of the service. Ensure validation failures provide clear, actionable error messages.
+Implement validation for task structure, content, and relationships using the existing schemas. Create validation rules for task properties such as title, description, and dependencies. Implement error collection and reporting mechanisms. Ensure validation failures provide clear, actionable error messages.
 
-## 5. Implement Resource Cleanup with AsyncDisposable Pattern [pending]
+## 5. Implement Resource Cleanup [pending]
 ### Dependencies: 6.2, 6.3
-### Description: Implement the AsyncDisposable pattern to ensure proper cleanup of resources used by the service.
+### Description: Implement proper resource cleanup to ensure all resources are properly managed and released.
 ### Details:
-Implement IAsyncDisposable interface in the TaskGenerationService. Create cleanup logic for temporary files, process handles, and other resources. Implement both synchronous Dispose() and asynchronous DisposeAsync() methods. Add safeguards to prevent resource leaks in error scenarios. Document the disposal requirements for consumers of the service.
+Create cleanup logic for temporary files, process handles, and other resources. Add safeguards to prevent resource leaks in error scenarios. Ensure all resources are properly released when they are no longer needed. Document the resource management approach for maintainers.
 
 ## 6. Create Unit Tests with Mocked Dependencies [pending]
 ### Dependencies: 6.1, 6.2, 6.3, 6.4, 6.5
 ### Description: Develop comprehensive unit tests for the Task Generation Service using mocked dependencies.
 ### Details:
-Create test fixtures for the TaskGenerationService with mocked dependencies. Implement tests for successful task generation scenarios. Add tests for error handling, validation failures, and edge cases. Create mocks for file system, CLI tool execution, and other external dependencies. Implement tests for the AsyncDisposable pattern to verify proper resource cleanup.
+Create tests for the task generation implementation with mocked dependencies. Implement tests for successful task generation scenarios. Add tests for error handling, validation failures, and edge cases. Create mocks for file system, CLI tool execution, and other external dependencies. Implement tests to verify proper resource cleanup.
 
