@@ -92,7 +92,7 @@
       "id": 4,
       "title": "Implement Tag Management System",
       "description": "Create utilities for parsing, validating, and extracting information from Taiga task tags according to the PRD specifications.",
-      "status": "pending",
+      "status": "done",
       "dependencies": [2],
       "priority": "medium",
       "details": "1. Implement tag utilities in the tasktracker-interface package at `/Users/firfi/work/clients/monadical/taiga-task-master/packages/tasktracker-interface/src/tags.ts`\n2. Create functions for:\n   - Extracting master task IDs from tags\n   - Validating tag formats\n   - Finding master IDs in arrays of tags\n   - Parsing existing tag strings to extract relevant information\n3. Add proper error handling for invalid inputs\n4. Create unit tests for all tag utilities\n5. Ensure compatibility with the Taiga API requirements\n6. Integrate with the existing type system using the already defined TaskId and ProjectId types from the common package\n7. Implement codecs for converting between tag formats and internal types (TaskId and ProjectId)\n\nNote: Project ID in Taiga has nothing to do with ProjectId in taskmaster - they are separate concepts. Tags are properly attached when sent as plain strings in the tags array of a task, so no tag creation functionality is needed.",
