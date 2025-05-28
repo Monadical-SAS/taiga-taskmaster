@@ -345,10 +345,10 @@ export interface HttpResponse<T> {
 }
 
 export interface HttpClient {
-  get: <T>(path: string, options?: RequestOptions & { params?: Record<string, unknown> }) => Promise<HttpResponse<T>>;
-  post: <T>(path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<T>>;
-  put: <T>(path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<T>>;
-  patch: <T>(path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<T>>;
+  get: (path: string, options?: RequestOptions & { params?: Record<string, unknown> }) => Promise<HttpResponse<unknown>>;
+  post: (path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<unknown>>;
+  put: (path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<unknown>>;
+  patch: (path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<unknown>>;
   delete: (path: string, options?: RequestOptions) => Promise<HttpResponse<void>>;
 }
 

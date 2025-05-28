@@ -1,5 +1,6 @@
 // @vibe-generated: conforms to taiga-api-interface
 import { request } from "undici";
+import { Schema } from "effect";
 import {
   type HttpClient,
   type HttpClientConfig,
@@ -67,20 +68,29 @@ const buildHeaders = (
 
 const buildResponseHeaders = (headers: Record<string, string | string[] | undefined>): Record<HeaderKey, HeaderValue> => 
   Object.entries(headers).reduce((acc, [key, value]) => 
-    typeof value === "string" 
-      ? { ...acc, [key as HeaderKey]: value as HeaderValue }
-      : acc, 
+    typeof value === "string"
+      ? (() => {
+          try {
+            const validKey = Schema.decodeUnknownSync(HeaderKey)(key);
+            const validValue = Schema.decodeUnknownSync(HeaderValue)(value);
+            return { ...acc, [validKey]: validValue };
+          } catch {
+            // Skip invalid headers
+            return acc;
+          }
+        })()
+      : acc,
     {} as Record<HeaderKey, HeaderValue>
   );
 
-const makeRequest = async <T>(
+const makeRequest = async (
   baseUrl: string,
   defaultHeaders: Record<HeaderKey, HeaderValue> | undefined,
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   data?: unknown,
   options?: RequestOptions & { params?: Record<string, unknown> }
-): Promise<HttpResponse<T>> => {
+): Promise<HttpResponse<unknown>> => {
   const url = buildUrl(baseUrl, path, options?.params);
   const headers = buildHeaders(defaultHeaders, options?.headers, !!data);
   
@@ -93,11 +103,13 @@ const makeRequest = async <T>(
 
   const response = await request(url, requestOptions);
   const responseHeaders = buildResponseHeaders(response.headers);
-  const status = response.statusCode as HttpStatus;
+  const status = Schema.decodeUnknownSync(HttpStatus)(response.statusCode);
   
-  const responseData: T = response.headers["content-type"]?.includes("application/json")
-    ? await response.body.json() as T
-    : await response.body.text() as T;
+  const rawResponseData = response.headers["content-type"]?.includes("application/json")
+    ? await response.body.json()
+    : await response.body.text();
+  
+  const responseData = rawResponseData;
 
   return response.statusCode >= 400
     ? Promise.reject(new Error(`HTTP ${response.statusCode}`))
@@ -109,20 +121,20 @@ const makeRequest = async <T>(
 };
 
 const createHttpClient = (config: HttpClientConfig): HttpClient => ({
-  get: <T>(path: string, options?: RequestOptions & { params?: Record<string, unknown> }) =>
-    makeRequest<T>(config.baseUrl, config.defaultHeaders, "GET", path, undefined, options),
+  get: (path: string, options?: RequestOptions & { params?: Record<string, unknown> }) =>
+    makeRequest(config.baseUrl, config.defaultHeaders, "GET", path, undefined, options),
   
-  post: <T>(path: string, data?: unknown, options?: RequestOptions) =>
-    makeRequest<T>(config.baseUrl, config.defaultHeaders, "POST", path, data, options),
+  post: (path: string, data?: unknown, options?: RequestOptions) =>
+    makeRequest(config.baseUrl, config.defaultHeaders, "POST", path, data, options),
   
-  put: <T>(path: string, data?: unknown, options?: RequestOptions) =>
-    makeRequest<T>(config.baseUrl, config.defaultHeaders, "PUT", path, data, options),
+  put: (path: string, data?: unknown, options?: RequestOptions) =>
+    makeRequest(config.baseUrl, config.defaultHeaders, "PUT", path, data, options),
   
-  patch: <T>(path: string, data?: unknown, options?: RequestOptions) =>
-    makeRequest<T>(config.baseUrl, config.defaultHeaders, "PATCH", path, data, options),
+  patch: (path: string, data?: unknown, options?: RequestOptions) =>
+    makeRequest(config.baseUrl, config.defaultHeaders, "PATCH", path, data, options),
   
   delete: (path: string, options?: RequestOptions) =>
-    makeRequest<void>(config.baseUrl, config.defaultHeaders, "DELETE", path, undefined, options)
+    makeRequest(config.baseUrl, config.defaultHeaders, "DELETE", path, undefined, options)
 });
 
 // ============================================================================
@@ -134,9 +146,9 @@ const createAuthenticatedHttpClient = (
   getAuthToken: () => AuthToken | null,
   refreshAuth: () => Promise<void>
 ): HttpClient => {
-  const withAuthAndRetry = async <T>(
-    operation: () => Promise<HttpResponse<T>>
-  ): Promise<HttpResponse<T>> => {
+  const withAuthAndRetry = async (
+    operation: () => Promise<HttpResponse<unknown>>
+  ): Promise<HttpResponse<unknown>> => {
     try {
       return await operation();
     } catch (error) {
@@ -154,28 +166,28 @@ const createAuthenticatedHttpClient = (
       return options || {};
     }
     
-    const authHeader = { "Authorization": `Bearer ${authToken}` as HeaderValue };
+    const authHeader = { "Authorization": Schema.decodeUnknownSync(HeaderValue)(`Bearer ${authToken}`) };
     return {
       ...options,
       headers: {
         ...options?.headers,
-        ...authHeader as Record<HeaderKey, HeaderValue>
+        ...authHeader
       }
     };
   };
 
   return {
-    get: <T>(path: string, options?: RequestOptions & { params?: Record<string, unknown> }) =>
-      withAuthAndRetry(() => baseClient.get<T>(path, addAuthHeader(options))),
+    get: (path: string, options?: RequestOptions & { params?: Record<string, unknown> }) =>
+      withAuthAndRetry(() => baseClient.get(path, addAuthHeader(options))),
     
-    post: <T>(path: string, data?: unknown, options?: RequestOptions) =>
-      withAuthAndRetry(() => baseClient.post<T>(path, data, addAuthHeader(options))),
+    post: (path: string, data?: unknown, options?: RequestOptions) =>
+      withAuthAndRetry(() => baseClient.post(path, data, addAuthHeader(options))),
     
-    put: <T>(path: string, data?: unknown, options?: RequestOptions) =>
-      withAuthAndRetry(() => baseClient.put<T>(path, data, addAuthHeader(options))),
+    put: (path: string, data?: unknown, options?: RequestOptions) =>
+      withAuthAndRetry(() => baseClient.put(path, data, addAuthHeader(options))),
     
-    patch: <T>(path: string, data?: unknown, options?: RequestOptions) =>
-      withAuthAndRetry(() => baseClient.patch<T>(path, data, addAuthHeader(options))),
+    patch: (path: string, data?: unknown, options?: RequestOptions) =>
+      withAuthAndRetry(() => baseClient.patch(path, data, addAuthHeader(options))),
     
     delete: (path: string, options?: RequestOptions) =>
       withAuthAndRetry(() => baseClient.delete(path, addAuthHeader(options)))
@@ -194,20 +206,22 @@ const createAuthService = (client: HttpClient): [AuthService, () => Promise<void
   
   const api = {
     login: async (credentials: AuthCredentials): Promise<AuthResponse> => {
-      const response = await client.post<AuthResponse>("/api/v1/auth", credentials);
+      const response = await client.post("/api/v1/auth", credentials);
+      const authResponse = Schema.decodeUnknownSync(AuthResponse)(response.data);
       return {
-        ...response.data,
-        refresh: (() => { state.currentRefreshToken = response.data.refresh; return response.data.refresh; })(),
-        auth_token: (() => { state.currentAuthToken = response.data.auth_token; return response.data.auth_token; })()
+        ...authResponse,
+        refresh: (() => { state.currentRefreshToken = authResponse.refresh; return authResponse.refresh; })(),
+        auth_token: (() => { state.currentAuthToken = authResponse.auth_token; return authResponse.auth_token; })()
       };
     },
 
     refresh: async (refreshToken: RefreshRequest): Promise<RefreshResponse> => {
-      const response = await client.post<RefreshResponse>("/api/v1/auth/refresh", refreshToken);
+      const response = await client.post("/api/v1/auth/refresh", refreshToken);
+      const refreshResponse = Schema.decodeUnknownSync(RefreshResponse)(response.data);
       return {
-        ...response.data,
-        refresh: (() => { state.currentRefreshToken = response.data.refresh; return response.data.refresh; })(),
-        auth_token: (() => { state.currentAuthToken = response.data.auth_token; return response.data.auth_token; })()
+        ...refreshResponse,
+        refresh: (() => { state.currentRefreshToken = refreshResponse.refresh; return refreshResponse.refresh; })(),
+        auth_token: (() => { state.currentAuthToken = refreshResponse.auth_token; return refreshResponse.auth_token; })()
       };
     }
   };
@@ -230,23 +244,23 @@ const createAuthService = (client: HttpClient): [AuthService, () => Promise<void
 
 const createTasksService = (client: HttpClient): TasksService => ({
   list: async (filters?: { project?: ProjectId; status?: StatusId; user_story?: UserStoryId }): Promise<TaskDetail[]> => {
-    const response = await client.get<TaskDetail[]>("/api/v1/tasks", { params: filters });
-    return response.data;
+    const response = await client.get("/api/v1/tasks", { params: filters });
+    return Schema.decodeUnknownSync(Schema.Array(TaskDetail))(response.data);
   },
 
   create: async (task: CreateTaskRequest): Promise<TaskDetail> => {
-    const response = await client.post<TaskDetail>("/api/v1/tasks", task);
-    return response.data;
+    const response = await client.post("/api/v1/tasks", task);
+    return Schema.decodeUnknownSync(TaskDetail)(response.data);
   },
 
   get: async (id: TaskId): Promise<TaskDetail> => {
-    const response = await client.get<TaskDetail>(`/api/v1/tasks/${id}`);
-    return response.data;
+    const response = await client.get(`/api/v1/tasks/${id}`);
+    return Schema.decodeUnknownSync(TaskDetail)(response.data);
   },
 
   update: async (id: TaskId, task: UpdateTaskRequest): Promise<TaskDetail> => {
-    const response = await client.patch<TaskDetail>(`/api/v1/tasks/${id}`, task);
-    return response.data;
+    const response = await client.patch(`/api/v1/tasks/${id}`, task);
+    return Schema.decodeUnknownSync(TaskDetail)(response.data);
   },
 
   delete: async (id: TaskId): Promise<void> => {
@@ -260,23 +274,23 @@ const createTasksService = (client: HttpClient): TasksService => ({
 
 const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
   list: async (filters?: { project?: ProjectId; status?: StatusId; milestone?: number }): Promise<UserStoryDetail[]> => {
-    const response = await client.get<UserStoryDetail[]>("/api/v1/userstories", { params: filters });
-    return response.data;
+    const response = await client.get("/api/v1/userstories", { params: filters });
+    return Schema.decodeUnknownSync(Schema.Array(UserStoryDetail))(response.data);
   },
 
   create: async (userStory: CreateUserStoryRequest): Promise<UserStoryDetail> => {
-    const response = await client.post<UserStoryDetail>("/api/v1/userstories", userStory);
-    return response.data;
+    const response = await client.post("/api/v1/userstories", userStory);
+    return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
   },
 
   get: async (id: UserStoryId): Promise<UserStoryDetail> => {
-    const response = await client.get<UserStoryDetail>(`/api/v1/userstories/${id}`);
-    return response.data;
+    const response = await client.get(`/api/v1/userstories/${id}`);
+    return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
   },
 
   update: async (id: UserStoryId, userStory: UpdateUserStoryRequest): Promise<UserStoryDetail> => {
-    const response = await client.patch<UserStoryDetail>(`/api/v1/userstories/${id}`, userStory);
-    return response.data;
+    const response = await client.patch(`/api/v1/userstories/${id}`, userStory);
+    return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
   },
 
   delete: async (id: UserStoryId): Promise<void> => {
@@ -290,23 +304,23 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
 
 const createTaskStatusesService = (client: HttpClient): TaskStatusesService => ({
   list: async (filters?: { project?: ProjectId }): Promise<TaskStatus[]> => {
-    const response = await client.get<TaskStatus[]>("/api/v1/task-statuses", { params: filters });
-    return response.data;
+    const response = await client.get("/api/v1/task-statuses", { params: filters });
+    return Schema.decodeUnknownSync(Schema.Array(TaskStatus))(response.data);
   },
 
   create: async (status: Omit<TaskStatus, 'id'>): Promise<TaskStatus> => {
-    const response = await client.post<TaskStatus>("/api/v1/task-statuses", status);
-    return response.data;
+    const response = await client.post("/api/v1/task-statuses", status);
+    return Schema.decodeUnknownSync(TaskStatus)(response.data);
   },
 
   get: async (id: StatusId): Promise<TaskStatus> => {
-    const response = await client.get<TaskStatus>(`/api/v1/task-statuses/${id}`);
-    return response.data;
+    const response = await client.get(`/api/v1/task-statuses/${id}`);
+    return Schema.decodeUnknownSync(TaskStatus)(response.data);
   },
 
   update: async (id: StatusId, status: Partial<Omit<TaskStatus, 'id'>>): Promise<TaskStatus> => {
-    const response = await client.patch<TaskStatus>(`/api/v1/task-statuses/${id}`, status);
-    return response.data;
+    const response = await client.patch(`/api/v1/task-statuses/${id}`, status);
+    return Schema.decodeUnknownSync(TaskStatus)(response.data);
   },
 
   delete: async (id: StatusId): Promise<void> => {
@@ -320,23 +334,23 @@ const createTaskStatusesService = (client: HttpClient): TaskStatusesService => (
 
 const createTaskCustomAttributesService = (client: HttpClient): TaskCustomAttributesService => ({
   list: async (filters?: { project?: ProjectId }): Promise<TaskCustomAttribute[]> => {
-    const response = await client.get<TaskCustomAttribute[]>("/api/v1/task-custom-attributes", { params: filters });
-    return response.data;
+    const response = await client.get("/api/v1/task-custom-attributes", { params: filters });
+    return Schema.decodeUnknownSync(Schema.Array(TaskCustomAttribute))(response.data);
   },
 
   create: async (attribute: CreateTaskCustomAttributeRequest): Promise<TaskCustomAttribute> => {
-    const response = await client.post<TaskCustomAttribute>("/api/v1/task-custom-attributes", attribute);
-    return response.data;
+    const response = await client.post("/api/v1/task-custom-attributes", attribute);
+    return Schema.decodeUnknownSync(TaskCustomAttribute)(response.data);
   },
 
   get: async (id: CustomAttributeId): Promise<TaskCustomAttribute> => {
-    const response = await client.get<TaskCustomAttribute>(`/api/v1/task-custom-attributes/${id}`);
-    return response.data;
+    const response = await client.get(`/api/v1/task-custom-attributes/${id}`);
+    return Schema.decodeUnknownSync(TaskCustomAttribute)(response.data);
   },
 
   update: async (id: CustomAttributeId, attribute: UpdateTaskCustomAttributeRequest): Promise<TaskCustomAttribute> => {
-    const response = await client.patch<TaskCustomAttribute>(`/api/v1/task-custom-attributes/${id}`, attribute);
-    return response.data;
+    const response = await client.patch(`/api/v1/task-custom-attributes/${id}`, attribute);
+    return Schema.decodeUnknownSync(TaskCustomAttribute)(response.data);
   },
 
   delete: async (id: CustomAttributeId): Promise<void> => {
