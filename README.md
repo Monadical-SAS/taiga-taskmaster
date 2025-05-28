@@ -34,21 +34,12 @@ pnpm type-check # Verify TypeScript
 
 ## Testing
 
-### Manual Taskmaster Integration Test
+### Manual Testing
 
-Test the complete taskmaster CLI workflow in isolation:
+Each package includes its own testing documentation:
 
-```bash
-cd packages/taskmaster-test
-pnpm test:isolated
-```
+- **[Taiga API Test](packages/taiga-api-test/README.md)** - Test Taiga API functionality, authentication, and token refresh
+- **[Taskmaster Test](packages/taskmaster-test/README.md)** - Test the complete taskmaster CLI workflow in isolation
+- **[TaskTracker Test](packages/tasktracker-test/README.md)** - Test task synchronization with Taiga using dependency injection
 
-This test:
-
-- Creates an isolated temp directory
-- Generates a sample PRD file
-- Runs `npx task-master parse-prd` with environment variables
-- Validates the generated tasks.json structure
-- Cleans up temporary files
-
-Requires `ANTHROPIC_API_KEY` and `PERPLEXITY_API_KEY` in the root `.env` file.
+See individual package READMEs for detailed usage instructions and environment requirements.

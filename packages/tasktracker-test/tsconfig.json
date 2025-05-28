@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../common" },
+    { "path": "../tasktracker" },
+    { "path": "../tasktracker-interface" },
+    { "path": "../taiga-api" },
+    { "path": "../taiga-api-interface" }
+  ]
+}

@@ -11,6 +11,7 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
+    "@taiga-task-master/common": "workspace:*",
     "@taiga-task-master/tasktracker-interface": "workspace:*"
   },
   "devDependencies": {

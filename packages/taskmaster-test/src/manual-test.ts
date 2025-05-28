@@ -19,8 +19,9 @@ const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Test configuration
-const TEMP_DIR = join(__dirname, "..", "temp");
+// Test configuration - safe isolated directory
+const TEST_PREFIX = "packages/taskmaster-test/test";
+const TEMP_DIR = join(__dirname, "..", "test");
 const TEST_PRD = `# Sample PRD for Testing
 
 ## Project Overview
@@ -47,73 +48,96 @@ Build a simple task management application with the following features:
 ` as PrdText;
 
 /**
- * Setup test environment with isolated temp directory
+ * Setup test environment with isolated safe directory
  */
 async function setupTestEnvironment(): Promise<void> {
   try {
-    // Clean up any existing temp directory
+    // Clean up any existing test directory
     await fs.rm(TEMP_DIR, { recursive: true, force: true });
 
-    // Create fresh temp directory
-    await fs.mkdir(TEMP_DIR, { recursive: true });
-
-    // Create nested directories for taskmaster structure
+    // Create fresh test directory structure
     await fs.mkdir(join(TEMP_DIR, "scripts"), { recursive: true });
     await fs.mkdir(join(TEMP_DIR, "tasks"), { recursive: true });
 
-    // Write PRD file to temp/scripts/prd.txt
-    const prdPath = join(TEMP_DIR, "scripts", "prd.txt");
-    await fs.writeFile(prdPath, TEST_PRD, "utf8");
+    // Also create the safe prefixed directory structure
+    await fs.mkdir(join(TEST_PREFIX, "scripts"), { recursive: true });
+    await fs.mkdir(join(TEST_PREFIX, "tasks"), { recursive: true });
+
+    // Write PRD file to both locations for compatibility
+    const localPrdPath = join(TEMP_DIR, "scripts", "prd.txt");
+    const safePrdPath = join(TEST_PREFIX, "scripts", "prd.txt");
+    
+    await fs.writeFile(localPrdPath, TEST_PRD, "utf8");
+    await fs.writeFile(safePrdPath, TEST_PRD, "utf8");
 
     console.log("✅ Test environment setup complete");
-    console.log(`📝 PRD file created at: ${prdPath}`);
+    console.log(`📝 PRD file created at: ${localPrdPath}`);
+    console.log(`🔒 Safe PRD file created at: ${safePrdPath}`);
   } catch (error) {
     throw new Error(`Failed to setup test environment: ${error}`);
   }
 }
 
 /**
- * Cleanup test environment
+ * Cleanup test environment - clean both local and safe directories
  */
 async function cleanupTestEnvironment(): Promise<void> {
   try {
-    // Remove task_*.txt files but keep tasks.json for inspection
-    const taskFiles = await fs.readdir(join(TEMP_DIR, "tasks"));
-    const taskTxtFiles = taskFiles.filter(
-      (file) => file.startsWith("task_") && file.endsWith(".txt")
-    );
-
-    for (const file of taskTxtFiles) {
-      await fs.unlink(join(TEMP_DIR, "tasks", file));
-    }
-
-    // Remove PRD file (created by setupTestEnvironment)
+    // Clean up local test directory
     try {
+      const taskFiles = await fs.readdir(join(TEMP_DIR, "tasks"));
+      const taskTxtFiles = taskFiles.filter(
+        (file) => file.startsWith("task_") && file.endsWith(".txt")
+      );
+
+      for (const file of taskTxtFiles) {
+        await fs.unlink(join(TEMP_DIR, "tasks", file));
+      }
+
       await fs.unlink(join(TEMP_DIR, "scripts", "prd.txt"));
-      console.log("🧹 Removed PRD file");
+      console.log("🧹 Cleaned up local test files");
     } catch {
-      // File might not exist
+      // Files might not exist
     }
 
-    console.log("🧹 Cleaned up temporary task files");
+    // Clean up safe test directory  
+    try {
+      await fs.rm(TEST_PREFIX, { recursive: true, force: true });
+      console.log("🧹 Cleaned up safe test directory");
+    } catch {
+      // Directory might not exist
+    }
+
+    console.log("🧹 Cleanup completed");
   } catch (error) {
     console.warn(`Warning: Failed to cleanup some files: ${error}`);
   }
 }
 
 /**
- * Create custom dependencies that work in the temp directory
+ * Create custom dependencies that work in the safe test directory with proper prefixing
  */
 function createTestDependencies(): GenerateTasksDeps {
-  // Since PRD is already created in setupTestEnvironment, this is a no-op
+  // Save PRD with safe prefix to prevent overwriting project files
   const savePrd = async (
-    _path: NonEmptyString,
-    _prd: PrdText
+    path: NonEmptyString,
+    prd: PrdText
   ): Promise<AsyncDisposable> => {
-    // PRD already exists in temp directory, return empty disposable
+    // Always prefix paths to ensure they go to safe test directory
+    const safePath = join(TEST_PREFIX, path);
+    await fs.mkdir(dirname(safePath), { recursive: true });
+    await fs.writeFile(safePath, prd, "utf8");
+    
+    console.log(`📝 Saved PRD to safe path: ${safePath}`);
+    
     return {
       async [Symbol.asyncDispose]() {
-        // Nothing to dispose
+        try {
+          await fs.unlink(safePath);
+          console.log(`🧹 Cleaned up PRD file: ${safePath}`);
+        } catch {
+          // File already deleted or doesn't exist
+        }
       },
     };
   };
@@ -121,8 +145,10 @@ function createTestDependencies(): GenerateTasksDeps {
   const readTasksJson = async (
     tasksJsonPath: NonEmptyString
   ): Promise<TasksFileContent> => {
-    const fullPath = join(TEMP_DIR, tasksJsonPath);
-    const content = await fs.readFile(fullPath, "utf8");
+    // Use safe prefixed path
+    const safePath = join(TEST_PREFIX, tasksJsonPath);
+    const content = await fs.readFile(safePath, "utf8");
+    console.log(`📖 Read tasks from safe path: ${safePath}`);
     return JSON.parse(content);
   };
 
@@ -131,18 +157,23 @@ function createTestDependencies(): GenerateTasksDeps {
     tasksJsonPath: NonEmptyString
   ): Promise<TasksFileContent> => {
     try {
-      // Use the PRD file that was created in setupTestEnvironment
-      const fullPrdPath = join(TEMP_DIR, "scripts", "prd.txt");
-      const fullTasksPath = join(TEMP_DIR, tasksJsonPath);
+      // Use safe prefixed paths to prevent overwriting project files
+      const safePrdPath = join(TEST_PREFIX, prdPath);
+      const safeTasksPath = join(TEST_PREFIX, tasksJsonPath);
+      
+      // Ensure target directory exists
+      await fs.mkdir(dirname(safeTasksPath), { recursive: true });
 
-      // Execute the task-master CLI tool with environment variables and working directory
-      const command = `npx dotenv -e ../../.env -- npx task-master parse-prd --input "${fullPrdPath}" --output "${fullTasksPath}" --force`;
+      // Execute the task-master CLI tool with safe paths
+      const command = `npx dotenv -e .env -- npx task-master parse-prd --input "${safePrdPath}" --output "${safeTasksPath}" --force`;
 
       console.log(`🚀 Executing: ${command}`);
-      console.log(`📁 Working directory: ${TEMP_DIR}`);
+      console.log(`📁 Safe PRD path: ${safePrdPath}`);
+      console.log(`📁 Safe tasks path: ${safeTasksPath}`);
+      console.log(`📁 Working directory: ${process.cwd()}`);
 
       const { stdout, stderr } = await execAsync(command, {
-        cwd: TEMP_DIR,
+        cwd: process.cwd(), // Run from project root for proper .env access
         timeout: 300000, // 5 minutes timeout
         maxBuffer: 1024 * 1024 * 10, // 10MB buffer
         env: {
@@ -161,14 +192,14 @@ function createTestDependencies(): GenerateTasksDeps {
 
       // Verify the output file was created
       try {
-        await fs.access(fullTasksPath);
-        console.log("✅ tasks.json file created successfully");
+        await fs.access(safeTasksPath);
+        console.log(`✅ tasks.json file created successfully at: ${safeTasksPath}`);
       } catch {
-        throw new Error(`Output file not created: ${fullTasksPath}`);
+        throw new Error(`Output file not created: ${safeTasksPath}`);
       }
 
       // Read and return the generated tasks
-      const content = await fs.readFile(fullTasksPath, "utf8");
+      const content = await fs.readFile(safeTasksPath, "utf8");
       const tasks = JSON.parse(content);
 
       console.log(`📊 Generated ${tasks.tasks?.length || 0} tasks`);
@@ -230,7 +261,8 @@ async function runManualTest(): Promise<void> {
 
     // Show location of generated files
     console.log("📂 Generated files location:");
-    console.log(`  - tasks.json: ${join(TEMP_DIR, "tasks", "tasks.json")}`);
+    console.log(`  - Local: ${join(TEMP_DIR, "tasks", "tasks.json")}`);
+    console.log(`  - Safe: ${join(TEST_PREFIX, "tasks", "tasks.json")}`);
 
     // Cleanup
     await cleanupTestEnvironment();

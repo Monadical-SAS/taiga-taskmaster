@@ -95,11 +95,11 @@ export const TaskDetail = Schema.Struct({
   id: TaskId,
   ref: Schema.Number,
   subject: Schema.String,
-  description: Schema.String,
+  description: Schema.optionalWith(Schema.String, { default: () => "" }),
   status: StatusId,
   status_extra_info: Schema.optional(
     Schema.Struct({
-      id: StatusId,
+      id: Schema.optional(StatusId),
       name: Schema.String,
       color: Schema.String,
       is_closed: Schema.Boolean,
