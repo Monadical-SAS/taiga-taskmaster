@@ -1,0 +1,25 @@
+{
+  "name": "@taiga-task-master/core-test",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "End-to-end test package combining taskmaster and tasktracker functionality",
+  "scripts": {
+    "build": "tsc -b",
+    "test:manual": "npx dotenv -e ../../.env -- tsx src/manual-test.ts"
+  },
+  "dependencies": {
+    "@taiga-task-master/common": "workspace:*",
+    "@taiga-task-master/taskmaster": "workspace:*",
+    "@taiga-task-master/taskmaster-interface": "workspace:*",
+    "@taiga-task-master/tasktracker": "workspace:*",
+    "@taiga-task-master/tasktracker-interface": "workspace:*",
+    "@taiga-task-master/taiga-api": "workspace:*",
+    "@taiga-task-master/taiga-api-interface": "workspace:*",
+    "dotenv": "^16.4.7",
+    "effect": "^3.11.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
