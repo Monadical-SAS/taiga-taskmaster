@@ -126,7 +126,8 @@ export const TasksFileContent = Schema.Struct({
     (input) => {
       // Extract all task IDs
       const taskIds = new Set(input.tasks.map((task) => task.id));
-
+      if (taskIds.size !== input.tasks.length)
+        return new Unexpected("task ids ain't uniq");
       // Check each task's dependencies are present
       return input.tasks.every((task) =>
         task.dependencies.every((depId) => taskIds.has(depId))

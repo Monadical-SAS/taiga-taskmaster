@@ -10,7 +10,6 @@ export const castPositiveInteger = (n: number): PositiveInteger => {
   return Schema.decodeSync(PositiveInteger)(n);
 };
 export const bang = <T>(v: T | undefined): T => {
-  // eslint-disable-next-line functional/no-throw-statements
   if (typeof v === "undefined") throw new Error(`panic! ${v} is undefined`);
   return v as T;
 };
@@ -32,3 +31,7 @@ export const castNonEmptyString = (s: string): NonEmptyString => {
   return Schema.decodeSync(NonEmptyString)(s);
 };
 export const Url = NonEmptyString.pipe(Schema.brand("Url"));
+
+// Taiga Tag Management
+export const TaigaTag = NonEmptyString.pipe(Schema.brand("TaigaTag"));
+export type TaigaTag = typeof TaigaTag.Type;

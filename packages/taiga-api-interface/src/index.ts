@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import { NonEmptyString, Url } from "@taiga-task-master/common";
+import { NonEmptyString, Url, TaigaTag } from "@taiga-task-master/common";
 
 // ============================================================================
 // Authentication Types
@@ -115,7 +115,7 @@ export const TaskDetail = Schema.Struct({
   created_date: Schema.String,
   modified_date: Schema.String,
   finished_date: Schema.NullOr(Schema.String),
-  tags: Schema.Array(Schema.Tuple(Schema.String, Schema.NullOr(Schema.String))),
+  tags: Schema.Array(Schema.Tuple(TaigaTag, Schema.NullOr(Schema.String))),
   watchers: Schema.Array(UserId),
   is_watcher: Schema.Boolean,
   version: Schema.Number,
@@ -131,7 +131,7 @@ export const CreateTaskRequest = Schema.Struct({
   milestone: Schema.optional(Schema.NullOr(Schema.Number)),
   is_blocked: Schema.optional(Schema.Boolean),
   blocked_note: Schema.optional(Schema.String),
-  tags: Schema.optional(Schema.Array(Schema.String)),
+  tags: Schema.optional(Schema.Array(TaigaTag)),
   watchers: Schema.optional(Schema.Array(UserId)),
 });
 
@@ -144,7 +144,7 @@ export const UpdateTaskRequest = Schema.Struct({
   milestone: Schema.optional(Schema.NullOr(Schema.Number)),
   is_blocked: Schema.optional(Schema.Boolean),
   blocked_note: Schema.optional(Schema.String),
-  tags: Schema.optional(Schema.Array(Schema.String)),
+  tags: Schema.optional(Schema.Array(TaigaTag)),
   watchers: Schema.optional(Schema.Array(UserId)),
   version: Schema.Number,
 });
@@ -194,7 +194,7 @@ export const UserStoryDetail = Schema.Struct({
   finished_date: Schema.NullOr(Schema.String),
   client_requirement: Schema.Boolean,
   team_requirement: Schema.Boolean,
-  tags: Schema.Array(Schema.Tuple(Schema.String, Schema.NullOr(Schema.String))),
+  tags: Schema.Array(Schema.Tuple(TaigaTag, Schema.NullOr(Schema.String))),
   watchers: Schema.Array(UserId),
   is_watcher: Schema.Boolean,
   version: Schema.Number,
@@ -217,7 +217,7 @@ export const CreateUserStoryRequest = Schema.Struct({
   blocked_note: Schema.optional(Schema.String),
   client_requirement: Schema.optional(Schema.Boolean),
   team_requirement: Schema.optional(Schema.Boolean),
-  tags: Schema.optional(Schema.Array(Schema.String)),
+  tags: Schema.optional(Schema.Array(TaigaTag)),
   watchers: Schema.optional(Schema.Array(UserId)),
   points: Schema.optional(
     Schema.Record({
@@ -237,7 +237,7 @@ export const UpdateUserStoryRequest = Schema.Struct({
   blocked_note: Schema.optional(Schema.String),
   client_requirement: Schema.optional(Schema.Boolean),
   team_requirement: Schema.optional(Schema.Boolean),
-  tags: Schema.optional(Schema.Array(Schema.String)),
+  tags: Schema.optional(Schema.Array(TaigaTag)),
   watchers: Schema.optional(Schema.Array(UserId)),
   points: Schema.optional(
     Schema.Record({
