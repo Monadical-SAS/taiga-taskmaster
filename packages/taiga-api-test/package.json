@@ -9,7 +9,8 @@
     "dev": "tsx src/index.ts",
     "test": "tsx src/index.ts",
     "test:minimal": "tsx src/minimal-test.ts",
-    "test:long-running": "tsx src/long-running-test.ts"
+    "test:long-running": "tsx src/long-running-test.ts",
+    "test:auth-retry": "tsx src/auth-retry-test.ts"
   },
   "dependencies": {
     "@taiga-task-master/common": "workspace:*",

@@ -330,6 +330,7 @@ export interface HttpClientConfig {
   baseUrl: typeof Url.Type;
   defaultHeaders?: Record<HeaderKey, HeaderValue>;
   timeout?: number;
+  credentials?: AuthCredentials;
 }
 
 export interface RequestOptions {

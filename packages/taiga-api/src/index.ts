@@ -197,16 +197,21 @@ const createAuthenticatedHttpClient = (
 // Auth Service Implementation
 // ============================================================================
 
-const createAuthService = (client: HttpClient): [AuthService, () => Promise<void>, () => AuthToken | null] => {
+const createAuthService = (client: HttpClient, credentials?: AuthCredentials): [AuthService, () => Promise<void>, () => AuthToken | null] => {
   const state = {
     currentRefreshToken: null as RefreshToken | null,
-    currentAuthToken: null as AuthToken | null
+    currentAuthToken: null as AuthToken | null,
+    storedCredentials: credentials || null as AuthCredentials | null
   };
   
   const api = {
     login: async (credentials: AuthCredentials): Promise<AuthResponse> => {
       const response = await client.post("/api/v1/auth", credentials);
       const authResponse = Schema.decodeUnknownSync(AuthResponse)(response.data);
+      
+      // Store credentials for future login retry
+      state.storedCredentials = credentials;
+      
       return {
         ...authResponse,
         refresh: (() => { state.currentRefreshToken = authResponse.refresh; return authResponse.refresh; })(),
@@ -229,9 +234,23 @@ const createAuthService = (client: HttpClient): [AuthService, () => Promise<void
   
   const refreshWithStoredToken = async (): Promise<void> => {
     if (!state.currentRefreshToken) {
-      throw new Error("No refresh token available");
+      console.log(`🔄 [${new Date().toISOString()}] No refresh token available, attempting login with stored credentials...`);
+      if (!state.storedCredentials) {
+        throw new Error("No refresh token or stored credentials available");
+      }
+      await api.login(state.storedCredentials);
+      return;
     }
-    return api.refresh({ refresh: state.currentRefreshToken }).then(() => void 0);
+    
+    try {
+      await api.refresh({ refresh: state.currentRefreshToken });
+    } catch (error) {
+      console.log(`❌ [${new Date().toISOString()}] Token refresh failed, attempting login with stored credentials...`, error);
+      if (!state.storedCredentials) {
+        throw new Error("Token refresh failed and no stored credentials available");
+      }
+      await api.login(state.storedCredentials);
+    }
   };
   
   const getAuthToken = (): AuthToken | null => state.currentAuthToken;
@@ -365,7 +384,7 @@ const createTaskCustomAttributesService = (client: HttpClient): TaskCustomAttrib
 
 const createTaigaApi = (config: HttpClientConfig): TaigaApi => {
   const baseClient = createHttpClient(config);
-  const [authService, refreshAuth, getAuthToken] = createAuthService(baseClient);
+  const [authService, refreshAuth, getAuthToken] = createAuthService(baseClient, config.credentials);
   const authenticatedClient = createAuthenticatedHttpClient(baseClient, getAuthToken, refreshAuth);
   
   return {

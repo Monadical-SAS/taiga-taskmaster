@@ -50,7 +50,12 @@ const main = async (): Promise<void> => {
     const { taigaApiFactory } = await import('../../taiga-api/dist/index.js');
     
     const api = taigaApiFactory.create({
-      baseUrl: Schema.decodeSync(Url)('https://api.taiga.io')
+      baseUrl: Schema.decodeSync(Url)('https://api.taiga.io'),
+      credentials: {
+        username,
+        password,
+        type: 'normal'
+      }
     });
     
     const apiAuthResponse = await api.auth.login({
@@ -83,6 +88,7 @@ const main = async (): Promise<void> => {
     
     console.log('\n🎉 All tests completed!');
     console.log('✨ Auto-refresh functionality is working internally');
+    console.log('🔄 Credential storage and login retry on refresh failure is now enabled');
     
   } catch (error) {
     console.error('❌ Error during testing:', error instanceof Error ? error.message : error);
