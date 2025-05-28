@@ -27,6 +27,8 @@
     { "path": "./packages/taskmaster-interface" },
     { "path": "./packages/taskmaster" },
     { "path": "./packages/tasktracker-interface" },
-    { "path": "./packages/tasktracker" }
+    { "path": "./packages/tasktracker" },
+    { "path": "./packages/taiga-api-interface" },
+    { "path": "./packages/taiga-api" }
   ]
 }

@@ -1,5 +1,5 @@
 import { Schema } from "@effect/schema";
-import { type NonEmptyString, type PositiveInteger, Url } from "@taiga-task-master/common";
+import { Url } from "@taiga-task-master/common";
 
 // ============================================================================
 // Authentication Types
@@ -276,40 +276,40 @@ export type UpdateTaskCustomAttributeRequest = Schema.Schema.Type<typeof UpdateT
 // ============================================================================
 
 export interface AuthService {
-  login(credentials: AuthCredentials): Promise<AuthResponse>;
-  refresh(refreshToken: RefreshRequest): Promise<RefreshResponse>;
+  login: (credentials: AuthCredentials) => Promise<AuthResponse>;
+  refresh: (refreshToken: RefreshRequest) => Promise<RefreshResponse>;
 }
 
 export interface TasksService {
-  list(filters?: { project?: ProjectId; status?: StatusId; user_story?: UserStoryId }): Promise<TaskDetail[]>;
-  create(task: CreateTaskRequest): Promise<TaskDetail>;
-  get(id: TaskId): Promise<TaskDetail>;
-  update(id: TaskId, task: UpdateTaskRequest): Promise<TaskDetail>;
-  delete(id: TaskId): Promise<void>;
+  list: (filters?: { project?: ProjectId; status?: StatusId; user_story?: UserStoryId }) => Promise<TaskDetail[]>;
+  create: (task: CreateTaskRequest) => Promise<TaskDetail>;
+  get: (id: TaskId) => Promise<TaskDetail>;
+  update: (id: TaskId, task: UpdateTaskRequest) => Promise<TaskDetail>;
+  delete: (id: TaskId) => Promise<void>;
 }
 
 export interface UserStoriesService {
-  list(filters?: { project?: ProjectId; status?: StatusId; milestone?: number }): Promise<UserStoryDetail[]>;
-  create(userStory: CreateUserStoryRequest): Promise<UserStoryDetail>;
-  get(id: UserStoryId): Promise<UserStoryDetail>;
-  update(id: UserStoryId, userStory: UpdateUserStoryRequest): Promise<UserStoryDetail>;
-  delete(id: UserStoryId): Promise<void>;
+  list: (filters?: { project?: ProjectId; status?: StatusId; milestone?: number }) => Promise<UserStoryDetail[]>;
+  create: (userStory: CreateUserStoryRequest) => Promise<UserStoryDetail>;
+  get: (id: UserStoryId) => Promise<UserStoryDetail>;
+  update: (id: UserStoryId, userStory: UpdateUserStoryRequest) => Promise<UserStoryDetail>;
+  delete: (id: UserStoryId) => Promise<void>;
 }
 
 export interface TaskStatusesService {
-  list(filters?: { project?: ProjectId }): Promise<TaskStatus[]>;
-  create(status: Omit<TaskStatus, 'id'>): Promise<TaskStatus>;
-  get(id: StatusId): Promise<TaskStatus>;
-  update(id: StatusId, status: Partial<Omit<TaskStatus, 'id'>>): Promise<TaskStatus>;
-  delete(id: StatusId): Promise<void>;
+  list: (filters?: { project?: ProjectId }) => Promise<TaskStatus[]>;
+  create: (status: Omit<TaskStatus, 'id'>) => Promise<TaskStatus>;
+  get: (id: StatusId) => Promise<TaskStatus>;
+  update: (id: StatusId, status: Partial<Omit<TaskStatus, 'id'>>) => Promise<TaskStatus>;
+  delete: (id: StatusId) => Promise<void>;
 }
 
 export interface TaskCustomAttributesService {
-  list(filters?: { project?: ProjectId }): Promise<TaskCustomAttribute[]>;
-  create(attribute: CreateTaskCustomAttributeRequest): Promise<TaskCustomAttribute>;
-  get(id: CustomAttributeId): Promise<TaskCustomAttribute>;
-  update(id: CustomAttributeId, attribute: UpdateTaskCustomAttributeRequest): Promise<TaskCustomAttribute>;
-  delete(id: CustomAttributeId): Promise<void>;
+  list: (filters?: { project?: ProjectId }) => Promise<TaskCustomAttribute[]>;
+  create: (attribute: CreateTaskCustomAttributeRequest) => Promise<TaskCustomAttribute>;
+  get: (id: CustomAttributeId) => Promise<TaskCustomAttribute>;
+  update: (id: CustomAttributeId, attribute: UpdateTaskCustomAttributeRequest) => Promise<TaskCustomAttribute>;
+  delete: (id: CustomAttributeId) => Promise<void>;
 }
 
 // ============================================================================
@@ -335,11 +335,11 @@ export interface HttpResponse<T> {
 }
 
 export interface HttpClient {
-  get<T>(path: string, options?: RequestOptions & { params?: Record<string, unknown> }): Promise<HttpResponse<T>>;
-  post<T>(path: string, data?: unknown, options?: RequestOptions): Promise<HttpResponse<T>>;
-  put<T>(path: string, data?: unknown, options?: RequestOptions): Promise<HttpResponse<T>>;
-  patch<T>(path: string, data?: unknown, options?: RequestOptions): Promise<HttpResponse<T>>;
-  delete(path: string, options?: RequestOptions): Promise<HttpResponse<void>>;
+  get: <T>(path: string, options?: RequestOptions & { params?: Record<string, unknown> }) => Promise<HttpResponse<T>>;
+  post: <T>(path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<T>>;
+  put: <T>(path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<T>>;
+  patch: <T>(path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<T>>;
+  delete: (path: string, options?: RequestOptions) => Promise<HttpResponse<void>>;
 }
 
 // ============================================================================
@@ -355,5 +355,5 @@ export interface TaigaApi {
 }
 
 export interface TaigaApiFactory {
-  create(config: HttpClientConfig): TaigaApi;
+  create: (config: HttpClientConfig) => TaigaApi;
 }

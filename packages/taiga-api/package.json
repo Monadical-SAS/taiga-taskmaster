@@ -1,0 +1,24 @@
+{
+  "name": "@taiga-task-master/taiga-api",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b --watch",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "@taiga-task-master/common": "workspace:*",
+    "@taiga-task-master/taiga-api-interface": "workspace:*",
+    "@effect/schema": "^0.75.5",
+    "effect": "^3.10.22",
+    "undici": "^6.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

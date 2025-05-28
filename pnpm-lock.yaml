@@ -63,6 +63,31 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.17.50)
 
+  packages/taiga-api:
+    dependencies:
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.15.4)
+      '@taiga-task-master/common':
+        specifier: workspace:*
+        version: link:../common
+      '@taiga-task-master/taiga-api-interface':
+        specifier: workspace:*
+        version: link:../taiga-api-interface
+      effect:
+        specifier: ^3.10.22
+        version: 3.15.4
+      undici:
+        specifier: ^6.0.0
+        version: 6.21.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.17.50
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.17.50)
+
   packages/taiga-api-interface:
     dependencies:
       '@effect/schema':
@@ -1046,6 +1071,10 @@ packages:
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
 
+  undici@6.21.3:
+    resolution: {integrity: sha512-gBLkYIlEnSp8pFbT64yFgGE6UIB9tAkhukC23PmMDCe5Nd+cRqKxSjw5y54MK2AZMgZfJWMaNE4nYUHgi1XEOw==}
+    engines: {node: '>=18.17'}
+
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
@@ -1954,6 +1983,8 @@ snapshots:
   typescript@5.8.3: {}
 
   undici-types@6.19.8: {}
+
+  undici@6.21.3: {}
 
   uri-js@4.4.1:
     dependencies:
