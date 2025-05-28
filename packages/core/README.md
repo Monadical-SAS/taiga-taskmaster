@@ -1,5 +1,3 @@
-# @vibe-generated
-
 # @taiga-task-master/core
 
 Core functionality package for the Taiga Task Master project.

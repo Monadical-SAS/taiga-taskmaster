@@ -1,0 +1,23 @@
+{
+  "name": "@taiga-task-master/taskmaster-test",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Manual testing package for taskmaster functionality",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/manual-test.ts",
+    "test": "tsx src/manual-test.ts",
+    "test:isolated": "npx dotenv -e ../../.env -- tsx src/manual-test.ts"
+  },
+  "dependencies": {
+    "@taiga-task-master/common": "workspace:*",
+    "@taiga-task-master/taskmaster": "workspace:*",
+    "@taiga-task-master/taskmaster-interface": "workspace:*",
+    "dotenv": "^16.4.7",
+    "effect": "^3.11.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

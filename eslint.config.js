@@ -48,5 +48,26 @@ export default tseslint.config(
       "functional/immutable-data": "off",
       "functional/no-loop-statements": "off",
     },
+  },
+  {
+    files: ["**/taskmaster-test/**/*.ts"],
+    rules: {
+      // Disable all functional rules for taskmaster-test package
+      "functional/no-expression-statements": "off",
+      "functional/no-return-void": "off",
+      "functional/no-conditional-statements": "off",
+      "functional/functional-parameters": "off",
+      "functional/prefer-immutable-types": "off",
+      "functional/no-throw-statements": "off",
+      "functional/no-mixed-types": "off",
+      "functional/immutable-data": "off",
+      "functional/no-loop-statements": "off",
+      "functional/no-let": "off",
+      "functional/no-try-statements": "off",
+      "functional/prefer-readonly-type": "off",
+      "functional/no-classes": "off",
+      "functional/no-this-expressions": "off",
+      "functional/prefer-tacit": "off",
+    },
   }
 );

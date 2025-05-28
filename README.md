@@ -31,3 +31,24 @@ pnpm dev       # Start development mode
 pnpm lint      # Check code style
 pnpm type-check # Verify TypeScript
 ```
+
+## Testing
+
+### Manual Taskmaster Integration Test
+
+Test the complete taskmaster CLI workflow in isolation:
+
+```bash
+cd packages/taskmaster-test
+pnpm test:isolated
+```
+
+This test:
+
+- Creates an isolated temp directory
+- Generates a sample PRD file
+- Runs `npx task-master parse-prd` with environment variables
+- Validates the generated tasks.json structure
+- Cleans up temporary files
+
+Requires `ANTHROPIC_API_KEY` and `PERPLEXITY_API_KEY` in the root `.env` file.

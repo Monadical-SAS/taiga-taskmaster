@@ -125,3 +125,6 @@ Desktop.ini
 
 # Claude Code artifacts
 .claude/
+
+# Taskmaster test temp directory
+packages/taskmaster-test/temp/

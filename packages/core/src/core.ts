@@ -1,6 +1,6 @@
 import type { GenerateTasksF } from "@taiga-task-master/taskmaster-interface";
 import type { SyncTasksF } from "@taiga-task-master/tasktracker-interface";
-import { PrdText } from "@taiga-task-master/common";
+import { PrdText, SINGLETON_PROJECT_ID } from "@taiga-task-master/common";
 import { Option } from "effect";
 
 export const greet = (name: string): string => `Hello, ${name}!`;
@@ -21,5 +21,5 @@ export const generateTasks =
       prd,
       Option.none(/*for update*/)
     );
-    return await di.tasktracker.syncTasks(tasks);
+    return await di.tasktracker.syncTasks(tasks.tasks, SINGLETON_PROJECT_ID);
   };

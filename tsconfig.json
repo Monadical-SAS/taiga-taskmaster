@@ -30,6 +30,7 @@
     { "path": "./packages/tasktracker" },
     { "path": "./packages/taiga-api-interface" },
     { "path": "./packages/taiga-api" },
-    { "path": "./packages/taiga-api-test" }
+    { "path": "./packages/taiga-api-test" },
+    { "path": "./packages/taskmaster-test" }
   ]
 }

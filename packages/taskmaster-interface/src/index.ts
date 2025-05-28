@@ -4,7 +4,6 @@ import {
   PrdText,
   castNonEmptyString,
 } from "@taiga-task-master/common";
-import type { SyncTasksInput } from "@taiga-task-master/tasktracker-interface";
 import { Option } from "effect";
 
 export type GenerateTasksDeps = {
