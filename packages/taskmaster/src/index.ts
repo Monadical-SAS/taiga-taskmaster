@@ -2,17 +2,14 @@
 import {
   generateTasks,
   type GenerateTasksDeps,
-  type GenerateTasksF,
 } from "@taiga-task-master/taskmaster-interface";
 import {
   type TasksFileContent,
   type NonEmptyString,
   type PrdText,
-  castNonEmptyString,
   TasksFileContent as TasksFileContentSchema,
-  type UniqTaskFileContentList,
 } from "@taiga-task-master/common";
-import { Option, Schema } from "effect";
+import { Schema } from "effect";
 import { promises as fs } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";

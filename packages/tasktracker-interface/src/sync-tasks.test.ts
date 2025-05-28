@@ -7,6 +7,7 @@ import {
   TaskFileContent,
   UniqTaskFileContentList,
   SINGLETON_PROJECT_ID,
+  UniqTaskFileContentListTypeSchema,
 } from "@taiga-task-master/common";
 import {
   syncTasks,
@@ -54,7 +55,9 @@ describe("syncTasks", () => {
         createMockTaskFileContent(1),
         createMockTaskFileContent(2),
       ];
-      const uniqTasks = Schema.decodeSync(UniqTaskFileContentList)(mockTasks);
+      const uniqTasks = Schema.decodeSync(UniqTaskFileContentListTypeSchema)(
+        mockTasks
+      );
 
       // Mock empty tracker response
       vi.mocked(deps.getTasks).mockResolvedValue(
@@ -86,11 +89,16 @@ describe("syncTasks", () => {
         createMockTaskFileContent(1),
         createMockTaskFileContent(2),
       ];
-      const uniqTasks = Schema.decodeSync(UniqTaskFileContentList)(mockTasks);
+      const uniqTasks = Schema.decodeSync(UniqTaskFileContentListTypeSchema)(
+        mockTasks
+      );
 
       // Mock tracker response with existing tasks
       vi.mocked(deps.getTasks).mockResolvedValue(
-        Schema.decodeSync(TaskTrackerTasksResult)([createTaskId(1), createTaskId(2)])
+        Schema.decodeSync(TaskTrackerTasksResult)([
+          createTaskId(1),
+          createTaskId(2),
+        ])
       );
       vi.mocked(deps.renderTask)
         .mockReturnValueOnce(createTaskText("Updated Task 1"))
@@ -115,15 +123,17 @@ describe("syncTasks", () => {
         createMockTaskFileContent(2), // existing
         createMockTaskFileContent(3), // new
       ];
-      const uniqTasks = Schema.decodeSync(UniqTaskFileContentList)(mockTasks);
+      const uniqTasks = Schema.decodeSync(UniqTaskFileContentListTypeSchema)(
+        mockTasks
+      );
 
       // Mock tracker response with task 2 existing
       vi.mocked(deps.getTasks).mockResolvedValue(
         Schema.decodeSync(TaskTrackerTasksResult)([createTaskId(2)])
       );
       vi.mocked(deps.renderTask)
-        .mockReturnValueOnce(createTaskText("New Task 1"))     // excluded tasks first (non-existing)
-        .mockReturnValueOnce(createTaskText("New Task 3"))     // excluded tasks 
+        .mockReturnValueOnce(createTaskText("New Task 1")) // excluded tasks first (non-existing)
+        .mockReturnValueOnce(createTaskText("New Task 3")) // excluded tasks
         .mockReturnValueOnce(createTaskText("Updated Task 2")); // satisfying tasks (existing)
 
       await syncTasks(deps)(uniqTasks, testProjectId);
@@ -163,7 +173,9 @@ describe("syncTasks", () => {
         createMockTaskFileContent(1),
         createMockTaskFileContent(2),
       ];
-      const uniqTasks = Schema.decodeSync(UniqTaskFileContentList)(mockTasks);
+      const uniqTasks = Schema.decodeSync(UniqTaskFileContentListTypeSchema)(
+        mockTasks
+      );
 
       vi.mocked(deps.getTasks).mockResolvedValue(
         Schema.decodeSync(TaskTrackerTasksResult)([])
@@ -185,7 +197,9 @@ describe("syncTasks", () => {
         createMockTaskFileContent(1), // new
         createMockTaskFileContent(2), // existing
       ];
-      const uniqTasks = Schema.decodeSync(UniqTaskFileContentList)(mockTasks);
+      const uniqTasks = Schema.decodeSync(UniqTaskFileContentListTypeSchema)(
+        mockTasks
+      );
 
       vi.mocked(deps.getTasks).mockResolvedValue(
         Schema.decodeSync(TaskTrackerTasksResult)([createTaskId(2)])
@@ -194,29 +208,31 @@ describe("syncTasks", () => {
         createTaskText("Rendered Task")
       );
 
-      let addTasksStarted = false;
-      let updateTasksStarted = false;
-      let addTasksResolved = false;
-      let updateTasksResolved = false;
+      const state = {
+        addTasksStarted: false,
+        updateTasksStarted: false,
+        addTasksResolved: false,
+        updateTasksResolved: false,
+      };
 
       vi.mocked(deps.addTasks).mockImplementation(async () => {
-        addTasksStarted = true;
+        state.addTasksStarted = true;
         await new Promise((resolve) => setTimeout(resolve, 50));
-        addTasksResolved = true;
-        expect(updateTasksStarted).toBe(true); // Should have started concurrently
-        expect(updateTasksResolved).toBe(false); // Should not have resolved yet
+        state.addTasksResolved = true;
+        expect(state.updateTasksStarted).toBe(true); // Should have started concurrently
+        expect(state.updateTasksResolved).toBe(false); // Should not have resolved yet
       });
 
       vi.mocked(deps.updateTasks).mockImplementation(async () => {
-        updateTasksStarted = true;
+        state.updateTasksStarted = true;
         await new Promise((resolve) => setTimeout(resolve, 100));
-        updateTasksResolved = true;
+        state.updateTasksResolved = true;
       });
 
       await syncTasks(deps)(uniqTasks, testProjectId);
 
-      expect(addTasksResolved).toBe(true);
-      expect(updateTasksResolved).toBe(true);
+      expect(state.addTasksResolved).toBe(true);
+      expect(state.updateTasksResolved).toBe(true);
     });
   });
 
@@ -228,7 +244,9 @@ describe("syncTasks", () => {
         createMockTaskFileContent(10),
         createMockTaskFileContent(15),
       ];
-      const uniqTasks = Schema.decodeSync(UniqTaskFileContentList)(mockTasks);
+      const uniqTasks = Schema.decodeSync(UniqTaskFileContentListTypeSchema)(
+        mockTasks
+      );
 
       vi.mocked(deps.getTasks).mockResolvedValue(
         Schema.decodeSync(TaskTrackerTasksResult)([])
@@ -249,7 +267,9 @@ describe("syncTasks", () => {
       const deps = createMockDeps();
       const customProjectId = Schema.decodeSync(ProjectId)("custom-project");
       const mockTasks = [createMockTaskFileContent(1)];
-      const uniqTasks = Schema.decodeSync(UniqTaskFileContentList)(mockTasks);
+      const uniqTasks = Schema.decodeSync(UniqTaskFileContentListTypeSchema)(
+        mockTasks
+      );
 
       vi.mocked(deps.getTasks).mockResolvedValue(
         Schema.decodeSync(TaskTrackerTasksResult)([])
@@ -260,9 +280,18 @@ describe("syncTasks", () => {
 
       await syncTasks(deps)(uniqTasks, customProjectId);
 
-      expect(deps.getTasks).toHaveBeenCalledWith(expect.any(Set), customProjectId);
-      expect(deps.addTasks).toHaveBeenCalledWith(expect.any(Map), customProjectId);
-      expect(deps.updateTasks).toHaveBeenCalledWith(expect.any(Map), customProjectId);
+      expect(deps.getTasks).toHaveBeenCalledWith(
+        expect.any(Set),
+        customProjectId
+      );
+      expect(deps.addTasks).toHaveBeenCalledWith(
+        expect.any(Map),
+        customProjectId
+      );
+      expect(deps.updateTasks).toHaveBeenCalledWith(
+        expect.any(Map),
+        customProjectId
+      );
     });
   });
 });

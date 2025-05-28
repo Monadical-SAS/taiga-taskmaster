@@ -123,16 +123,24 @@ export const TaskFileContent = TaskFileContentBase.pipe(
 
 export type TaskFileContent = typeof TaskFileContent.Type;
 
-export const UniqTaskFileContentList = Schema.Array(TaskFileContent).pipe(
+const UniqTaskFileContentListBrandless = Schema.Array(TaskFileContent).pipe(
   Schema.filter((input) => {
     const idsS = new Set(input.map((t) => t.id));
     if (idsS.size !== input.length) {
       return new Unexpected("tasks in SyncTasksInput aren't uniq by id");
     }
     return true;
-  }),
+  })
+);
+export const UniqTaskFileContentList = UniqTaskFileContentListBrandless.pipe(
   Schema.brand("UniqTaskFileContentList")
 );
+// schema without the "dirty" initial part
+export const UniqTaskFileContentListTypeSchema = Schema.typeSchema(
+  UniqTaskFileContentListBrandless
+).pipe(Schema.brand("UniqTaskFileContentList"));
+export type UniqTaskFileContentListTypeSchema =
+  typeof UniqTaskFileContentListTypeSchema.Type;
 
 export type UniqTaskFileContentList = typeof UniqTaskFileContentList.Type;
 

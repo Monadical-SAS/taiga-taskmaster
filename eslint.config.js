@@ -50,9 +50,15 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/taskmaster-test/**/*.ts"],
+    files: [
+      "**/taskmaster-test/**/*.ts",
+      "**/tasktracker-test/**/*.ts",
+      "**/taiga-api-test/**/*.ts",
+      "**/*-test/**/*.ts",
+      "**/manual-test.ts",
+    ],
     rules: {
-      // Disable all functional rules for taskmaster-test package
+      // Disable all functional rules and strict TypeScript rules for test packages
       "functional/no-expression-statements": "off",
       "functional/no-return-void": "off",
       "functional/no-conditional-statements": "off",
@@ -68,6 +74,9 @@ export default tseslint.config(
       "functional/no-classes": "off",
       "functional/no-this-expressions": "off",
       "functional/prefer-tacit": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/no-unused-vars": "off",
     },
   }
 );
