@@ -3,31 +3,35 @@
 # Status: in-progress
 # Dependencies: 1, 2
 # Priority: high
-# Description: Create a reusable HTTP client with Taiga authentication handling and token management that implements the existing interfaces.
+# Description: Create a Taiga API layer with authentication handling and implement necessary API endpoints following the interface-implementation pattern.
 # Details:
-1. Implement the HTTP client based on the existing interfaces in the core package
-2. Create authentication utilities for Taiga API:
-   - Bearer token authentication
-   - Token refresh mechanism
+1. Create separate packages:
+   - taiga-api-interface: Define interfaces for Taiga API endpoints
+   - taiga-api: Implement the interfaces with HTTP client
+2. Implement authentication for Taiga API:
+   - Normal login with Bearer token authentication
    - Auth header generation
-3. Implement retry logic with exponential backoff
+3. Implement the following API endpoints based on Taiga API docs:
+   - Tasks (list, create, get, update, delete)
+   - User Stories (list, create, get, update, delete)
+   - Task Statuses (list, create, get, update, delete)
+   - Task Custom Attributes (list, create, get, update, delete)
 4. Add proper error handling and logging
-5. Create HTTP client factory function with dependency injection
-6. Implement request/response interceptors for authentication
-7. Add rate limiting protection
-8. Create unit tests with mocked responses
+5. Use Effect Schema for validation of API responses
+6. Create TypeScript interfaces for all API models
+7. Follow the established interface-driven approach in the project architecture
 
-The implementation should follow the interface-driven approach established in the project architecture.
+Reference the Taiga API documentation from the docs/ directory for implementation details.
 
 # Test Strategy:
 1. Unit test the HTTP client creation with different base URLs
-2. Test auth header generation with various token configurations
-3. Mock Undici for testing token refresh functionality
-4. Test retry mechanism with both success and failure scenarios
-5. Verify exponential backoff calculations
-6. Test jitter randomization is within expected bounds
-7. Mock Taiga API responses for client method tests
-8. Verify the implementation conforms to the established interfaces
+2. Test auth header generation with token configurations
+3. Mock API responses for each implemented endpoint
+4. Test error handling for various API error scenarios
+5. Verify schema validation works correctly for API responses
+6. Test each CRUD operation for all implemented endpoints
+7. Verify the implementation conforms to the established interfaces
+8. Test authentication flow with mock responses
 
 # Subtasks:
 ## 3.1. Implement HTTP client factory [done]
@@ -42,15 +46,45 @@ The implementation should follow the interface-driven approach established in th
 ### Details:
 
 
-## 3.3. Implement retry mechanism [pending]
+## 3.5. Create taiga-api-interface package [pending]
 ### Dependencies: None
-### Description: Add retry logic with exponential backoff and jitter
+### Description: Define interfaces for all required Taiga API endpoints and models
 ### Details:
 
 
-## 3.4. Create unit tests [pending]
+## 3.6. Create taiga-api package [pending]
 ### Dependencies: None
-### Description: Write comprehensive tests for the HTTP client implementation
+### Description: Implement the interfaces defined in taiga-api-interface
+### Details:
+
+
+## 3.7. Implement Tasks API endpoints [pending]
+### Dependencies: None
+### Description: Implement CRUD operations for Tasks API
+### Details:
+
+
+## 3.8. Implement User Stories API endpoints [pending]
+### Dependencies: None
+### Description: Implement CRUD operations for User Stories API
+### Details:
+
+
+## 3.9. Implement Task Statuses API endpoints [pending]
+### Dependencies: None
+### Description: Implement CRUD operations for Task Statuses API
+### Details:
+
+
+## 3.11. Create Effect Schema validators [pending]
+### Dependencies: None
+### Description: Implement validators for all API responses using Effect Schema
+### Details:
+
+
+## 3.12. Create unit tests [pending]
+### Dependencies: None
+### Description: Write comprehensive tests for all API endpoint implementations
 ### Details:
 
 

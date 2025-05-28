@@ -63,6 +63,28 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.17.50)
 
+  packages/taiga-api-interface:
+    dependencies:
+      '@effect/schema':
+        specifier: ^0.75.5
+        version: 0.75.5(effect@3.15.4)
+      '@taiga-task-master/common':
+        specifier: workspace:*
+        version: link:../common
+      effect:
+        specifier: ^3.10.22
+        version: 3.15.4
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.17.50
+      undici-types:
+        specifier: ^6.0.0
+        version: 6.19.8
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.17.50)
+
   packages/taskmaster:
     dependencies:
       '@taiga-task-master/taskmaster-interface':
@@ -122,6 +144,12 @@ importers:
         version: 2.1.9(@types/node@20.17.50)
 
 packages:
+
+  '@effect/schema@0.75.5':
+    resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
+    deprecated: this package has been merged into the main effect package
+    peerDependencies:
+      effect: ^3.9.2
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -1101,6 +1129,11 @@ packages:
     engines: {node: '>=10'}
 
 snapshots:
+
+  '@effect/schema@0.75.5(effect@3.15.4)':
+    dependencies:
+      effect: 3.15.4
+      fast-check: 3.23.2
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true

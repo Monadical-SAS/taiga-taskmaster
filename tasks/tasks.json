@@ -27,15 +27,15 @@
     {
       "id": 3,
       "title": "Implement Authentication and HTTP Client",
-      "description": "Create a reusable HTTP client with Taiga authentication handling and token management that implements the existing interfaces.",
+      "description": "Create a Taiga API layer with authentication handling and implement necessary API endpoints following the interface-implementation pattern.",
       "status": "in-progress",
       "dependencies": [
         1,
         2
       ],
       "priority": "high",
-      "details": "1. Implement the HTTP client based on the existing interfaces in the core package\n2. Create authentication utilities for Taiga API:\n   - Bearer token authentication\n   - Token refresh mechanism\n   - Auth header generation\n3. Implement retry logic with exponential backoff\n4. Add proper error handling and logging\n5. Create HTTP client factory function with dependency injection\n6. Implement request/response interceptors for authentication\n7. Add rate limiting protection\n8. Create unit tests with mocked responses\n\nThe implementation should follow the interface-driven approach established in the project architecture.",
-      "testStrategy": "1. Unit test the HTTP client creation with different base URLs\n2. Test auth header generation with various token configurations\n3. Mock Undici for testing token refresh functionality\n4. Test retry mechanism with both success and failure scenarios\n5. Verify exponential backoff calculations\n6. Test jitter randomization is within expected bounds\n7. Mock Taiga API responses for client method tests\n8. Verify the implementation conforms to the established interfaces",
+      "details": "1. Create separate packages:\n   - taiga-api-interface: Define interfaces for Taiga API endpoints\n   - taiga-api: Implement the interfaces with HTTP client\n2. Implement authentication for Taiga API:\n   - Normal login with Bearer token authentication\n   - Auth header generation\n3. Implement the following API endpoints based on Taiga API docs:\n   - Tasks (list, create, get, update, delete)\n   - User Stories (list, create, get, update, delete)\n   - Task Statuses (list, create, get, update, delete)\n   - Task Custom Attributes (list, create, get, update, delete)\n4. Add proper error handling and logging\n5. Use Effect Schema for validation of API responses\n6. Create TypeScript interfaces for all API models\n7. Follow the established interface-driven approach in the project architecture\n\nReference the Taiga API documentation from the docs/ directory for implementation details.",
+      "testStrategy": "1. Unit test the HTTP client creation with different base URLs\n2. Test auth header generation with token configurations\n3. Mock API responses for each implemented endpoint\n4. Test error handling for various API error scenarios\n5. Verify schema validation works correctly for API responses\n6. Test each CRUD operation for all implemented endpoints\n7. Verify the implementation conforms to the established interfaces\n8. Test authentication flow with mock responses",
       "subtasks": [
         {
           "id": 3.1,
@@ -50,16 +50,46 @@
           "description": "Create utilities for generating auth headers and refreshing tokens"
         },
         {
-          "id": 3.3,
-          "title": "Implement retry mechanism",
+          "id": 3.5,
+          "title": "Create taiga-api-interface package",
           "status": "pending",
-          "description": "Add retry logic with exponential backoff and jitter"
+          "description": "Define interfaces for all required Taiga API endpoints and models"
         },
         {
-          "id": 3.4,
+          "id": 3.6,
+          "title": "Create taiga-api package",
+          "status": "pending",
+          "description": "Implement the interfaces defined in taiga-api-interface"
+        },
+        {
+          "id": 3.7,
+          "title": "Implement Tasks API endpoints",
+          "status": "pending",
+          "description": "Implement CRUD operations for Tasks API"
+        },
+        {
+          "id": 3.8,
+          "title": "Implement User Stories API endpoints",
+          "status": "pending",
+          "description": "Implement CRUD operations for User Stories API"
+        },
+        {
+          "id": 3.9,
+          "title": "Implement Task Statuses API endpoints",
+          "status": "pending",
+          "description": "Implement CRUD operations for Task Statuses API"
+        },
+        {
+          "id": 3.11,
+          "title": "Create Effect Schema validators",
+          "status": "pending",
+          "description": "Implement validators for all API responses using Effect Schema"
+        },
+        {
+          "id": 3.12,
           "title": "Create unit tests",
           "status": "pending",
-          "description": "Write comprehensive tests for the HTTP client implementation"
+          "description": "Write comprehensive tests for all API endpoint implementations"
         }
       ]
     },

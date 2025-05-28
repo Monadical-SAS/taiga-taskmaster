@@ -13,19 +13,6 @@ export type TrackerTask = {
   masterId: TaskId
 }
 
-// example that the methods can have their own deps; we'll serve them during their construction
-// export type GetTasksDeps = {
-//   httpGet: (url: Url/*TODO auth*/) => Promise<unknown>
-// }
-//
-// export type AddTasksDeps = {
-//   httpPost: (url: Url/*TODO auth*/, body: unknown/*TODO better typing*/) => Promise<unknown>
-// }
-//
-// export type UpdateTasksDeps = {
-//   httpPatch: (url: Url/*TODO auth*/, body: unknown/*TODO better typing*/) => Promise<unknown>
-// }
-
 export type SyncTasksDeps = {
   getTasks: (ids: Set<TaskId>) => Promise<TrackerTask[]>,
   addTasks: (tasks: [TaskId, TaskText][]) => Promise<void>,
