@@ -26,7 +26,7 @@
       "id": 3,
       "title": "Implement Authentication and HTTP Client",
       "description": "Create a Taiga API layer with authentication handling and implement necessary API endpoints following the interface-implementation pattern.",
-      "status": "in-progress",
+      "status": "done",
       "dependencies": [1, 2],
       "priority": "high",
       "details": "see taiga-api/docs/todos/1-robust-auth/README.md for more info. you have to look at it and its references before proceeding.\n 1. Create separate packages:\n   - taiga-api-interface: Define interfaces for Taiga API endpoints\n   - taiga-api: Implement the interfaces with HTTP client\n2. Implement authentication for Taiga API:\n   - Normal login with Bearer token authentication\n   - Auth header generation\n3. Implement the following API endpoints based on Taiga API docs:\n   - Tasks (list, create, get, update, delete)\n   - User Stories (list, create, get, update, delete)\n   - Task Statuses (list, create, get, update, delete)\n   - Task Custom Attributes (list, create, get, update, delete)\n4. Add proper error handling and logging\n5. Use Effect Schema for validation of API responses\n6. Create TypeScript interfaces for all API models\n7. Follow the established interface-driven approach in the project architecture\n\nReference the Taiga API documentation from the docs/ directory for implementation details.",
@@ -41,49 +41,49 @@
         {
           "id": 3.2,
           "title": "Implement authentication utilities",
-          "status": "in-progress",
+          "status": "done",
           "description": "Create utilities for generating auth headers and refreshing tokens"
         },
         {
           "id": 3.5,
           "title": "Create taiga-api-interface package",
-          "status": "pending",
+          "status": "done",
           "description": "Define interfaces for all required Taiga API endpoints and models"
         },
         {
           "id": 3.6,
           "title": "Create taiga-api package",
-          "status": "pending",
+          "status": "done",
           "description": "Implement the interfaces defined in taiga-api-interface"
         },
         {
           "id": 3.7,
           "title": "Implement Tasks API endpoints",
-          "status": "pending",
+          "status": "done",
           "description": "Implement CRUD operations for Tasks API"
         },
         {
           "id": 3.8,
           "title": "Implement User Stories API endpoints",
-          "status": "pending",
+          "status": "done",
           "description": "Implement CRUD operations for User Stories API"
         },
         {
           "id": 3.9,
           "title": "Implement Task Statuses API endpoints",
-          "status": "pending",
+          "status": "done",
           "description": "Implement CRUD operations for Task Statuses API"
         },
         {
           "id": 3.11,
           "title": "Create Effect Schema validators",
-          "status": "pending",
+          "status": "done",
           "description": "Implement validators for all API responses using Effect Schema"
         },
         {
           "id": 3.12,
           "title": "Create unit tests",
-          "status": "pending",
+          "status": "done",
           "description": "Write comprehensive tests for all API endpoint implementations"
         }
       ]
@@ -91,12 +91,12 @@
     {
       "id": 4,
       "title": "Implement Tag Management System",
-      "description": "Create utilities for generating, validating, and extracting information from Taiga task tags according to the PRD specifications.",
+      "description": "Create utilities for parsing, validating, and extracting information from Taiga task tags according to the PRD specifications.",
       "status": "pending",
       "dependencies": [2],
       "priority": "medium",
-      "details": "1. Implement tag utilities in the common package following the established architecture\n2. Create functions for:\n   - Generating taskmaster tags with proper format\n   - Extracting master task IDs from tags\n   - Validating tag formats\n   - Finding master IDs in arrays of tags\n   - Creating project-specific tags\n3. Add proper error handling for invalid inputs\n4. Create unit tests for all tag utilities\n5. Ensure compatibility with the Taiga API requirements\n6. Integrate with the existing type system using branded types\n\nThe implementation should leverage the existing type system and follow functional programming patterns.",
-      "testStrategy": "1. Test tag creation with various task IDs\n2. Verify project tag format is correct\n3. Test extraction of master IDs from valid and invalid tags\n4. Test finding master IDs in arrays of mixed tags\n5. Verify validation of taskmaster tags\n6. Test error handling when PROJECT_SLUG is not set\n7. Test with edge cases like very large IDs or special characters in project slugs\n8. Verify integration with branded types",
+      "details": "1. Implement tag utilities in the tasktracker-interface package at `/Users/firfi/work/clients/monadical/taiga-task-master/packages/tasktracker-interface/src/tags.ts`\n2. Create functions for:\n   - Extracting master task IDs from tags\n   - Validating tag formats\n   - Finding master IDs in arrays of tags\n   - Parsing existing tag strings to extract relevant information\n3. Add proper error handling for invalid inputs\n4. Create unit tests for all tag utilities\n5. Ensure compatibility with the Taiga API requirements\n6. Integrate with the existing type system using the already defined TaskId and ProjectId types from the common package\n7. Implement codecs for converting between tag formats and internal types (TaskId and ProjectId)\n\nNote: Project ID in Taiga has nothing to do with ProjectId in taskmaster - they are separate concepts. Tags are properly attached when sent as plain strings in the tags array of a task, so no tag creation functionality is needed.",
+      "testStrategy": "1. Test extraction of master IDs from valid and invalid tags\n2. Test finding master IDs in arrays of mixed tags\n3. Verify validation of taskmaster tags\n4. Test error handling for invalid inputs\n5. Test with edge cases like very large IDs or special characters\n6. Verify integration with TaskId and ProjectId types\n7. Test the codecs for converting between tag formats and internal types\n8. Test parsing of existing tag strings to extract relevant information\n9. Verify that the utilities correctly handle different tag formats",
       "subtasks": []
     },
     {

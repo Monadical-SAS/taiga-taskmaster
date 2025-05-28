@@ -3,28 +3,29 @@
 # Status: pending
 # Dependencies: 2
 # Priority: medium
-# Description: Create utilities for generating, validating, and extracting information from Taiga task tags according to the PRD specifications.
+# Description: Create utilities for parsing, validating, and extracting information from Taiga task tags according to the PRD specifications.
 # Details:
-1. Implement tag utilities in the common package following the established architecture
+1. Implement tag utilities in the tasktracker-interface package at `/Users/firfi/work/clients/monadical/taiga-task-master/packages/tasktracker-interface/src/tags.ts`
 2. Create functions for:
-   - Generating taskmaster tags with proper format
    - Extracting master task IDs from tags
    - Validating tag formats
    - Finding master IDs in arrays of tags
-   - Creating project-specific tags
+   - Parsing existing tag strings to extract relevant information
 3. Add proper error handling for invalid inputs
 4. Create unit tests for all tag utilities
 5. Ensure compatibility with the Taiga API requirements
-6. Integrate with the existing type system using branded types
+6. Integrate with the existing type system using the already defined TaskId and ProjectId types from the common package
+7. Implement codecs for converting between tag formats and internal types (TaskId and ProjectId)
 
-The implementation should leverage the existing type system and follow functional programming patterns.
+Note: Project ID in Taiga has nothing to do with ProjectId in taskmaster - they are separate concepts. Tags are properly attached when sent as plain strings in the tags array of a task, so no tag creation functionality is needed.
 
 # Test Strategy:
-1. Test tag creation with various task IDs
-2. Verify project tag format is correct
-3. Test extraction of master IDs from valid and invalid tags
-4. Test finding master IDs in arrays of mixed tags
-5. Verify validation of taskmaster tags
-6. Test error handling when PROJECT_SLUG is not set
-7. Test with edge cases like very large IDs or special characters in project slugs
-8. Verify integration with branded types
+1. Test extraction of master IDs from valid and invalid tags
+2. Test finding master IDs in arrays of mixed tags
+3. Verify validation of taskmaster tags
+4. Test error handling for invalid inputs
+5. Test with edge cases like very large IDs or special characters
+6. Verify integration with TaskId and ProjectId types
+7. Test the codecs for converting between tag formats and internal types
+8. Test parsing of existing tag strings to extract relevant information
+9. Verify that the utilities correctly handle different tag formats

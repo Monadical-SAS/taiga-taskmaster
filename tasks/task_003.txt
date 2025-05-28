@@ -1,14 +1,12 @@
 # Task ID: 3
 # Title: Implement Authentication and HTTP Client
-# Status: in-progress
+# Status: done
 # Dependencies: 1, 2
 # Priority: high
 # Description: Create a Taiga API layer with authentication handling and implement necessary API endpoints following the interface-implementation pattern.
 # Details:
-
 see taiga-api/docs/todos/1-robust-auth/README.md for more info. you have to look at it and its references before proceeding.
-
-1. Create separate packages:
+ 1. Create separate packages:
    - taiga-api-interface: Define interfaces for Taiga API endpoints
    - taiga-api: Implement the interfaces with HTTP client
 2. Implement authentication for Taiga API:
@@ -43,49 +41,49 @@ Reference the Taiga API documentation from the docs/ directory for implementatio
 ### Details:
 
 
-## 3.2. Implement authentication utilities [in-progress]
+## 3.2. Implement authentication utilities [done]
 ### Dependencies: None
 ### Description: Create utilities for generating auth headers and refreshing tokens
 ### Details:
 
 
-## 3.5. Create taiga-api-interface package [pending]
+## 3.5. Create taiga-api-interface package [done]
 ### Dependencies: None
 ### Description: Define interfaces for all required Taiga API endpoints and models
 ### Details:
 
 
-## 3.6. Create taiga-api package [pending]
+## 3.6. Create taiga-api package [done]
 ### Dependencies: None
 ### Description: Implement the interfaces defined in taiga-api-interface
 ### Details:
 
 
-## 3.7. Implement Tasks API endpoints [pending]
+## 3.7. Implement Tasks API endpoints [done]
 ### Dependencies: None
 ### Description: Implement CRUD operations for Tasks API
 ### Details:
 
 
-## 3.8. Implement User Stories API endpoints [pending]
+## 3.8. Implement User Stories API endpoints [done]
 ### Dependencies: None
 ### Description: Implement CRUD operations for User Stories API
 ### Details:
 
 
-## 3.9. Implement Task Statuses API endpoints [pending]
+## 3.9. Implement Task Statuses API endpoints [done]
 ### Dependencies: None
 ### Description: Implement CRUD operations for Task Statuses API
 ### Details:
 
 
-## 3.11. Create Effect Schema validators [pending]
+## 3.11. Create Effect Schema validators [done]
 ### Dependencies: None
 ### Description: Implement validators for all API responses using Effect Schema
 ### Details:
 
 
-## 3.12. Create unit tests [pending]
+## 3.12. Create unit tests [done]
 ### Dependencies: None
 ### Description: Write comprehensive tests for all API endpoint implementations
 ### Details:

@@ -1,6 +1,7 @@
 import { TaskId, NonEmptyString } from "@taiga-task-master/common";
 import { pipe, Schema, Tuple } from "effect";
 import { partition } from "effect/Array";
+export * from "./tags.js";
 
 export const TaskText = NonEmptyString.pipe(Schema.brand("TaskText"));
 

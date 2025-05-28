@@ -1,10 +1,18 @@
 import { ParseResult, Redacted, Schema } from "effect";
 import { Unexpected } from "effect/ParseResult";
-import { bang, PositiveInteger } from "./common.js";
+import { bang, NonEmptyString, PositiveInteger } from "./common.js";
 
 export const TaskId = PositiveInteger.pipe(Schema.brand("TaskId"));
 
 export type TaskId = typeof TaskId.Type;
+
+// note that project id in Taskmaster (this one) doesn't have to do anything with ProjectId in Taiga
+export const ProjectId = NonEmptyString.pipe(Schema.brand("ProjectId"));
+
+export type ProjectId = typeof ProjectId.Type;
+
+// only 1 for now, TODO for removal
+export const SINGLETON_PROJECT_ID = "taskmaster-test" as ProjectId;
 
 export const SubtaskId = PositiveInteger.pipe(Schema.brand("SubtaskId"));
 
