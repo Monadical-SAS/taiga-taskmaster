@@ -22,6 +22,10 @@
     ],
     "*.{md,json,yaml,yml}": [
       "prettier --write"
+    ],
+    "*.{ts,tsx}": [
+      "bash -c 'pnpm run check-circular'",
+      "bash -c 'pnpm run type-check'"
     ]
   },
   "dependencies": {
