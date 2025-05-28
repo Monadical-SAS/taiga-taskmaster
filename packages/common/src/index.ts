@@ -22,8 +22,12 @@ export const bang = <T>(v: T | undefined): T => {
 
 export const assert = bang;
 
+export const NonEmptyStringBrand = Symbol.for(
+  'NonEmptyString'
+)
+
 export const NonEmptyString = Schema.NonEmptyString.pipe(
-  Schema.brand('NonEmptyString')
+  Schema.brand(NonEmptyStringBrand)
 );
 
 export type NonEmptyString = typeof NonEmptyString.Type;

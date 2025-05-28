@@ -33,8 +33,10 @@ import {
   type TaskId,
   type UserStoryId,
   type StatusId,
-  type CustomAttributeId
-} from "@taiga-task-master/taiga-api-interface";
+  type CustomAttributeId,
+  type AuthToken,
+  type RefreshToken
+} from '@taiga-task-master/taiga-api-interface';
 
 // ============================================================================
 // HTTP Client Implementation
@@ -124,20 +126,103 @@ const createHttpClient = (config: HttpClientConfig): HttpClient => ({
 });
 
 // ============================================================================
+// Authenticated HTTP Client with Auto-Refresh
+// ============================================================================
+
+const createAuthenticatedHttpClient = (
+  baseClient: HttpClient, 
+  getAuthToken: () => AuthToken | null,
+  refreshAuth: () => Promise<void>
+): HttpClient => {
+  const withAuthAndRetry = async <T>(
+    operation: () => Promise<HttpResponse<T>>
+  ): Promise<HttpResponse<T>> => {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("HTTP 401")) {
+        await refreshAuth();
+        return await operation();
+      }
+      throw error;
+    }
+  };
+
+  const addAuthHeader = (options?: RequestOptions): RequestOptions => {
+    const authToken = getAuthToken();
+    if (!authToken) {
+      return options || {};
+    }
+    
+    const authHeader = { "Authorization": `Bearer ${authToken}` as HeaderValue };
+    return {
+      ...options,
+      headers: {
+        ...options?.headers,
+        ...authHeader as Record<HeaderKey, HeaderValue>
+      }
+    };
+  };
+
+  return {
+    get: <T>(path: string, options?: RequestOptions & { params?: Record<string, unknown> }) =>
+      withAuthAndRetry(() => baseClient.get<T>(path, addAuthHeader(options))),
+    
+    post: <T>(path: string, data?: unknown, options?: RequestOptions) =>
+      withAuthAndRetry(() => baseClient.post<T>(path, data, addAuthHeader(options))),
+    
+    put: <T>(path: string, data?: unknown, options?: RequestOptions) =>
+      withAuthAndRetry(() => baseClient.put<T>(path, data, addAuthHeader(options))),
+    
+    patch: <T>(path: string, data?: unknown, options?: RequestOptions) =>
+      withAuthAndRetry(() => baseClient.patch<T>(path, data, addAuthHeader(options))),
+    
+    delete: (path: string, options?: RequestOptions) =>
+      withAuthAndRetry(() => baseClient.delete(path, addAuthHeader(options)))
+  };
+};
+
+// ============================================================================
 // Auth Service Implementation
 // ============================================================================
 
-const createAuthService = (client: HttpClient): AuthService => ({
-  login: async (credentials: AuthCredentials): Promise<AuthResponse> => {
-    const response = await client.post<AuthResponse>("/api/v1/auth", credentials);
-    return response.data;
-  },
+const createAuthService = (client: HttpClient): [AuthService, () => Promise<void>, () => AuthToken | null] => {
+  const state = {
+    currentRefreshToken: null as RefreshToken | null,
+    currentAuthToken: null as AuthToken | null
+  };
+  
+  const api = {
+    login: async (credentials: AuthCredentials): Promise<AuthResponse> => {
+      const response = await client.post<AuthResponse>("/api/v1/auth", credentials);
+      return {
+        ...response.data,
+        refresh: (() => { state.currentRefreshToken = response.data.refresh; return response.data.refresh; })(),
+        auth_token: (() => { state.currentAuthToken = response.data.auth_token; return response.data.auth_token; })()
+      };
+    },
 
-  refresh: async (refreshToken: RefreshRequest): Promise<RefreshResponse> => {
-    const response = await client.post<RefreshResponse>("/api/v1/auth/refresh", refreshToken);
-    return response.data;
-  }
-});
+    refresh: async (refreshToken: RefreshRequest): Promise<RefreshResponse> => {
+      const response = await client.post<RefreshResponse>("/api/v1/auth/refresh", refreshToken);
+      return {
+        ...response.data,
+        refresh: (() => { state.currentRefreshToken = response.data.refresh; return response.data.refresh; })(),
+        auth_token: (() => { state.currentAuthToken = response.data.auth_token; return response.data.auth_token; })()
+      };
+    }
+  };
+  
+  const refreshWithStoredToken = async (): Promise<void> => {
+    if (!state.currentRefreshToken) {
+      throw new Error("No refresh token available");
+    }
+    return api.refresh({ refresh: state.currentRefreshToken }).then(() => void 0);
+  };
+  
+  const getAuthToken = (): AuthToken | null => state.currentAuthToken;
+  
+  return [api, refreshWithStoredToken, getAuthToken];
+};
 
 // ============================================================================
 // Tasks Service Implementation
@@ -264,14 +349,16 @@ const createTaskCustomAttributesService = (client: HttpClient): TaskCustomAttrib
 // ============================================================================
 
 const createTaigaApi = (config: HttpClientConfig): TaigaApi => {
-  const client = createHttpClient(config);
+  const baseClient = createHttpClient(config);
+  const [authService, refreshAuth, getAuthToken] = createAuthService(baseClient);
+  const authenticatedClient = createAuthenticatedHttpClient(baseClient, getAuthToken, refreshAuth);
   
   return {
-    auth: createAuthService(client),
-    tasks: createTasksService(client),
-    userStories: createUserStoriesService(client),
-    taskStatuses: createTaskStatusesService(client),
-    taskCustomAttributes: createTaskCustomAttributesService(client)
+    auth: authService,
+    tasks: createTasksService(authenticatedClient),
+    userStories: createUserStoriesService(authenticatedClient),
+    taskStatuses: createTaskStatusesService(authenticatedClient),
+    taskCustomAttributes: createTaskCustomAttributesService(authenticatedClient)
   };
 };
 

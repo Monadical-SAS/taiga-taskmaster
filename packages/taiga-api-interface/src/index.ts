@@ -1,5 +1,5 @@
-import { Schema } from "@effect/schema";
-import { Url } from "@taiga-task-master/common";
+import { Schema } from "effect";
+import { NonEmptyString, Url } from '@taiga-task-master/common';
 
 // ============================================================================
 // Authentication Types
@@ -11,13 +11,21 @@ export const AuthCredentials = Schema.Struct({
   type: Schema.Literal("normal")
 });
 
+export const AuthToken = NonEmptyString.pipe(
+  Schema.brand('AuthToken')
+);
+
+export const RefreshToken = NonEmptyString.pipe(
+  Schema.brand('RefreshToken')
+);
+
 export const AuthResponse = Schema.Struct({
   id: Schema.Number,
   username: Schema.String,
   email: Schema.String,
   full_name: Schema.String,
-  auth_token: Schema.String,
-  refresh: Schema.String,
+  auth_token: AuthToken,
+  refresh: RefreshToken,
   accepted_terms: Schema.Boolean,
   read_new_terms: Schema.Boolean
 });
@@ -27,10 +35,12 @@ export const RefreshRequest = Schema.Struct({
 });
 
 export const RefreshResponse = Schema.Struct({
-  auth_token: Schema.String,
-  refresh: Schema.String
+  auth_token: AuthToken,
+  refresh: RefreshToken
 });
 
+export type AuthToken = Schema.Schema.Type<typeof AuthToken>;
+export type RefreshToken = Schema.Schema.Type<typeof RefreshToken>;
 export type AuthCredentials = Schema.Schema.Type<typeof AuthCredentials>;
 export type AuthResponse = Schema.Schema.Type<typeof AuthResponse>;
 export type RefreshRequest = Schema.Schema.Type<typeof RefreshRequest>;
@@ -64,11 +74,11 @@ export const HttpStatus = Schema.Number.pipe(
   Schema.brand("HttpStatus")
 );
 
-export const HeaderKey = Schema.NonEmptyString.pipe(
+export const HeaderKey = NonEmptyString.pipe(
   Schema.brand("HeaderKey")
 );
 
-export const HeaderValue = Schema.NonEmptyString.pipe(
+export const HeaderValue = NonEmptyString.pipe(
   Schema.brand("HeaderValue")
 );
 

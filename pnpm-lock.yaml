@@ -31,7 +31,7 @@ importers:
   packages/common:
     dependencies:
       effect:
-        specifier: ^3.10.0
+        specifier: ^3.15.4
         version: 3.15.4
     devDependencies:
       '@types/node':
@@ -53,7 +53,7 @@ importers:
         specifier: workspace:*
         version: link:../tasktracker-interface
       effect:
-        specifier: ^3.10.0
+        specifier: ^3.15.4
         version: 3.15.4
     devDependencies:
       '@types/node':
@@ -65,9 +65,6 @@ importers:
 
   packages/taiga-api:
     dependencies:
-      '@effect/schema':
-        specifier: ^0.75.5
-        version: 0.75.5(effect@3.15.4)
       '@taiga-task-master/common':
         specifier: workspace:*
         version: link:../common
@@ -75,7 +72,7 @@ importers:
         specifier: workspace:*
         version: link:../taiga-api-interface
       effect:
-        specifier: ^3.10.22
+        specifier: ^3.15.4
         version: 3.15.4
       undici:
         specifier: ^6.0.0
@@ -90,14 +87,11 @@ importers:
 
   packages/taiga-api-interface:
     dependencies:
-      '@effect/schema':
-        specifier: ^0.75.5
-        version: 0.75.5(effect@3.15.4)
       '@taiga-task-master/common':
         specifier: workspace:*
         version: link:../common
       effect:
-        specifier: ^3.10.22
+        specifier: ^3.15.4
         version: 3.15.4
     devDependencies:
       '@types/node':
@@ -158,7 +152,7 @@ importers:
         specifier: workspace:*
         version: link:../common
       effect:
-        specifier: ^3.10.0
+        specifier: ^3.15.4
         version: 3.15.4
     devDependencies:
       '@types/node':
@@ -169,12 +163,6 @@ importers:
         version: 2.1.9(@types/node@20.17.50)
 
 packages:
-
-  '@effect/schema@0.75.5':
-    resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
-    deprecated: this package has been merged into the main effect package
-    peerDependencies:
-      effect: ^3.9.2
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -1158,11 +1146,6 @@ packages:
     engines: {node: '>=10'}
 
 snapshots:
-
-  '@effect/schema@0.75.5(effect@3.15.4)':
-    dependencies:
-      effect: 3.15.4
-      fast-check: 3.23.2
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
