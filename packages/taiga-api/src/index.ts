@@ -93,13 +93,6 @@ const makeRequest = async (
 ): Promise<HttpResponse<unknown>> => {
   const url = buildUrl(baseUrl, path, options?.params);
   const headers = buildHeaders(defaultHeaders, options?.headers, !!data);
-  
-  // Log outgoing request
-  console.log(`🌐 [${new Date().toISOString()}] ${method} ${url}`);
-  if (headers.Authorization) {
-    console.log(`🔐 [${new Date().toISOString()}] Using auth token: ${headers.Authorization.substring(0, 20)}...`);
-  }
-  
   const requestOptions: Parameters<typeof request>[1] = {
     method: method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
     headers,
@@ -111,14 +104,9 @@ const makeRequest = async (
   const responseHeaders = buildResponseHeaders(response.headers);
   const status = Schema.decodeSync(HttpStatus)(response.statusCode);
   
-  // Log response status
-  console.log(`📥 [${new Date().toISOString()}] Response: ${response.statusCode} ${path}`);
-  
-  const rawResponseData = response.headers["content-type"]?.includes("application/json")
+  const responseData = response.headers["content-type"]?.includes("application/json")
     ? await response.body.json()
     : await response.body.text();
-  
-  const responseData = rawResponseData;
 
   return response.statusCode >= 400
     ? Promise.reject(new Error(`HTTP ${response.statusCode}`))
