@@ -83,7 +83,7 @@ export const createCliWrapper = () => {
   ): Promise<TasksFileContent> => {
     try {
       // Execute the taskmaster CLI tool (could be claude-task-master or MCP taskmaster)
-      const command = `npx task-master parse-prd --input "${prdPath}" --output "${tasksJsonPath}" --force`;
+      const command = `npx task-master parse-prd --research --input "${prdPath}" --output "${tasksJsonPath}" --force`;
 
       const { stdout, stderr } = await execAsync(command, {
         cwd: process.cwd(),

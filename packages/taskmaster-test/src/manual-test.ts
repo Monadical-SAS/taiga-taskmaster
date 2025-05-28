@@ -149,7 +149,7 @@ function createTestDependencies(): GenerateTasksDeps {
       await fs.mkdir(dirname(tempTasksPath), { recursive: true });
 
       // Execute the task-master CLI tool with temp paths
-      const command = `npx dotenv -e .env -- npx task-master parse-prd --input "${tempPrdPath}" --output "${tempTasksPath}" --force`;
+      const command = `npx dotenv -e .env -- npx task-master parse-prd --research --input "${tempPrdPath}" --output "${tempTasksPath}" --force`;
 
       const projectRoot = join(__dirname, "..", "..", "..");
 
