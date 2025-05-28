@@ -5,6 +5,9 @@
 # Priority: high
 # Description: Create a Taiga API layer with authentication handling and implement necessary API endpoints following the interface-implementation pattern.
 # Details:
+
+see taiga-api/docs/todos/1-robust-auth/README.md for more info. you have to look at it and its references before proceeding.
+
 1. Create separate packages:
    - taiga-api-interface: Define interfaces for Taiga API endpoints
    - taiga-api: Implement the interfaces with HTTP client

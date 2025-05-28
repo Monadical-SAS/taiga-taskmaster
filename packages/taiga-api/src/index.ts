@@ -103,7 +103,7 @@ const makeRequest = async (
   const response = await request(url, requestOptions);
   const responseHeaders = buildResponseHeaders(response.headers);
   const status = Schema.decodeSync(HttpStatus)(response.statusCode);
-  
+
   const responseData = response.headers["content-type"]?.includes("application/json")
     ? await response.body.json()
     : await response.body.text();
