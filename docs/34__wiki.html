@@ -1,0 +1,350 @@
+<div class="sect1">
+<h2 id="wiki">34. Wiki pages</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="wiki-list">34.1. List</h3>
+<div class="paragraph">
+<p>To list wiki pages send a GET request with the following parameters:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-wiki-detail">wiki page detail objects</a></p>
+</div>
+<div class="paragraph">
+<p>The results can be filtered using the following parameters:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project</strong>: project id</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki?project<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-create">34.2. Create</h3>
+<div class="paragraph">
+<p>To create wiki pages send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project</strong> (required): project id</p>
+</li>
+<li>
+<p><strong>slug</strong> (required): slug</p>
+</li>
+<li>
+<p><strong>content</strong> (required): string</p>
+</li>
+<li>
+<p><strong>watchers</strong>: array of watcher id’s</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "content": "Lorem ipsum dolor.",</span>
+<span class="tok-s1">        "project": 1,</span>
+<span class="tok-s1">        "slug": "new-page",</span>
+<span class="tok-s1">        "watchers": []</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "content": "Lorem ipsum dolor.",</span>
+<span class="tok-s1">        "project": 1,</span>
+<span class="tok-s1">        "slug": "new-simple-page"</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-wiki-detail">wiki page detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-get">34.3. Get</h3>
+<div class="paragraph">
+<p>To get a wiki page send a GET request specifying the wiki page id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/5</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-wiki-detail">wiki page detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-get-by-slug">34.4. Get by slug</h3>
+<div class="paragraph">
+<p>To get a wiki page send a GET request specifying the wiki page slug and the project id as parameters:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/by_slug?slug<span class="tok-o">=</span>home<span class="tok-se">\&amp;</span><span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-wiki-detail">wiki page detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-edit">34.5. Edit</h3>
+<div class="paragraph">
+<p>To edit wiki pages send a PUT or a PATCH specifying the wiki page id in the url.
+In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "subject": "Patching subject",</span>
+<span class="tok-s1">        "version": 1</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/5</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-wiki-detail">wiki page detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-delete">34.6. Delete</h3>
+<div class="paragraph">
+<p>To delete wiki page send a DELETE specifying the wiki page id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/5</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-watch">34.7. Watch a wiki page</h3>
+<div class="paragraph">
+<p>To watch a wiki page send a POST request specifying the wiki page id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/5/watch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK with an empty body response</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-unwatch">34.8. Stop watching a wiki page</h3>
+<div class="paragraph">
+<p>To stop watching a wiki page send a POST request specifying the wiki page id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/5/unwatch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK with an empty body response</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-watchers">34.9. List wiki page watchers</h3>
+<div class="paragraph">
+<p>To get the list of watchers from a wiki page send a GET request specifying the wiki page id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/5/watchers</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-wiki-watcher-detail">wiki page watcher object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-list-attachments">34.10. List attachments</h3>
+<div class="paragraph">
+<p>To list wiki page attachments send a GET request with the following parameters:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project</strong>: project id</p>
+</li>
+<li>
+<p><strong>object_id</strong>: wiki page id</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/attachments?object_id<span class="tok-o">=</span><span class="tok-m">5</span><span class="tok-se">\&amp;</span><span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail objects</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-create-attachment">34.11. Create attachment</h3>
+<div class="paragraph">
+<p>To create wiki page attachments send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>object_id</strong> (required): wiki page id</p>
+</li>
+<li>
+<p><strong>project</strong> (required): project id</p>
+</li>
+<li>
+<p><strong>attached_file</strong> (required): attaching file</p>
+</li>
+<li>
+<p><strong>description</strong></p>
+</li>
+<li>
+<p><strong>is_deprecated</strong></p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+    <span class="tok-nt">"attached_file"</span><span class="tok-p">:</span> <span class="tok-s2">"attachments/6/2/d/2/9fd8261a62f1be8d66867e604b81eeab08e4e28382c23f1ca8e5e7d90c49/sample_attachment_3.txt"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"created_date"</span><span class="tok-p">:</span> <span class="tok-s2">"2020-07-02T11:58:05.759Z"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"description"</span><span class="tok-p">:</span> <span class="tok-s2">"Updated description"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"from_comment"</span><span class="tok-p">:</span> <span class="tok-kc">false</span><span class="tok-p">,</span>
+    <span class="tok-nt">"id"</span><span class="tok-p">:</span> <span class="tok-mi">749</span><span class="tok-p">,</span>
+    <span class="tok-nt">"is_deprecated"</span><span class="tok-p">:</span> <span class="tok-kc">true</span><span class="tok-p">,</span>
+    <span class="tok-nt">"modified_date"</span><span class="tok-p">:</span> <span class="tok-s2">"2020-07-03T08:40:58.624Z"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"name"</span><span class="tok-p">:</span> <span class="tok-s2">"sample_attachment_3.txt"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"object_id"</span><span class="tok-p">:</span> <span class="tok-mi">7</span><span class="tok-p">,</span>
+    <span class="tok-nt">"order"</span><span class="tok-p">:</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
+    <span class="tok-nt">"owner"</span><span class="tok-p">:</span> <span class="tok-mi">7</span><span class="tok-p">,</span>
+    <span class="tok-nt">"preview_url"</span><span class="tok-p">:</span> <span class="tok-s2">"http://localhost:8000/media/attachments/6/2/d/2/9fd8261a62f1be8d66867e604b81eeab08e4e28382c23f1ca8e5e7d90c49/sample_attachment_3.txt"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"project"</span><span class="tok-p">:</span> <span class="tok-mi">3</span><span class="tok-p">,</span>
+    <span class="tok-nt">"sha1"</span><span class="tok-p">:</span> <span class="tok-s2">"da2631d805f12a1b533738a0912e9b9c2261dbef"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"size"</span><span class="tok-p">:</span> <span class="tok-mi">1178</span><span class="tok-p">,</span>
+    <span class="tok-nt">"thumbnail_card_url"</span><span class="tok-p">:</span> <span class="tok-kc">null</span><span class="tok-p">,</span>
+    <span class="tok-nt">"url"</span><span class="tok-p">:</span> <span class="tok-s2">"http://localhost:8000/media/attachments/6/2/d/2/9fd8261a62f1be8d66867e604b81eeab08e4e28382c23f1ca8e5e7d90c49/sample_attachment_3.txt"</span>
+<span class="tok-p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-get-attachment">34.12. Get attachment</h3>
+<div class="paragraph">
+<p>To get an wiki page attachment send a GET request specifying the wiki page attachment id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/attachments/749</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-edit-attachment">34.13. Edit attachment</h3>
+<div class="paragraph">
+<p>To edit wiki page attachments send a PUT or a PATCH specifying the wiki page attachment id in the url.
+In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "description": "Updated description"</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/attachments/749</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="wiki-delete-attachment">34.14. Delete attachment</h3>
+<div class="paragraph">
+<p>To delete wiki page attachments send a DELETE specifying the wiki page attachment id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/wiki/attachments/749</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
+</div>
+</div>
+</div>
+</div>
+

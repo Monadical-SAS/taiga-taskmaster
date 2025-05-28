@@ -1,0 +1,48 @@
+<div class="sect1">
+<h2 id="issue-custom-attributes-values">33. Issue custom attributes values</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="issue-custom-attributes-values-get">33.1. Get</h3>
+<div class="paragraph">
+<p>To get a issue custom attribute send a GET request specifying the issue custom attribute id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/issues/custom-attributes-values/22</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-issue-custom-attribute-detail">issue custom attribute detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="issue-custom-attributes-values-edit">33.2. Edit</h3>
+<div class="paragraph">
+<p>To edit issue custom attributes values send a PUT or a PATCH specifying the issue id in the url.
+"attribute_values" must be a JSON object with pairs issue custom atribute id - value.
+In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "attributes_values": {</span>
+<span class="tok-s1">            "5": "240 min"</span>
+<span class="tok-s1">        },</span>
+<span class="tok-s1">        "version": 1</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/issues/custom-attributes-values/22</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the update is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-issue-custom-attributes-values-detail">issue custom attribute detail object</a></p>
+</div>
+</div>
+</div>
+</div>
+

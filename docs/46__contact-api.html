@@ -1,0 +1,37 @@
+<div class="sect1">
+<h2 id="contact-api">46. Contact</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="contact">46.1. Contact project</h3>
+<div class="paragraph">
+<p>To contact the admins from a project (the project must have the contact option  activated) send a POST request containing the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project</strong>: project id</p>
+</li>
+<li>
+<p><strong>comment</strong>: comment for the admin staff</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "comment": "Comment to admins",</span>
+<span class="tok-s1">        "project": 3</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/contact</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-contact">contact project object</a></p>
+</div>
+</div>
+</div>
+</div>
+

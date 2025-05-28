@@ -1,0 +1,725 @@
+<div class="sect1">
+<h2 id="user-stories">18. User stories</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="user-stories-list">18.1. List</h3>
+<div class="paragraph">
+<p>To list user stories send a GET request with the following parameters:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-userstory-detail-list">user story list objects</a></p>
+</div>
+<div class="paragraph">
+<p>The results can be filtered using the following parameters:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project</strong>: project id</p>
+</li>
+<li>
+<p><strong>milestone</strong>: milestone id</p>
+</li>
+<li>
+<p><strong>milestone__isnull</strong>: (true|false) if you are looking for user stories associated with a milestone or not</p>
+</li>
+<li>
+<p><strong>status</strong>: status id</p>
+</li>
+<li>
+<p><strong>status__is_archived</strong>: (true|false)</p>
+</li>
+<li>
+<p><strong>tags</strong>: separated by ","</p>
+</li>
+<li>
+<p><strong>watchers</strong>: watching user id</p>
+</li>
+<li>
+<p><strong>assigned_to</strong>: assigned to user id</p>
+</li>
+<li>
+<p><strong>epic</strong>: epic id</p>
+</li>
+<li>
+<p><strong>role</strong>: role id</p>
+</li>
+<li>
+<p><strong>status__is_closed</strong>: (true|false)</p>
+</li>
+<li>
+<p><strong>exclude_status</strong>: status id</p>
+</li>
+<li>
+<p><strong>exclude_tags</strong>: separated by ","</p>
+</li>
+<li>
+<p><strong>exclude_assigned_to</strong>: assigned to user id</p>
+</li>
+<li>
+<p><strong>exclude role</strong>: role id</p>
+</li>
+<li>
+<p><strong>exclude epic</strong>: epic id</p>
+<div class="literalblock">
+<div class="content">
+<pre>the "exclude_" params work excluding from the response the results with which they match.</pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories?project<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-create">18.2. Create</h3>
+<div class="paragraph">
+<p>To create user stories send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>assigned_to</strong>: user id</p>
+</li>
+<li>
+<p><strong>backlog_order</strong>: order in the backlog</p>
+</li>
+<li>
+<p><strong>blocked_note</strong>: reason why the user story is blocked</p>
+</li>
+<li>
+<p><strong>client_requirement</strong>: boolean</p>
+</li>
+<li>
+<p><strong>description</strong>: string</p>
+</li>
+<li>
+<p><strong>is_blocked</strong>: boolean</p>
+</li>
+<li>
+<p><strong>is_closed</strong>: boolean</p>
+</li>
+<li>
+<p><strong>kanban_order</strong>: order in the kanban</p>
+</li>
+<li>
+<p><strong>milestone</strong>: milestone id</p>
+</li>
+<li>
+<p><strong>points</strong>: dictionary of points</p>
+</li>
+<li>
+<p><strong>project</strong> (required): project id</p>
+</li>
+<li>
+<p><strong>sprint_order</strong>: order in the milestone</p>
+</li>
+<li>
+<p><strong>status</strong>: status id</p>
+</li>
+<li>
+<p><strong>subject</strong> (required)</p>
+</li>
+<li>
+<p><strong>tags</strong>: array of strings</p>
+</li>
+<li>
+<p><strong>team_requirement</strong>: boolean</p>
+</li>
+<li>
+<p><strong>watchers</strong>: array of watcher id’s</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "assigned_to": null,</span>
+<span class="tok-s1">        "backlog_order": 2,</span>
+<span class="tok-s1">        "blocked_note": "blocking reason",</span>
+<span class="tok-s1">        "client_requirement": false,</span>
+<span class="tok-s1">        "description": "Implement API CALL",</span>
+<span class="tok-s1">        "is_blocked": false,</span>
+<span class="tok-s1">        "is_closed": true,</span>
+<span class="tok-s1">        "kanban_order": 37,</span>
+<span class="tok-s1">        "milestone": null,</span>
+<span class="tok-s1">        "points": {</span>
+<span class="tok-s1">            "1": 4,</span>
+<span class="tok-s1">            "2": 3,</span>
+<span class="tok-s1">            "3": 2,</span>
+<span class="tok-s1">            "4": 1</span>
+<span class="tok-s1">        },</span>
+<span class="tok-s1">        "project": 1,</span>
+<span class="tok-s1">        "sprint_order": 2,</span>
+<span class="tok-s1">        "status": 2,</span>
+<span class="tok-s1">        "subject": "Customer personal data",</span>
+<span class="tok-s1">        "tags": [</span>
+<span class="tok-s1">            "service catalog",</span>
+<span class="tok-s1">            "customer"</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "team_requirement": false,</span>
+<span class="tok-s1">        "watchers": []</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "project": 1,</span>
+<span class="tok-s1">        "subject": "Customer personal data"</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-userstory-detail">user story detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-get">18.3. Get</h3>
+<div class="paragraph">
+<p>To get a user story send a GET request specifying the user story id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-userstory-detail-get">user story detail (GET) object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-get-by-ref">18.4. Get by ref</h3>
+<div class="paragraph">
+<p>To get a user story send a GET request specifying the user story reference and one of the following parameters:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>project (project id)</p>
+</li>
+<li>
+<p>project__slug</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/by_ref?ref<span class="tok-o">=</span><span class="tok-m">1</span><span class="tok-se">\&amp;</span><span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-userstory-detail-get">user story detail (GET) object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-edit">18.5. Edit</h3>
+<div class="paragraph">
+<p>To edit user stories send a PUT or a PATCH specifying the user story id in the url.
+In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "subject": "Patching subject",</span>
+<span class="tok-s1">        "version": 1</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-userstory-detail">user story detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-delete">18.6. Delete</h3>
+<div class="paragraph">
+<p>To delete user stories send a DELETE specifying the user story id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-bulk-create">18.7. Bulk creation</h3>
+<div class="paragraph">
+<p>To create multiple user stories at the same time send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project_id</strong> (required)</p>
+</li>
+<li>
+<p><strong>status_id</strong></p>
+</li>
+<li>
+<p><strong>bulk_stories</strong>: user story subjects, one per line</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "bulk_stories": "US 1 \n US 2 \n US 3",</span>
+<span class="tok-s1">        "project_id": 1</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/bulk_create</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-userstory-detail">user story detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-bulk-update-backlog-order">18.8. Bulk update backlog order</h3>
+<div class="paragraph">
+<p>To update the backlog order of multiple user stories at the same time send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project_id</strong> (required)</p>
+</li>
+<li>
+<p><strong>bulk_stories</strong>: list where each element is a json object with two attributes, the user story id and the new order</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "bulk_stories": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "order": 10,</span>
+<span class="tok-s1">                "us_id": 1</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "order": 15,</span>
+<span class="tok-s1">                "us_id": 2</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "project_id": 1</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/bulk_update_backlog_order</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the update is successful, the HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-userstory-detail">user story detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-bulk-update-kanban-order">18.9. Bulk update kanban order</h3>
+<div class="paragraph">
+<p>To update the kanban order of multiple user stories at the same time send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project_id</strong> (required)</p>
+</li>
+<li>
+<p><strong>bulk_stories</strong>: list where each element is a json object with two attributes, the user story id and the new order</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "bulk_stories": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "order": 10,</span>
+<span class="tok-s1">                "us_id": 1</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "order": 15,</span>
+<span class="tok-s1">                "us_id": 2</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "project_id": 1</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/bulk_update_kanban_order</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the update is successful, the HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-userstory-detail">user story detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-bulk-update-sprint-order">18.10. Bulk update sprint order</h3>
+<div class="paragraph">
+<p>To update the sprint order of multiple user stories at the same time send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project_id</strong> (required)</p>
+</li>
+<li>
+<p><strong>bulk_stories</strong>: list where each element is a json object with two attributes, the user story id and the new order</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "bulk_stories": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "order": 10,</span>
+<span class="tok-s1">                "us_id": 1</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "order": 15,</span>
+<span class="tok-s1">                "us_id": 2</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "project_id": 1</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/bulk_update_sprint_order</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the update is successful, the HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-userstory-detail">user story detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-bulk-update-milestone">18.11. Bulk update milestone</h3>
+<div class="paragraph">
+<p>To update the sprint of multiple user stories at the same time send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project_id</strong> (required)</p>
+</li>
+<li>
+<p><strong>milestone_id</strong> (required)</p>
+</li>
+<li>
+<p><strong>bulk_stories</strong>: list where each element is a json object with two attributes, the user story id and the new order</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "bulk_stories": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "order": 10,</span>
+<span class="tok-s1">                "us_id": 1</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "order": 15,</span>
+<span class="tok-s1">                "us_id": 2</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "milestone_id": 1,</span>
+<span class="tok-s1">        "project_id": 1</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/bulk_update_milestone</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the update is successful, the HTTP response is a 204 NO CONTENT with an empty body response</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-get-filters-data">18.12. Filters data</h3>
+<div class="paragraph">
+<p>To get the user stories filters data send a GET request specifying the project id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/filters_data?project<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-userstory-filters-data">user story filters data object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-upvote">18.13. Vote a user story</h3>
+<div class="paragraph">
+<p>To add a vote to a user story send a POST request specifying the user story id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/1/upvote</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK with an empty body response</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-downvote">18.14. Remove vote from a user story</h3>
+<div class="paragraph">
+<p>To remove a vote from a user story send a POST request specifying the user story id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/1/downvote</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When remove of the vote succeeded, the HTTP response is a 200 OK with an empty body response</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-voters">18.15. Get user story voters list</h3>
+<div class="paragraph">
+<p>To get the list of voters from a user story send a GET request specifying the user story id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/2/voters</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-userstory-voter-detail">user story voter object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-watch">18.16. Watch a user story</h3>
+<div class="paragraph">
+<p>To watch a user story send a POST request specifying the project id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/1/watch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK with an empty body response</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-unwatch">18.17. Stop watching a user story</h3>
+<div class="paragraph">
+<p>To stop watching a user story send a POST request specifying the user story id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/1/unwatch</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK with an empty body response</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-watchers">18.18. List user story watchers</h3>
+<div class="paragraph">
+<p>To get the list of watchers from a user story send a GET request specifying the user story id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+    <span class="tok-nt">"full_name"</span><span class="tok-p">:</span> <span class="tok-s2">"Vanesa Torres"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"id"</span><span class="tok-p">:</span> <span class="tok-mi">6</span><span class="tok-p">,</span>
+    <span class="tok-nt">"username"</span><span class="tok-p">:</span> <span class="tok-s2">"user2114747470430251528"</span>
+<span class="tok-p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-userstory-watcher-detail">user story watcher object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-list-attachments">18.19. List attachments</h3>
+<div class="paragraph">
+<p>To list user story attachments send a GET request with the following parameters:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>project</strong>: project id</p>
+</li>
+<li>
+<p><strong>object_id</strong>: user story id</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/attachments?object_id<span class="tok-o">=</span><span class="tok-m">1</span><span class="tok-se">\&amp;</span><span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail objects</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-create-attachment">18.20. Create attachment</h3>
+<div class="paragraph">
+<p>To create user story attachments send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>object_id</strong> (required): user story id</p>
+</li>
+<li>
+<p><strong>project</strong> (required): project id</p>
+</li>
+<li>
+<p><strong>attached_file</strong> (required): attaching file</p>
+</li>
+<li>
+<p><strong>description</strong></p>
+</li>
+<li>
+<p><strong>is_deprecated</strong></p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: multipart/form-data"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-F <span class="tok-nv">attached_file</span><span class="tok-o">=</span>@test.png <span class="tok-se">\</span>
+-F <span class="tok-nv">from_comment</span><span class="tok-o">=</span>False <span class="tok-se">\</span>
+-F <span class="tok-nv">object_id</span><span class="tok-o">=</span><span class="tok-m">1</span> <span class="tok-se">\</span>
+-F <span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">1</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/attachments</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-get-attachment">18.21. Get attachment</h3>
+<div class="paragraph">
+<p>To get a user story attachment send a GET request specifying the user story attachment id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/attachments/415</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-edit-attachment">18.22. Edit attachment</h3>
+<div class="paragraph">
+<p>To edit user story attachments send a PUT or a PATCH specifying the user story attachment id in the url.
+In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "description": "patching description"</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/attachments/1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="user-stories-delete-attachment">18.23. Delete attachment</h3>
+<div class="paragraph">
+<p>To delete user story attachments send a DELETE specifying the user story attachment id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/userstories/attachments/458</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
+</div>
+</div>
+</div>
+</div>
+

@@ -1,0 +1,788 @@
+<div class="sect1">
+<h2 id="project-templates">9. Project templates</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="project-templates-list">9.1. List</h3>
+<div class="paragraph">
+<p>To list project templates send a GET request with the following parameters:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/project-templates</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-project-template-detail">project template detail objects</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="project-templates-create">9.2. Create</h3>
+<div class="paragraph">
+<p>To create project templates send a POST request with the following data:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong> (required): string</p>
+</li>
+<li>
+<p><strong>slug</strong>: slug</p>
+</li>
+<li>
+<p><strong>description</strong> (required): string</p>
+</li>
+<li>
+<p><strong>default_owner_role</strong> (required):</p>
+</li>
+<li>
+<p><strong>is_backlog_activated</strong>: boolean</p>
+</li>
+<li>
+<p><strong>is_kanban_activated</strong>: boolean</p>
+</li>
+<li>
+<p><strong>is_wiki_activated</strong>: boolean</p>
+</li>
+<li>
+<p><strong>is_issues_activated</strong>: boolean</p>
+</li>
+<li>
+<p><strong>videoconferences</strong>: ("whereby-com" | "jitsi" | "talky" | "custom")</p>
+</li>
+<li>
+<p><strong>videoconferences_extra_data</strong>: string</p>
+</li>
+<li>
+<p><strong>default_options</strong>: a json with a list of objects with:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>points</strong>: slug</p>
+</li>
+<li>
+<p><strong>us_status</strong>: slug</p>
+</li>
+<li>
+<p><strong>task_status</strong>: slug</p>
+</li>
+<li>
+<p><strong>issue_status</strong>: slug</p>
+</li>
+<li>
+<p><strong>issue_type</strong>: slug</p>
+</li>
+<li>
+<p><strong>priority</strong>: slug</p>
+</li>
+<li>
+<p><strong>severity</strong>: slug</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>us_statuses</strong>: a json with a list of objects with:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong>: string</p>
+</li>
+<li>
+<p><strong>slug</strong>: slug</p>
+</li>
+<li>
+<p><strong>is_closed</strong>: boolean</p>
+</li>
+<li>
+<p><strong>color</strong>: #rgb color</p>
+</li>
+<li>
+<p><strong>wip_limit</strong>: integer or none</p>
+</li>
+<li>
+<p><strong>order</strong>: integer</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>points</strong>: a json with a list of objects with:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong>: string</p>
+</li>
+<li>
+<p><strong>value</strong>: integer or none</p>
+</li>
+<li>
+<p><strong>order</strong>: integer</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>task_statuses</strong>: a json with a list of objects with:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong>: string</p>
+</li>
+<li>
+<p><strong>slug</strong>: slug</p>
+</li>
+<li>
+<p><strong>is_closed</strong>: boolean</p>
+</li>
+<li>
+<p><strong>color</strong>: #rgb color</p>
+</li>
+<li>
+<p><strong>order</strong>: integer</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>issue_statuses</strong>: a json with a list of objects with:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong>: string</p>
+</li>
+<li>
+<p><strong>slug</strong>: slug</p>
+</li>
+<li>
+<p><strong>is_closed</strong>: boolean</p>
+</li>
+<li>
+<p><strong>color</strong>: #rgb color</p>
+</li>
+<li>
+<p><strong>order</strong>: integer</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>issue_types</strong>: a json with a list of objects with:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong>: string</p>
+</li>
+<li>
+<p><strong>color</strong>: #rgb color</p>
+</li>
+<li>
+<p><strong>order</strong>: integer</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>priorities</strong>: a json with a list of objects with:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong>: string</p>
+</li>
+<li>
+<p><strong>color</strong>: #rgb color</p>
+</li>
+<li>
+<p><strong>order</strong>: integer</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>severities</strong>: a json with a list of objects with:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong>: string</p>
+</li>
+<li>
+<p><strong>color</strong>: #rgb color</p>
+</li>
+<li>
+<p><strong>order</strong>: integer</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>roles</strong>: a json with a list of objects with:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>name</strong>: string</p>
+</li>
+<li>
+<p><strong>slug</strong>: slug</p>
+</li>
+<li>
+<p><strong>permissions</strong>: list of permissions</p>
+</li>
+<li>
+<p><strong>order</strong>: integer</p>
+</li>
+<li>
+<p><strong>computable</strong>: boolean</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">ADMIN_AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "default_options": {</span>
+<span class="tok-s1">            "issue_status": "New",</span>
+<span class="tok-s1">            "issue_type": "Bug",</span>
+<span class="tok-s1">            "points": "?",</span>
+<span class="tok-s1">            "priority": "Normal",</span>
+<span class="tok-s1">            "severity": "Normal",</span>
+<span class="tok-s1">            "task_status": "New",</span>
+<span class="tok-s1">            "us_status": "New"</span>
+<span class="tok-s1">        },</span>
+<span class="tok-s1">        "default_owner_role": "product-owner",</span>
+<span class="tok-s1">        "description": "Sample description",</span>
+<span class="tok-s1">        "id": 2,</span>
+<span class="tok-s1">        "is_backlog_activated": false,</span>
+<span class="tok-s1">        "is_issues_activated": false,</span>
+<span class="tok-s1">        "is_kanban_activated": true,</span>
+<span class="tok-s1">        "is_wiki_activated": false,</span>
+<span class="tok-s1">        "issue_statuses": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#999999",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "New",</span>
+<span class="tok-s1">                "order": 1</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#729fcf",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "In progress",</span>
+<span class="tok-s1">                "order": 2</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#f57900",</span>
+<span class="tok-s1">                "is_closed": true,</span>
+<span class="tok-s1">                "name": "Ready for test",</span>
+<span class="tok-s1">                "order": 3</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#4e9a06",</span>
+<span class="tok-s1">                "is_closed": true,</span>
+<span class="tok-s1">                "name": "Closed",</span>
+<span class="tok-s1">                "order": 4</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#cc0000",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "Needs Info",</span>
+<span class="tok-s1">                "order": 5</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#d3d7cf",</span>
+<span class="tok-s1">                "is_closed": true,</span>
+<span class="tok-s1">                "name": "Rejected",</span>
+<span class="tok-s1">                "order": 6</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#75507b",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "Postponed",</span>
+<span class="tok-s1">                "order": 7</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "issue_types": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#cc0000",</span>
+<span class="tok-s1">                "name": "Bug",</span>
+<span class="tok-s1">                "order": 1</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#729fcf",</span>
+<span class="tok-s1">                "name": "Question",</span>
+<span class="tok-s1">                "order": 2</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#4e9a06",</span>
+<span class="tok-s1">                "name": "Enhancement",</span>
+<span class="tok-s1">                "order": 3</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "name": "New Template",</span>
+<span class="tok-s1">        "points": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "?",</span>
+<span class="tok-s1">                "order": 1,</span>
+<span class="tok-s1">                "value": null</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "0",</span>
+<span class="tok-s1">                "order": 2,</span>
+<span class="tok-s1">                "value": 0.0</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "1/2",</span>
+<span class="tok-s1">                "order": 3,</span>
+<span class="tok-s1">                "value": 0.5</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "1",</span>
+<span class="tok-s1">                "order": 4,</span>
+<span class="tok-s1">                "value": 1.0</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "2",</span>
+<span class="tok-s1">                "order": 5,</span>
+<span class="tok-s1">                "value": 2.0</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "3",</span>
+<span class="tok-s1">                "order": 6,</span>
+<span class="tok-s1">                "value": 3.0</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "5",</span>
+<span class="tok-s1">                "order": 7,</span>
+<span class="tok-s1">                "value": 5.0</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "8",</span>
+<span class="tok-s1">                "order": 8,</span>
+<span class="tok-s1">                "value": 8.0</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "10",</span>
+<span class="tok-s1">                "order": 9,</span>
+<span class="tok-s1">                "value": 10.0</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "15",</span>
+<span class="tok-s1">                "order": 10,</span>
+<span class="tok-s1">                "value": 15.0</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "20",</span>
+<span class="tok-s1">                "order": 11,</span>
+<span class="tok-s1">                "value": 20.0</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "name": "40",</span>
+<span class="tok-s1">                "order": 12,</span>
+<span class="tok-s1">                "value": 40.0</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "priorities": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#999999",</span>
+<span class="tok-s1">                "name": "Low",</span>
+<span class="tok-s1">                "order": 1</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#4e9a06",</span>
+<span class="tok-s1">                "name": "Normal",</span>
+<span class="tok-s1">                "order": 3</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#CC0000",</span>
+<span class="tok-s1">                "name": "High",</span>
+<span class="tok-s1">                "order": 5</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "roles": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "computable": true,</span>
+<span class="tok-s1">                "name": "UX",</span>
+<span class="tok-s1">                "order": 10,</span>
+<span class="tok-s1">                "permissions": [</span>
+<span class="tok-s1">                    "add_issue",</span>
+<span class="tok-s1">                    "modify_issue",</span>
+<span class="tok-s1">                    "comment_issue",</span>
+<span class="tok-s1">                    "delete_issue",</span>
+<span class="tok-s1">                    "view_issues",</span>
+<span class="tok-s1">                    "add_milestone",</span>
+<span class="tok-s1">                    "modify_milestone",</span>
+<span class="tok-s1">                    "delete_milestone",</span>
+<span class="tok-s1">                    "view_milestones",</span>
+<span class="tok-s1">                    "view_project",</span>
+<span class="tok-s1">                    "add_task",</span>
+<span class="tok-s1">                    "modify_task",</span>
+<span class="tok-s1">                    "comment_task",</span>
+<span class="tok-s1">                    "delete_task",</span>
+<span class="tok-s1">                    "view_tasks",</span>
+<span class="tok-s1">                    "add_us",</span>
+<span class="tok-s1">                    "modify_us",</span>
+<span class="tok-s1">                    "comment_us",</span>
+<span class="tok-s1">                    "delete_us",</span>
+<span class="tok-s1">                    "view_us",</span>
+<span class="tok-s1">                    "add_wiki_page",</span>
+<span class="tok-s1">                    "modify_wiki_page",</span>
+<span class="tok-s1">                    "comment_wiki_page",</span>
+<span class="tok-s1">                    "delete_wiki_page",</span>
+<span class="tok-s1">                    "view_wiki_pages",</span>
+<span class="tok-s1">                    "add_wiki_link",</span>
+<span class="tok-s1">                    "delete_wiki_link",</span>
+<span class="tok-s1">                    "view_wiki_links"</span>
+<span class="tok-s1">                ],</span>
+<span class="tok-s1">                "slug": "ux"</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "computable": true,</span>
+<span class="tok-s1">                "name": "Design",</span>
+<span class="tok-s1">                "order": 20,</span>
+<span class="tok-s1">                "permissions": [</span>
+<span class="tok-s1">                    "add_issue",</span>
+<span class="tok-s1">                    "modify_issue",</span>
+<span class="tok-s1">                    "comment_issue",</span>
+<span class="tok-s1">                    "delete_issue",</span>
+<span class="tok-s1">                    "view_issues",</span>
+<span class="tok-s1">                    "add_milestone",</span>
+<span class="tok-s1">                    "modify_milestone",</span>
+<span class="tok-s1">                    "delete_milestone",</span>
+<span class="tok-s1">                    "view_milestones",</span>
+<span class="tok-s1">                    "view_project",</span>
+<span class="tok-s1">                    "add_task",</span>
+<span class="tok-s1">                    "modify_task",</span>
+<span class="tok-s1">                    "comment_task",</span>
+<span class="tok-s1">                    "delete_task",</span>
+<span class="tok-s1">                    "view_tasks",</span>
+<span class="tok-s1">                    "add_us",</span>
+<span class="tok-s1">                    "modify_us",</span>
+<span class="tok-s1">                    "comment_us",</span>
+<span class="tok-s1">                    "delete_us",</span>
+<span class="tok-s1">                    "view_us",</span>
+<span class="tok-s1">                    "add_wiki_page",</span>
+<span class="tok-s1">                    "modify_wiki_page",</span>
+<span class="tok-s1">                    "comment_wiki_page",</span>
+<span class="tok-s1">                    "delete_wiki_page",</span>
+<span class="tok-s1">                    "view_wiki_pages",</span>
+<span class="tok-s1">                    "add_wiki_link",</span>
+<span class="tok-s1">                    "delete_wiki_link",</span>
+<span class="tok-s1">                    "view_wiki_links"</span>
+<span class="tok-s1">                ],</span>
+<span class="tok-s1">                "slug": "design"</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "computable": true,</span>
+<span class="tok-s1">                "name": "Front",</span>
+<span class="tok-s1">                "order": 30,</span>
+<span class="tok-s1">                "permissions": [</span>
+<span class="tok-s1">                    "add_issue",</span>
+<span class="tok-s1">                    "modify_issue",</span>
+<span class="tok-s1">                    "comment_issue",</span>
+<span class="tok-s1">                    "delete_issue",</span>
+<span class="tok-s1">                    "view_issues",</span>
+<span class="tok-s1">                    "add_milestone",</span>
+<span class="tok-s1">                    "modify_milestone",</span>
+<span class="tok-s1">                    "delete_milestone",</span>
+<span class="tok-s1">                    "view_milestones",</span>
+<span class="tok-s1">                    "view_project",</span>
+<span class="tok-s1">                    "add_task",</span>
+<span class="tok-s1">                    "modify_task",</span>
+<span class="tok-s1">                    "comment_task",</span>
+<span class="tok-s1">                    "delete_task",</span>
+<span class="tok-s1">                    "view_tasks",</span>
+<span class="tok-s1">                    "add_us",</span>
+<span class="tok-s1">                    "modify_us",</span>
+<span class="tok-s1">                    "comment_us",</span>
+<span class="tok-s1">                    "delete_us",</span>
+<span class="tok-s1">                    "view_us",</span>
+<span class="tok-s1">                    "add_wiki_page",</span>
+<span class="tok-s1">                    "modify_wiki_page",</span>
+<span class="tok-s1">                    "comment_wiki_page",</span>
+<span class="tok-s1">                    "delete_wiki_page",</span>
+<span class="tok-s1">                    "view_wiki_pages",</span>
+<span class="tok-s1">                    "add_wiki_link",</span>
+<span class="tok-s1">                    "delete_wiki_link",</span>
+<span class="tok-s1">                    "view_wiki_links"</span>
+<span class="tok-s1">                ],</span>
+<span class="tok-s1">                "slug": "front"</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "computable": true,</span>
+<span class="tok-s1">                "name": "Back",</span>
+<span class="tok-s1">                "order": 40,</span>
+<span class="tok-s1">                "permissions": [</span>
+<span class="tok-s1">                    "add_issue",</span>
+<span class="tok-s1">                    "modify_issue",</span>
+<span class="tok-s1">                    "comment_issue",</span>
+<span class="tok-s1">                    "delete_issue",</span>
+<span class="tok-s1">                    "view_issues",</span>
+<span class="tok-s1">                    "add_milestone",</span>
+<span class="tok-s1">                    "modify_milestone",</span>
+<span class="tok-s1">                    "delete_milestone",</span>
+<span class="tok-s1">                    "view_milestones",</span>
+<span class="tok-s1">                    "view_project",</span>
+<span class="tok-s1">                    "add_task",</span>
+<span class="tok-s1">                    "modify_task",</span>
+<span class="tok-s1">                    "comment_task",</span>
+<span class="tok-s1">                    "delete_task",</span>
+<span class="tok-s1">                    "view_tasks",</span>
+<span class="tok-s1">                    "add_us",</span>
+<span class="tok-s1">                    "modify_us",</span>
+<span class="tok-s1">                    "comment_us",</span>
+<span class="tok-s1">                    "delete_us",</span>
+<span class="tok-s1">                    "view_us",</span>
+<span class="tok-s1">                    "add_wiki_page",</span>
+<span class="tok-s1">                    "modify_wiki_page",</span>
+<span class="tok-s1">                    "comment_wiki_page",</span>
+<span class="tok-s1">                    "delete_wiki_page",</span>
+<span class="tok-s1">                    "view_wiki_pages",</span>
+<span class="tok-s1">                    "add_wiki_link",</span>
+<span class="tok-s1">                    "delete_wiki_link",</span>
+<span class="tok-s1">                    "view_wiki_links"</span>
+<span class="tok-s1">                ],</span>
+<span class="tok-s1">                "slug": "back"</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "computable": false,</span>
+<span class="tok-s1">                "name": "Product Owner",</span>
+<span class="tok-s1">                "order": 50,</span>
+<span class="tok-s1">                "permissions": [</span>
+<span class="tok-s1">                    "add_issue",</span>
+<span class="tok-s1">                    "modify_issue",</span>
+<span class="tok-s1">                    "comment_issue",</span>
+<span class="tok-s1">                    "delete_issue",</span>
+<span class="tok-s1">                    "view_issues",</span>
+<span class="tok-s1">                    "add_milestone",</span>
+<span class="tok-s1">                    "modify_milestone",</span>
+<span class="tok-s1">                    "delete_milestone",</span>
+<span class="tok-s1">                    "view_milestones",</span>
+<span class="tok-s1">                    "view_project",</span>
+<span class="tok-s1">                    "add_task",</span>
+<span class="tok-s1">                    "modify_task",</span>
+<span class="tok-s1">                    "comment_task",</span>
+<span class="tok-s1">                    "delete_task",</span>
+<span class="tok-s1">                    "view_tasks",</span>
+<span class="tok-s1">                    "add_us",</span>
+<span class="tok-s1">                    "modify_us",</span>
+<span class="tok-s1">                    "comment_us",</span>
+<span class="tok-s1">                    "delete_us",</span>
+<span class="tok-s1">                    "view_us",</span>
+<span class="tok-s1">                    "add_wiki_page",</span>
+<span class="tok-s1">                    "modify_wiki_page",</span>
+<span class="tok-s1">                    "comment_wiki_page",</span>
+<span class="tok-s1">                    "delete_wiki_page",</span>
+<span class="tok-s1">                    "view_wiki_pages",</span>
+<span class="tok-s1">                    "add_wiki_link",</span>
+<span class="tok-s1">                    "delete_wiki_link",</span>
+<span class="tok-s1">                    "view_wiki_links"</span>
+<span class="tok-s1">                ],</span>
+<span class="tok-s1">                "slug": "product-owner"</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "computable": false,</span>
+<span class="tok-s1">                "name": "Stakeholder",</span>
+<span class="tok-s1">                "order": 60,</span>
+<span class="tok-s1">                "permissions": [</span>
+<span class="tok-s1">                    "add_issue",</span>
+<span class="tok-s1">                    "modify_issue",</span>
+<span class="tok-s1">                    "comment_issue",</span>
+<span class="tok-s1">                    "delete_issue",</span>
+<span class="tok-s1">                    "view_issues",</span>
+<span class="tok-s1">                    "view_milestones",</span>
+<span class="tok-s1">                    "view_project",</span>
+<span class="tok-s1">                    "view_tasks",</span>
+<span class="tok-s1">                    "view_us",</span>
+<span class="tok-s1">                    "modify_wiki_page",</span>
+<span class="tok-s1">                    "comment_wiki_page",</span>
+<span class="tok-s1">                    "view_wiki_pages",</span>
+<span class="tok-s1">                    "add_wiki_link",</span>
+<span class="tok-s1">                    "delete_wiki_link",</span>
+<span class="tok-s1">                    "view_wiki_links"</span>
+<span class="tok-s1">                ],</span>
+<span class="tok-s1">                "slug": "stakeholder"</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "severities": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#999999",</span>
+<span class="tok-s1">                "name": "Wishlist",</span>
+<span class="tok-s1">                "order": 1</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#729fcf",</span>
+<span class="tok-s1">                "name": "Minor",</span>
+<span class="tok-s1">                "order": 2</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#4e9a06",</span>
+<span class="tok-s1">                "name": "Normal",</span>
+<span class="tok-s1">                "order": 3</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#f57900",</span>
+<span class="tok-s1">                "name": "Important",</span>
+<span class="tok-s1">                "order": 4</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#CC0000",</span>
+<span class="tok-s1">                "name": "Critical",</span>
+<span class="tok-s1">                "order": 5</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "slug": "new-template",</span>
+<span class="tok-s1">        "task_statuses": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#999999",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "New",</span>
+<span class="tok-s1">                "order": 1</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#729fcf",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "In progress",</span>
+<span class="tok-s1">                "order": 2</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#f57900",</span>
+<span class="tok-s1">                "is_closed": true,</span>
+<span class="tok-s1">                "name": "Ready for test",</span>
+<span class="tok-s1">                "order": 3</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#4e9a06",</span>
+<span class="tok-s1">                "is_closed": true,</span>
+<span class="tok-s1">                "name": "Closed",</span>
+<span class="tok-s1">                "order": 4</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#cc0000",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "Needs Info",</span>
+<span class="tok-s1">                "order": 5</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "us_statuses": [</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#999999",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "New",</span>
+<span class="tok-s1">                "order": 1,</span>
+<span class="tok-s1">                "wip_limit": null</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#f57900",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "Ready",</span>
+<span class="tok-s1">                "order": 2,</span>
+<span class="tok-s1">                "wip_limit": null</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#729fcf",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "In progress",</span>
+<span class="tok-s1">                "order": 3,</span>
+<span class="tok-s1">                "wip_limit": null</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#4e9a06",</span>
+<span class="tok-s1">                "is_closed": false,</span>
+<span class="tok-s1">                "name": "Ready for test",</span>
+<span class="tok-s1">                "order": 4,</span>
+<span class="tok-s1">                "wip_limit": null</span>
+<span class="tok-s1">            },</span>
+<span class="tok-s1">            {</span>
+<span class="tok-s1">                "color": "#cc0000",</span>
+<span class="tok-s1">                "is_closed": true,</span>
+<span class="tok-s1">                "name": "Done",</span>
+<span class="tok-s1">                "order": 5,</span>
+<span class="tok-s1">                "wip_limit": null</span>
+<span class="tok-s1">            }</span>
+<span class="tok-s1">        ],</span>
+<span class="tok-s1">        "videoconferences": null,</span>
+<span class="tok-s1">        "videoconferences_extra_data": ""</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/project-templates</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">ADMIN_AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "default_owner_role": "product-owner",</span>
+<span class="tok-s1">        "description": "Sample description",</span>
+<span class="tok-s1">        "name": "New simple template"</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/project-templates</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-template-detail">project template detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="project-templates-get">9.3. Get</h3>
+<div class="paragraph">
+<p>To get a project template send a GET request specifying the project template id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/project-templates/1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-template-detail">project template detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="project-templates-edit">9.4. Edit</h3>
+<div class="paragraph">
+<p>To edit project templates send a PUT or a PATCH specifying the project template id in the url.
+In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">ADMIN_AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-d <span class="tok-s1">'{</span>
+<span class="tok-s1">        "description": "New description"</span>
+<span class="tok-s1">    }'</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/project-templates/1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-template-detail">project template detail object</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="project-templates-delete">9.5. Delete</h3>
+<div class="paragraph">
+<p>To delete project template send a DELETE specifying the project template id in the url</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+-H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+-H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">ADMIN_AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+-s http://localhost:8000/api/v1/project-templates/1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
+</div>
+</div>
+</div>
+</div>
+

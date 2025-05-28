@@ -1,0 +1,384 @@
+<div class="sect1">
+<h2 id="_general_notes">1. General notes</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tbody><tr>
+<td class="icon">
+<div class="title"></div>
+</td>
+<td class="content">
+<div class="title">About Taiga instance and URLs used in this document</div>
+<div class="paragraph">
+<p>All API calls used in the documentation are refered to a local taiga instance API running on localhost:8000,
+so if you use another instance remember to change the url.</p>
+</div>
+<div class="paragraph">
+<p>For example, if you want to perform the tests against our own instance, you should use <em><a class="bare" href="https://api.taiga.io/api/v1">https://api.taiga.io/api/v1</a></em>
+instead of  <em><a class="bare" href="http://localhost:8000/api/v1">http://localhost:8000/api/v1</a></em>.</p>
+</div>
+</td>
+</tr>
+</tbody></table>
+</div>
+<div class="sect2">
+<h3 id="_authentication">1.1. Authentication</h3>
+<div class="sect3">
+<h4 id="_standard_token_authentication">1.1.1. Standard token authentication</h4>
+<div class="paragraph">
+<p>To authenticate requests an http header called "Authorization" should be added. Its format should be:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code><span></span>Authorization: Bearer ${AUTH_TOKEN}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This token can be received through the <a href="https://docs.taiga.io/api.html#auth-normal-login">login API</a></p>
+</div>
+<div class="paragraph">
+<p>To provide an example, the following can be used within a Bash script running on Ubuntu - customise as appropriate for your system configuration.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Install <code>jq</code> (a command-line JSON processor):</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>$ sudo apt-get install jq</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Bash snippet:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span><span class="tok-ch">#!/bin/bash</span>
+<span class="tok-c1"># Request username and password for connecting to Taiga</span>
+<span class="tok-nb">read</span> -p <span class="tok-s2">"Username or email: "</span> USERNAME
+<span class="tok-nb">read</span> -r -s -p <span class="tok-s2">"Password: "</span> PASSWORD
+
+<span class="tok-nv">DATA</span><span class="tok-o">=</span><span class="tok-k">$(</span>jq --null-input <span class="tok-se">\</span>
+        --arg username <span class="tok-s2">"</span><span class="tok-nv">$USERNAME</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+        --arg password <span class="tok-s2">"</span><span class="tok-nv">$PASSWORD</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+        <span class="tok-s1">'{ type: "normal", username: $username, password: $password }'</span><span class="tok-k">)</span>
+
+<span class="tok-c1"># Get AUTH_TOKEN</span>
+<span class="tok-nv">USER_AUTH_DETAIL</span><span class="tok-o">=</span><span class="tok-k">$(</span> curl -X POST <span class="tok-se">\</span>
+  -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+  -d <span class="tok-s2">"</span><span class="tok-nv">$DATA</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
+  https://api.taiga.io/api/v1/auth <span class="tok-m">2</span>&gt;/dev/null <span class="tok-k">)</span>
+
+<span class="tok-nv">AUTH_TOKEN</span><span class="tok-o">=</span><span class="tok-k">$(</span> <span class="tok-nb">echo</span> <span class="tok-si">${</span><span class="tok-nv">USER_AUTH_DETAIL</span><span class="tok-si">}</span> <span class="tok-p">|</span> jq -r <span class="tok-s1">'.auth_token'</span> <span class="tok-k">)</span>
+
+<span class="tok-c1"># Exit if AUTH_TOKEN is not available</span>
+<span class="tok-k">if</span> <span class="tok-o">[</span> -z <span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span> <span class="tok-o">]</span><span class="tok-p">;</span> <span class="tok-k">then</span>
+    <span class="tok-nb">echo</span> <span class="tok-s2">"Error: Incorrect username and/or password supplied"</span>
+    <span class="tok-nb">exit</span> <span class="tok-m">1</span>
+<span class="tok-k">else</span>
+    <span class="tok-nb">echo</span> <span class="tok-s2">"auth_token is </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span>
+<span class="tok-k">fi</span>
+
+<span class="tok-c1"># Proceed to use API calls as desired</span>
+...</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If unable to install <code>jq</code>, it is possible (but not recommended) to use <code>grep</code> and <code>cut</code> to extract the value of <code>auth_token</code> from the JSON <a href="https://docs.taiga.io/api.html#object-auth-user-detail">user auth detail object</a> - use the following line instead:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-o">=</span><span class="tok-k">$(</span> <span class="tok-nb">echo</span> <span class="tok-si">${</span><span class="tok-nv">USER_AUTH_DETAIL</span><span class="tok-si">}</span> <span class="tok-p">|</span> grep -Po <span class="tok-s1">'"auth_token":.*?[^\\]",'</span> <span class="tok-p">|</span> cut -d<span class="tok-se">\"</span> -f4 <span class="tok-k">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This token has an expiration time so you must update it with a <a href="https://docs.taiga.io/api.html#auth-normal-login">refresh API call</a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_application_token_authentication">1.1.2. Application token authentication</h4>
+<div class="paragraph">
+<p>This kind of tokens are designed for allowing external apps use the Taiga API, they are associated to an existing user and an Application. They can be manually created via the django ADMIN or programatically created via API.</p>
+</div>
+<div class="paragraph">
+<p>They work in the same way than standard Taiga authentication tokens but the "Authorization" header change slightly. Its format should be:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code><span></span>Authorization: Application ${AUTH_TOKEN}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The process for obtaining a valid token consists in:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.taiga.io/api.html#external-app-get-token">Checking if there is an existing application token for the requesting user</a></p>
+</li>
+<li>
+<p><a href="https://docs.taiga.io/api.html#external-app-authorization">Requesting an authorization code for the requesting user if it doesn’t exist yet</a></p>
+</li>
+<li>
+<p><a href="https://docs.taiga.io/api.html#external-app-validation">Validating the authorization code to obtain the final token</a></p>
+</li>
+<li>
+<p><a href="https://docs.taiga.io/api.html#external-app-decyphering">Decyphering the token</a></p>
+</li>
+</ul>
+</div>
+<div class="sect4">
+<h5 id="external-app-get-token">Checking if there is an existing application token for the requesting user</h5>
+<div class="paragraph">
+<p>A GET request must be done to the applications resource including the application id in the url and specifying the token endpoint:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+    -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+    -H <span class="tok-s2">"Authorization: Bearer {AUTH_TOKEN}"</span> <span class="tok-se">\</span>
+    https://api.taiga.io/api/v1/applications/5c8515c2-4fc4-11e5-9a5e-68f72800aadd/token</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The API will answer with info about the application and the token:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+    <span class="tok-nt">"user"</span><span class="tok-p">:</span> <span class="tok-mi">4</span><span class="tok-p">,</span>
+    <span class="tok-nt">"id"</span><span class="tok-p">:</span> <span class="tok-kc">null</span><span class="tok-p">,</span>
+    <span class="tok-nt">"application"</span><span class="tok-p">:</span> <span class="tok-p">{</span>
+        <span class="tok-nt">"id"</span><span class="tok-p">:</span> <span class="tok-s2">"a60c3208-5234-11e5-96df-68f72800aadd"</span><span class="tok-p">,</span>
+        <span class="tok-nt">"name"</span><span class="tok-p">:</span> <span class="tok-s2">"Testing application"</span><span class="tok-p">,</span>
+        <span class="tok-nt">"web"</span><span class="tok-p">:</span> <span class="tok-s2">"http://taiga.io"</span><span class="tok-p">,</span>
+        <span class="tok-nt">"description"</span><span class="tok-p">:</span> <span class="tok-s2">"Testing external app"</span><span class="tok-p">,</span>
+        <span class="tok-nt">"icon_url"</span><span class="tok-p">:</span> <span class="tok-s2">"https://tree.taiga.io/images/beta.png"</span>
+    <span class="tok-p">},</span>
+    <span class="tok-nt">"auth_code"</span><span class="tok-p">:</span> <span class="tok-kc">null</span><span class="tok-p">,</span>
+    <span class="tok-nt">"next_url"</span><span class="tok-p">:</span> <span class="tok-s2">"http://tree.taiga.io/redirect?auth_code=None"</span>
+<span class="tok-p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If id and auth_code are null it means there is no application token generated and you need to <a href="https://docs.taiga.io/api.html#external-app-authorization">authorize one</a>. If they are not null you can jump to the <a href="https://docs.taiga.io/api.html#external-app-validation">validation step</a>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="external-app-authorization">Requesting an authorization code for the requesting user if it doesn’t exist yet</h5>
+<div class="paragraph">
+<p>The request should include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>application: the application id for the requested token</p>
+</li>
+<li>
+<p>state: an unguessable random string. It is used to protect against cross-site request forgery attacks. The API will include this value when the validation process is completed so the final app can verify it matches the original one.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+    -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+    -H <span class="tok-s2">"Authorization: Bearer eyJ1c2VyX2F1dGhlbnRpY2F0aW9uX2lkIjo0fQ:1ZX33b:QnAN3EcuChLoRVf3CdybWEi2OEg"</span> <span class="tok-se">\</span>
+    -d <span class="tok-s1">'{</span>
+<span class="tok-s1">    	  "application": "a60c3208-5234-11e5-96df-68f72800aadd",</span>
+<span class="tok-s1">    	  "state": "random-state"</span>
+<span class="tok-s1">      }'</span> <span class="tok-se">\</span>
+    https://api.taiga.io/api/v1/application-tokens/authorize</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The API answer will be something like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+    <span class="tok-nt">"auth_code"</span><span class="tok-p">:</span> <span class="tok-s2">"c8bfacba-5236-11e5-b8f6-68f72800aadd"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"state"</span><span class="tok-p">:</span> <span class="tok-s2">"random-state"</span><span class="tok-p">,</span>
+    <span class="tok-nt">"next_url"</span><span class="tok-p">:</span> <span class="tok-s2">"asd?auth_code=c8bfacba-5236-11e5-b8f6-68f72800aadd"</span>
+<span class="tok-p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The obtained auth_code must be validated as described in the <a href="https://docs.taiga.io/api.html#external-app-validation">validation step</a>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="external-app-validation">Validating the authorization code to obtain the final token</h5>
+<div class="paragraph">
+<p>Now the external app must validate the auth_code obtained in the previous steps with a request including:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>application: the application id for the requested token</p>
+</li>
+<li>
+<p>state: an unguessable random string. It is used to protect against cross-site request forgery attacks. The API will include this value when the validation process is completed so the final app can verify it matches the original one.</p>
+</li>
+<li>
+<p>auth_code: the authorization code received on previous the steps.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+    -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
+    -H <span class="tok-s2">"Authorization: Bearer eyJ1c2VyX2F1dGhlbnRpY2F0aW9uX2lkIjo0fQ:1ZX33b:QnAN3EcuChLoRVf3CdybWEi2OEg"</span> <span class="tok-se">\</span>
+    -d <span class="tok-s1">'{</span>
+<span class="tok-s1">    	  "application": "a60c3208-5234-11e5-96df-68f72800aadd",</span>
+<span class="tok-s1">    	  "auth_code": "21ce08c4-5237-11e5-a8a3-68f72800aadd",</span>
+<span class="tok-s1">    	  "state": "random-state"</span>
+<span class="tok-s1">      }'</span> <span class="tok-se">\</span>
+https://api.taiga.io/api/v1/application-tokens/validate</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The API answer will be something like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+    <span class="tok-nt">"cyphered_token"</span><span class="tok-p">:</span> <span class="tok-s2">"eyJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiQTEyOEtXIn0.E-Ee1cRgG0JEd90yJu-Dgl_vwKHTHdPy2YHRbCsMvfiJx0OvR12E8g.kGwJPnWQJecFPEae.ebQtpRNPbKh6FBS-LSUhw1xNARl0Q5loCO4fAk00LHFqcDpAwba7LHeR3MPx9T9LfA.KM-Id_041g8OdWaseGyV8g"</span>
+<span class="tok-p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="external-app-decyphering">Decyphering the token</h5>
+<div class="paragraph">
+<p>The token is cyphered using JWE with A128KW as algorythm and A256GCM as encryption. Both parts (Taiga and the external application requesting the token) must know about the encryption key used in the process (in Taiga it’s an attribute of the application model).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>A python snippet for decyphering the token:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python"><span></span><span class="tok-kn">from</span> <span class="tok-nn">jwkest.jwk</span> <span class="tok-kn">import</span> <span class="tok-n">SYMKey</span>
+<span class="tok-kn">from</span> <span class="tok-nn">jwkest.jwe</span> <span class="tok-kn">import</span> <span class="tok-n">JWE</span>
+<span class="tok-n">key</span> <span class="tok-o">=</span><span class="tok-s2">"this-is-the-secret-key"</span>
+<span class="tok-n">cyphered_token</span><span class="tok-o">=</span><span class="tok-s2">"eyJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiQTEyOEtXIn0.H5jWzzXQISSh_QPCO5mWhT0EI9RRV45xA7vbWoxeBIjiCL3qwAmlzg.bBWVKwGTkta5y99c.ArycfFtrlmWgyZ4lwXw_JiSVmkn9YF6Xwlh8nVDku0BLW8kvaxNy3XRbbb17MtZ7mg.pDkpgDwffCyCy4sYNQI6zA"</span>
+<span class="tok-n">sym_key</span> <span class="tok-o">=</span> <span class="tok-n">SYMKey</span><span class="tok-p">(</span><span class="tok-n">key</span><span class="tok-o">=</span><span class="tok-n">key</span><span class="tok-p">,</span> <span class="tok-n">alg</span><span class="tok-o">=</span><span class="tok-s2">"A128KW"</span><span class="tok-p">)</span>
+<span class="tok-n">token</span><span class="tok-o">=</span><span class="tok-n">JWE</span><span class="tok-p">()</span><span class="tok-o">.</span><span class="tok-n">decrypt</span><span class="tok-p">(</span><span class="tok-n">cyphered_token</span><span class="tok-p">,</span> <span class="tok-n">keys</span><span class="tok-o">=</span><span class="tok-p">[</span><span class="tok-n">sym_key</span><span class="tok-p">])</span>
+<span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-n">token</span><span class="tok-p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When decyphering it correctly you will obtain a json containing the application token that can be used in the Authorization headers</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+    <span class="tok-nt">"token"</span><span class="tok-p">:</span> <span class="tok-s2">"95db1710-5238-11e5-a86e-68f72800aadd"</span>
+<span class="tok-p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_occ_optimistic_concurrency_control">1.2. OCC - Optimistic concurrency control</h3>
+<div class="paragraph">
+<p>In taiga multiple operations can be happening at the same time for an element so every modifying request should include a valid version parameter. You can think about two different users updating the same user story, there are two possible scenarios here:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>They are updating the same attributes on the element. In this situation the API will accept the first request and deny the second one because the version parameter will be considered as invalid.</p>
+</li>
+<li>
+<p>They are updating different attributes on the element. In this situation the API is smart enough for accepting both requests, the second one would have an invalid version but the changes are not affecting modified attributes so they can be applied safely</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The version parameter is considered valid if it contains the current version for the element, it will be incremented automatically if the modification is successful.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pagination">1.3. Pagination</h3>
+<div class="paragraph">
+<p>By default the API will always return paginated results and includes the following headers in the response:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>x-paginated: boolean indicating if pagination is being used for the request</p>
+</li>
+<li>
+<p>x-paginated-by: number of results per page</p>
+</li>
+<li>
+<p>x-pagination-count: total number of results</p>
+</li>
+<li>
+<p>x-pagination-current: current page</p>
+</li>
+<li>
+<p>x-pagination-next: next results</p>
+</li>
+<li>
+<p>x-pagination-prev: previous results</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Disabling pagination</strong> can be accomplished by setting an extra http header:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code><span></span>x-disable-pagination: True</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_internationalization">1.4. Internationalization</h3>
+<div class="paragraph">
+<p>The API returns some content translated, you can specify the language with an extra http header:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code><span></span>Accept-Language: {LanguageId}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The LanguageId can be chosen from the value list of available languages. You can get them using the <a href="https://docs.taiga.io/api.html#locales">locales API</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_throttling">1.5. Throttling</h3>
+<div class="paragraph">
+<p>If the api is configured with throttling you have to take care on responses
+with 429 (Too many requests) status code, that mean you reach the throttling
+limit.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_read_only_fields">1.6. Read only fields</h3>
+<div class="paragraph">
+<p>All the fields ending in _extra_info (assigned_to_extra_info, is_private_extra_info, owner_extra_info, project_extra_info, status_extra_info, status_extra_info, user_story_extra_info…​) are read only fields</p>
+</div>
+</div>
+</div>
+</div>
+

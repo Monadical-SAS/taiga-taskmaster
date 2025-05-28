@@ -35,7 +35,7 @@
       ],
       "priority": "high",
       "details": "1. Implement the HTTP client based on the existing interfaces in the core package\n2. Create authentication utilities for Taiga API:\n   - Bearer token authentication\n   - Token refresh mechanism\n   - Auth header generation\n3. Implement retry logic with exponential backoff\n4. Add proper error handling and logging\n5. Create HTTP client factory function with dependency injection\n6. Implement request/response interceptors for authentication\n7. Add rate limiting protection\n8. Create unit tests with mocked responses\n\nThe implementation should follow the interface-driven approach established in the project architecture.",
-      "testStrategy": "1. Unit test the HTTP client creation with different base URLs\n2. Test auth header generation with various token configurations\n3. Mock Axios for testing token refresh functionality\n4. Test retry mechanism with both success and failure scenarios\n5. Verify exponential backoff calculations\n6. Test jitter randomization is within expected bounds\n7. Mock Taiga API responses for client method tests\n8. Verify the implementation conforms to the established interfaces",
+      "testStrategy": "1. Unit test the HTTP client creation with different base URLs\n2. Test auth header generation with various token configurations\n3. Mock Undici for testing token refresh functionality\n4. Test retry mechanism with both success and failure scenarios\n5. Verify exponential backoff calculations\n6. Test jitter randomization is within expected bounds\n7. Mock Taiga API responses for client method tests\n8. Verify the implementation conforms to the established interfaces",
       "subtasks": [
         {
           "id": 3.1,

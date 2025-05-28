@@ -22,7 +22,7 @@ The implementation should follow the interface-driven approach established in th
 # Test Strategy:
 1. Unit test the HTTP client creation with different base URLs
 2. Test auth header generation with various token configurations
-3. Mock Axios for testing token refresh functionality
+3. Mock Undici for testing token refresh functionality
 4. Test retry mechanism with both success and failure scenarios
 5. Verify exponential backoff calculations
 6. Test jitter randomization is within expected bounds
