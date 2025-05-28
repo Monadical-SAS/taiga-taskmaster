@@ -20,8 +20,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Test configuration - safe isolated directory
-const TEST_PREFIX = "packages/taskmaster-test/test";
-const TEMP_DIR = join(__dirname, "..", "test");
+const TEMP_DIR = join(__dirname, "..", "temp");
+const TEST_PREFIX = TEMP_DIR;
 const TEST_PRD = `# Sample PRD for Testing
 
 ## Project Overview
@@ -59,20 +59,12 @@ async function setupTestEnvironment(): Promise<void> {
     await fs.mkdir(join(TEMP_DIR, "scripts"), { recursive: true });
     await fs.mkdir(join(TEMP_DIR, "tasks"), { recursive: true });
 
-    // Also create the safe prefixed directory structure
-    await fs.mkdir(join(TEST_PREFIX, "scripts"), { recursive: true });
-    await fs.mkdir(join(TEST_PREFIX, "tasks"), { recursive: true });
-
-    // Write PRD file to both locations for compatibility
-    const localPrdPath = join(TEMP_DIR, "scripts", "prd.txt");
-    const safePrdPath = join(TEST_PREFIX, "scripts", "prd.txt");
-    
-    await fs.writeFile(localPrdPath, TEST_PRD, "utf8");
-    await fs.writeFile(safePrdPath, TEST_PRD, "utf8");
+    // Write PRD file to temp directory
+    const prdPath = join(TEMP_DIR, "scripts", "prd.txt");
+    await fs.writeFile(prdPath, TEST_PRD, "utf8");
 
     console.log("✅ Test environment setup complete");
-    console.log(`📝 PRD file created at: ${localPrdPath}`);
-    console.log(`🔒 Safe PRD file created at: ${safePrdPath}`);
+    console.log(`📝 PRD file created at: ${prdPath}`);
   } catch (error) {
     throw new Error(`Failed to setup test environment: ${error}`);
   }
@@ -95,17 +87,9 @@ async function cleanupTestEnvironment(): Promise<void> {
       }
 
       await fs.unlink(join(TEMP_DIR, "scripts", "prd.txt"));
-      console.log("🧹 Cleaned up local test files");
+      console.log("🧹 Cleaned up test files");
     } catch {
       // Files might not exist
-    }
-
-    // Clean up safe test directory  
-    try {
-      await fs.rm(TEST_PREFIX, { recursive: true, force: true });
-      console.log("🧹 Cleaned up safe test directory");
-    } catch {
-      // Directory might not exist
     }
 
     console.log("🧹 Cleanup completed");
@@ -118,23 +102,23 @@ async function cleanupTestEnvironment(): Promise<void> {
  * Create custom dependencies that work in the safe test directory with proper prefixing
  */
 function createTestDependencies(): GenerateTasksDeps {
-  // Save PRD with safe prefix to prevent overwriting project files
+  // Save PRD with temp directory prefix to prevent overwriting project files
   const savePrd = async (
     path: NonEmptyString,
     prd: PrdText
   ): Promise<AsyncDisposable> => {
-    // Always prefix paths to ensure they go to safe test directory
-    const safePath = join(TEST_PREFIX, path);
-    await fs.mkdir(dirname(safePath), { recursive: true });
-    await fs.writeFile(safePath, prd, "utf8");
-    
-    console.log(`📝 Saved PRD to safe path: ${safePath}`);
-    
+    // Always prefix paths to ensure they go to temp directory
+    const tempPath = join(TEST_PREFIX, path);
+    await fs.mkdir(dirname(tempPath), { recursive: true });
+    await fs.writeFile(tempPath, prd, "utf8");
+
+    console.log(`📝 Saved PRD to temp path: ${tempPath}`);
+
     return {
       async [Symbol.asyncDispose]() {
         try {
-          await fs.unlink(safePath);
-          console.log(`🧹 Cleaned up PRD file: ${safePath}`);
+          await fs.unlink(tempPath);
+          console.log(`🧹 Cleaned up PRD file: ${tempPath}`);
         } catch {
           // File already deleted or doesn't exist
         }
@@ -145,10 +129,10 @@ function createTestDependencies(): GenerateTasksDeps {
   const readTasksJson = async (
     tasksJsonPath: NonEmptyString
   ): Promise<TasksFileContent> => {
-    // Use safe prefixed path
-    const safePath = join(TEST_PREFIX, tasksJsonPath);
-    const content = await fs.readFile(safePath, "utf8");
-    console.log(`📖 Read tasks from safe path: ${safePath}`);
+    // Use temp directory prefixed path
+    const tempPath = join(TEST_PREFIX, tasksJsonPath);
+    const content = await fs.readFile(tempPath, "utf8");
+    console.log(`📖 Read tasks from temp path: ${tempPath}`);
     return JSON.parse(content);
   };
 
@@ -157,23 +141,25 @@ function createTestDependencies(): GenerateTasksDeps {
     tasksJsonPath: NonEmptyString
   ): Promise<TasksFileContent> => {
     try {
-      // Use safe prefixed paths to prevent overwriting project files
-      const safePrdPath = join(TEST_PREFIX, prdPath);
-      const safeTasksPath = join(TEST_PREFIX, tasksJsonPath);
-      
-      // Ensure target directory exists
-      await fs.mkdir(dirname(safeTasksPath), { recursive: true });
+      // Use temp directory prefixed paths to prevent overwriting project files
+      const tempPrdPath = join(TEST_PREFIX, prdPath);
+      const tempTasksPath = join(TEST_PREFIX, tasksJsonPath);
 
-      // Execute the task-master CLI tool with safe paths
-      const command = `npx dotenv -e .env -- npx task-master parse-prd --input "${safePrdPath}" --output "${safeTasksPath}" --force`;
+      // Ensure target directory exists
+      await fs.mkdir(dirname(tempTasksPath), { recursive: true });
+
+      // Execute the task-master CLI tool with temp paths
+      const command = `npx dotenv -e .env -- npx task-master parse-prd --input "${tempPrdPath}" --output "${tempTasksPath}" --force`;
+
+      const projectRoot = join(__dirname, "..", "..", "..");
 
       console.log(`🚀 Executing: ${command}`);
-      console.log(`📁 Safe PRD path: ${safePrdPath}`);
-      console.log(`📁 Safe tasks path: ${safeTasksPath}`);
-      console.log(`📁 Working directory: ${process.cwd()}`);
+      console.log(`📁 Temp PRD path: ${tempPrdPath}`);
+      console.log(`📁 Temp tasks path: ${tempTasksPath}`);
+      console.log(`📁 Working directory: ${projectRoot}`);
 
       const { stdout, stderr } = await execAsync(command, {
-        cwd: process.cwd(), // Run from project root for proper .env access
+        cwd: projectRoot, // Run from project root for proper .env access
         timeout: 300000, // 5 minutes timeout
         maxBuffer: 1024 * 1024 * 10, // 10MB buffer
         env: {
@@ -192,14 +178,16 @@ function createTestDependencies(): GenerateTasksDeps {
 
       // Verify the output file was created
       try {
-        await fs.access(safeTasksPath);
-        console.log(`✅ tasks.json file created successfully at: ${safeTasksPath}`);
+        await fs.access(tempTasksPath);
+        console.log(
+          `✅ tasks.json file created successfully at: ${tempTasksPath}`
+        );
       } catch {
-        throw new Error(`Output file not created: ${safeTasksPath}`);
+        throw new Error(`Output file not created: ${tempTasksPath}`);
       }
 
       // Read and return the generated tasks
-      const content = await fs.readFile(safeTasksPath, "utf8");
+      const content = await fs.readFile(tempTasksPath, "utf8");
       const tasks = JSON.parse(content);
 
       console.log(`📊 Generated ${tasks.tasks?.length || 0} tasks`);
@@ -261,8 +249,7 @@ async function runManualTest(): Promise<void> {
 
     // Show location of generated files
     console.log("📂 Generated files location:");
-    console.log(`  - Local: ${join(TEMP_DIR, "tasks", "tasks.json")}`);
-    console.log(`  - Safe: ${join(TEST_PREFIX, "tasks", "tasks.json")}`);
+    console.log(`  - Temp: ${join(TEMP_DIR, "tasks", "tasks.json")}`);
 
     // Cleanup
     await cleanupTestEnvironment();
