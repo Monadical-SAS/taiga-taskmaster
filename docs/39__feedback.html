@@ -1,33 +1,40 @@
 <div class="sect1">
-<h2 id="feedback">39. Feedback</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="feedback-create">39.1. Create</h3>
-<div class="paragraph">
-<p>To create feedback send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>comment</strong> (required)</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+  <h2 id="feedback">39. Feedback</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="feedback-create">39.1. Create</h3>
+      <div class="paragraph">
+        <p>To create feedback send a POST request with the following data:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>comment</strong> (required)</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "comment": "Testing feedback"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/feedback</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When created successfully, the HTTP response is a 201 Created and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-feedback-detail"
+            >feedback object</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>When created successfully, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-feedback-detail">feedback object</a></p>
-</div>
-</div>
-</div>
-</div>
-

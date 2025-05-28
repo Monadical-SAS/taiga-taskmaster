@@ -1,81 +1,60 @@
 ## 23. Tasks
+
 ### 23.1. List
+
 To list tasks send a GET request with the following parameters:
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON list of [task list objects](https://docs.taiga.io/api.html#object-task-detail-list)
 The results can be filtered using the following parameters:
-*
-**project**: project id
-*
-**status**: status id
-*
-**tags**: separated by ","
-*
-**user_story**: user story id
-*
-**role**: role id
-*
-**owner**: owner id
-*
-**milestone**: milestone id
-*
-**watchers**: watching user id
-*
-**assigned_to**: assigned to user id
-*
-**status__is_closed**: (true|false)
-*
-**exclude_status**: status id
-*
-**exclude_tags**: separared by ","
-*
-**exclude_role**: role id
-*
-**exclude_owner**: owner id
-*
-**exclude_assigned_to**: assigned to user id
-the "exclude_" params work excluding from the response the results with which they match.
+
+- **project**: project id
+- **status**: status id
+- **tags**: separated by ","
+- **user_story**: user story id
+- **role**: role id
+- **owner**: owner id
+- **milestone**: milestone id
+- **watchers**: watching user id
+- **assigned_to**: assigned to user id
+- **status\_\_is_closed**: (true|false)
+- **exclude_status**: status id
+- **exclude_tags**: separared by ","
+- **exclude_role**: role id
+- **exclude_owner**: owner id
+- **exclude_assigned_to**: assigned to user id
+  the "exclude\_" params work excluding from the response the results with which they match.
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 ### 23.2. Create
+
 To create tasks send a POST request with the following data:
-*
-**assigned_to**: user id
-*
-**blocked_note**: reason why the task is blocked
-*
-**description**: string
-*
-**is_blocked**: boolean
-*
-**is_closed**: boolean
-*
-**milestone**: milestone id
-*
-**project** (required): project id
-*
-**user_story**: user story id
-*
-**status**: status id
-*
-**subject** (required)
-*
-**tags**: array of strings
-*
-**us_order**: order in the user story,
-*
-**taskboard_order**: order in the taskboard,
-*
-**is_iocaine**: boolean,
-*
-**external_reference**: tuple of ("service", serviceId),
-*
-**watchers**: array of watcher id’s
+
+- **assigned_to**: user id
+- **blocked_note**: reason why the task is blocked
+- **description**: string
+- **is_blocked**: boolean
+- **is_closed**: boolean
+- **milestone**: milestone id
+- **project** (required): project id
+- **user_story**: user story id
+- **status**: status id
+- **subject** (required)
+- **tags**: array of strings
+- **us_order**: order in the user story,
+- **taskboard_order**: order in the taskboard,
+- **is_iocaine**: boolean,
+- **external_reference**: tuple of ("service", serviceId),
+- **watchers**: array of watcher id’s
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
@@ -101,6 +80,7 @@ To create tasks send a POST request with the following data:
 "watchers": []
 }' \
 ```
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
@@ -109,20 +89,27 @@ To create tasks send a POST request with the following data:
 "subject": "Customer personal data"
 }' \
 ```
+
 When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON [task detail object](https://docs.taiga.io/api.html#object-task-detail)
+
 ### 23.3. Get
+
 To get a task send a GET request specifying the task id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON [task detail (GET) object](https://docs.taiga.io/api.html#object-task-detail-get)
+
 ### 23.4. Get by ref
+
 To get a task send a GET request specifying the task reference and one of the following parameters:
-*
-project (project id)
-*
-project__slug
+
+- project (project id)
+- project\_\_slug
+
 ```json
 "assigned_to": 15,
 "assigned_to_extra_info": {
@@ -254,10 +241,14 @@ null
 6
 ]
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON [task detail (GET) object](https://docs.taiga.io/api.html#object-task-detail-get)
+
 ### 23.5. Edit
+
 To edit tasks send a PUT or a PATCH specifying the task id in the url.
 In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
@@ -266,26 +257,30 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 "version": 1
 }' \
 ```
+
 When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON [task detail object](https://docs.taiga.io/api.html#object-task-detail)
+
 ### 23.6. Delete
+
 To delete tasks send a DELETE specifying the task id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response
+
 ### 23.7. Bulk creation
+
 To create multiple tasks at the same time send a POST request with the following data:
-*
-**project_id** (required)
-*
-**status_id**
-*
-**sprint_id**: milestone id (optional)
-*
-**us_id**: user story id (optional)
-*
-**bulk_tasks**: task subjects, one per line
+
+- **project_id** (required)
+- **status_id**
+- **sprint_id**: milestone id (optional)
+- **us_id**: user story id (optional)
+- **bulk_tasks**: task subjects, one per line
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
@@ -295,79 +290,110 @@ To create multiple tasks at the same time send a POST request with the following
 "project_id": 1
 }' \
 ```
+
 When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON list of [task detail object](https://docs.taiga.io/api.html#object-task-detail)
+
 ### 23.8. Filters data
+
 To get the task filters data send a GET request specifying the project id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON [task filters data object](https://docs.taiga.io/api.html#object-task-filters-data)
+
 ### 23.9. Vote a task
+
 To vote tasks send a POST request specifying the task id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK with an empty body response
+
 ### 23.10. Remove vote from a task
+
 To remove a vote from a task send a POST request specifying the task id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 When remove of the vote succeeded, the HTTP response is a 200 OK with an empty body response
+
 ### 23.11. Get task voters list
+
 To get the list of voters from a task send a GET request specifying the task id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON list of [task voter object](https://docs.taiga.io/api.html#object-task-voter-detail)
+
 ### 23.12. Watch a task
+
 To watch a task send a POST request specifying the task id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK with an empty body response
+
 ### 23.13. Stop watching a task
+
 To stop watching a task send a POST request specifying the task id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK with an empty body response
+
 ### 23.14. List task watchers
+
 To get the list of watchers from a task send a GET request specifying the task id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON list of [task watcher object](https://docs.taiga.io/api.html#object-userstory-watcher-detail)
+
 ### 23.15. List attachments
+
 To list task attachments send a GET request with the following parameters:
-*
-**project**: project id
-*
-**object_id**: task id
+
+- **project**: project id
+- **object_id**: task id
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON list of [attachment detail objects](https://docs.taiga.io/api.html#object-attachment-detail)
+
 ### 23.16. Create attachment
+
 To create task attachments send a POST request with the following data:
-*
-**object_id** (required): task id
-*
-**project** (required): project id
-*
-**attached_file** (required): attaching file
-*
-**description**
-*
-**is_deprecated**
+
+- **object_id** (required): task id
+- **project** (required): project id
+- **attached_file** (required): attaching file
+- **description**
+- **is_deprecated**
+
 ```bash
 -H "Content-Type: multipart/form-data" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
@@ -376,17 +402,25 @@ To create task attachments send a POST request with the following data:
 -F object_id=1 \
 -F project=1 \
 ```
+
 When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON [attachment detail object](https://docs.taiga.io/api.html#object-attachment-detail)
+
 ### 23.17. Get attachment
+
 To get a task attachment send a GET request specifying the task attachment id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON [attachment detail object](https://docs.taiga.io/api.html#object-attachment-detail)
+
 ### 23.18. Edit attachment
+
 To edit task attachments send a PUT or a PATCH specifying the task attachment id in the url.
 In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
@@ -394,11 +428,16 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 "description": "Updated description"
 }' \
 ```
+
 When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON [attachment detail object](https://docs.taiga.io/api.html#object-attachment-detail)
+
 ### 23.19. Delete attachment
+
 To delete task attachments send a DELETE specifying the task attachment id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response

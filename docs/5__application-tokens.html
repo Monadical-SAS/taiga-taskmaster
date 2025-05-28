@@ -1,82 +1,125 @@
 <div class="sect1">
-<h2 id="application-tokens">5. Application tokens</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="application-tokens-list">5.1. List</h3>
-<div class="paragraph">
-<p>To list the application tokens for an authenticated user send a GET request with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>application</strong>: application id</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="application-tokens">5. Application tokens</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="application-tokens-list">5.1. List</h3>
+      <div class="paragraph">
+        <p>
+          To list the application tokens for an authenticated user send a GET
+          request with the following parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>application</strong>: application id</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/application-tokens</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-application-token-detail">application token objects</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="application-tokens-get">5.2. Get</h3>
-<div class="paragraph">
-<p>To get an application token send a GET request specifying the application token id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a
+            href="https://docs.taiga.io/api.html#object-application-token-detail"
+            >application token objects</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="application-tokens-get">5.2. Get</h3>
+      <div class="paragraph">
+        <p>
+          To get an application token send a GET request specifying the
+          application token id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/application-tokens/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-application-token-detail">application token object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="application-tokens-delete">5.3. Delete</h3>
-<div class="paragraph">
-<p>To delete application tokens send a DELETE specifying the application token id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a
+            href="https://docs.taiga.io/api.html#object-application-token-detail"
+            >application token object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="application-tokens-delete">5.3. Delete</h3>
+      <div class="paragraph">
+        <p>
+          To delete application tokens send a DELETE specifying the application
+          token id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/application-tokens/2</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="application-tokens-authorize">5.4. Authorize</h3>
-<div class="paragraph">
-<p>To request an authorization code send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>application</strong>: the application id for the requested token</p>
-</li>
-<li>
-<p><strong>state</strong>: an unguessable random string. It is used to protect against cross-site request forgery attacks. The API will include this value when the validation process is completed so the final app can verify it matches the original one.</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="application-tokens-authorize">5.4. Authorize</h3>
+      <div class="paragraph">
+        <p>
+          To request an authorization code send a POST request with the
+          following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>application</strong>: the application id for the requested
+              token
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>state</strong>: an unguessable random string. It is used
+              to protect against cross-site request forgery attacks. The API
+              will include this value when the validation process is completed
+              so the final app can verify it matches the original one.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -84,33 +127,56 @@
 <span class="tok-s1">        "state": "random-state"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/application-tokens/authorize</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-application-token-authorization-code">authorization code object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="application-tokens-validate">5.5. Validate</h3>
-<div class="paragraph">
-<p>To validate an authorization code send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>application</strong>: the application id for the requested token</p>
-</li>
-<li>
-<p><strong>state</strong>: an unguessable random string. It is used to protect against cross-site request forgery attacks. The API will include this value when the validation process is completed so the final app can verify it matches the original one.</p>
-</li>
-<li>
-<p><strong>auth_code</strong>: the authorization code received on previous the steps.</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 and the
+          response body is a JSON
+          <a
+            href="https://docs.taiga.io/api.html#object-application-token-authorization-code"
+            >authorization code object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="application-tokens-validate">5.5. Validate</h3>
+      <div class="paragraph">
+        <p>
+          To validate an authorization code send a POST request with the
+          following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>application</strong>: the application id for the requested
+              token
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>state</strong>: an unguessable random string. It is used
+              to protect against cross-site request forgery attacks. The API
+              will include this value when the validation process is completed
+              so the final app can verify it matches the original one.
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>auth_code</strong>: the authorization code received on
+              previous the steps.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "application": "00000000-0000-0000-0000-000000000000",</span>
@@ -118,12 +184,18 @@
 <span class="tok-s1">        "state": "random-state"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/application-tokens/validate</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 and the
+          response body is a JSON
+          <a
+            href="https://docs.taiga.io/api.html#object-application-token-cyphered-token"
+            >cyphered token object</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-application-token-cyphered-token">cyphered token object</a></p>
-</div>
-</div>
-</div>
-</div>
-

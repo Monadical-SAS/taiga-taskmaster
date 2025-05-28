@@ -1,2 +1,1 @@
-
-Common utilities and shared types 
+Common utilities and shared types

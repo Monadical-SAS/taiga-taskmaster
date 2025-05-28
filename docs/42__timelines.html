@@ -1,66 +1,105 @@
 <div class="sect1">
-<h2 id="timelines">42. Timelines</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="timeline-user-list">42.1. List user timeline</h3>
-<div class="paragraph">
-<p>To list a user timeline send a GET request with the following parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="timelines">42. Timelines</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="timeline-user-list">42.1. List user timeline</h3>
+      <div class="paragraph">
+        <p>
+          To list a user timeline send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/timeline/user/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This API call returns only actions directly executed by the specified user.</p>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-timeline-detail">timeline entry detail</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="timeline-profile-list">42.2. List profile timeline</h3>
-<div class="paragraph">
-<p>To list a profile timeline send a GET request with the following parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          This API call returns only actions directly executed by the specified
+          user.
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-timeline-detail"
+            >timeline entry detail</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="timeline-profile-list">42.2. List profile timeline</h3>
+      <div class="paragraph">
+        <p>
+          To list a profile timeline send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/timeline/profile/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This API call returns actions executed by the specified user and related to them, watching objects, actions by related team members, belonging to projects…​</p>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-timeline-detail">timeline entry detail</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="timeline-project-list">42.3. List project timeline</h3>
-<div class="paragraph">
-<p>To list a project timeline send a GET request with the following parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          This API call returns actions executed by the specified user and
+          related to them, watching objects, actions by related team members,
+          belonging to projects…​
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-timeline-detail"
+            >timeline entry detail</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="timeline-project-list">42.3. List project timeline</h3>
+      <div class="paragraph">
+        <p>
+          To list a project timeline send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/timeline/project/1</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          This API call returns actions executed by different users related to
+          the specified project.
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-timeline-detail"
+            >timeline entry detail</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>This API call returns actions executed by different users related to the specified project.</p>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-timeline-detail">timeline entry detail</a></p>
-</div>
-</div>
-</div>
-</div>
-

@@ -1,61 +1,81 @@
 <div class="sect1">
-<h2 id="importers">45. Importers</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="importers-trello">45.1. Trello</h3>
-<div class="sect3">
-<h4 id="importers-trello-auth-url">45.1.1. Auth url</h4>
-<div class="paragraph">
-<p>Get the url for authorize Taiga to access to your Trello account.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="importers">45. Importers</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="importers-trello">45.1. Trello</h3>
+      <div class="sect3">
+        <h4 id="importers-trello-auth-url">45.1.1. Auth url</h4>
+        <div class="paragraph">
+          <p>
+            Get the url for authorize Taiga to access to your Trello account.
+          </p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/trello/auth_url</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-trello-auth-url">importer auth url object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-trello-authorize">45.1.2. Authorize</h4>
-<div class="paragraph">
-<p>Complete the authorization process.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-trello-auth-url"
+                  >importer auth url object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-trello-authorize">45.1.2. Authorize</h4>
+        <div class="paragraph">
+          <p>Complete the authorization process.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "code": "00000000000000000000000000000000"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/trello/authorize</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-trello-auth-token">importer auth token object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-trello-list-users">45.1.3. List users</h4>
-<div class="paragraph">
-<p>List your Trello users.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-trello-auth-token"
+                  >importer auth token object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-trello-list-users">45.1.3. List users</h4>
+        <div class="paragraph">
+          <p>List your Trello users.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -63,48 +83,64 @@
 <span class="tok-s1">        "token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/trello/list_users</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-trello-list-users">list of importer users object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-trello-list-projects">45.1.4. List projects</h4>
-<div class="paragraph">
-<p>List your Trello boards.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-trello-list-users"
+                  >list of importer users object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-trello-list-projects">45.1.4. List projects</h4>
+        <div class="paragraph">
+          <p>List your Trello boards.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/trello/list_projects</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-trello-list-projects">list of importer projects object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-trello-import-project">45.1.5. Import project</h4>
-<div class="paragraph">
-<p>Ask the server to import a project from Trello.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-trello-list-projects"
+                  >list of importer projects object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-trello-import-project">45.1.5. Import project</h4>
+        <div class="paragraph">
+          <p>Ask the server to import a project from Trello.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -121,75 +157,109 @@
 <span class="tok-s1">        }</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/trello/import</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>If taiga is working in synchronous mode the result is a 200 OK and as response body a JSON of <a href="https://docs.taiga.io/api.html#object-importers-trello-import-project">imported project result</a>.</p>
-</li>
-<li>
-<p>If taiga is working in asynchronous mode the result is a 202 Accepted and as response body a JSON of <a href="https://docs.taiga.io/api.html#object-importers-task-accepted">import project accepted</a>.</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="importers-github">45.2. Github</h3>
-<div class="sect3">
-<h4 id="importers-github-auth-url">45.2.1. Auth url</h4>
-<div class="paragraph">
-<p>Get the url for authorize Taiga to access to your Github account.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                If taiga is working in synchronous mode the result is a 200 OK
+                and as response body a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-trello-import-project"
+                  >imported project result</a
+                >.
+              </p>
+            </li>
+            <li>
+              <p>
+                If taiga is working in asynchronous mode the result is a 202
+                Accepted and as response body a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-task-accepted"
+                  >import project accepted</a
+                >.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="importers-github">45.2. Github</h3>
+      <div class="sect3">
+        <h4 id="importers-github-auth-url">45.2.1. Auth url</h4>
+        <div class="paragraph">
+          <p>
+            Get the url for authorize Taiga to access to your Github account.
+          </p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/github/auth_url</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-github-auth-url">importer auth url object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-github-authorize">45.2.2. Authorize</h4>
-<div class="paragraph">
-<p>Complete the authorization process.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-github-auth-url"
+                  >importer auth url object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-github-authorize">45.2.2. Authorize</h4>
+        <div class="paragraph">
+          <p>Complete the authorization process.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "code": "00000000000000000000"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/github/authorize</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-github-auth-token">importer auth token object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-github-list-users">45.2.3. List users</h4>
-<div class="paragraph">
-<p>List the Github repository users.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-github-auth-token"
+                  >importer auth token object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-github-list-users">45.2.3. List users</h4>
+        <div class="paragraph">
+          <p>List the Github repository users.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -197,48 +267,64 @@
 <span class="tok-s1">        "token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/github/list_users</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-github-list-users">list of importer users object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-github-list-projects">45.2.4. List repositories</h4>
-<div class="paragraph">
-<p>List your Github repositories.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-github-list-users"
+                  >list of importer users object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-github-list-projects">45.2.4. List repositories</h4>
+        <div class="paragraph">
+          <p>List your Github repositories.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/github/list_projects</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-github-list-projects">list of importer projects object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-github-import-project">45.2.5. Import project</h4>
-<div class="paragraph">
-<p>Ask the server to import a repository from Github.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-github-list-projects"
+                  >list of importer projects object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-github-import-project">45.2.5. Import project</h4>
+        <div class="paragraph">
+          <p>Ask the server to import a repository from Github.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -255,73 +341,105 @@
 <span class="tok-s1">        }</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/github/import</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>If taiga is working in synchronous mode the result is a 200 OK and as response body a JSON of <a href="https://docs.taiga.io/api.html#object-importers-github-import-project">imported project result</a>.</p>
-</li>
-<li>
-<p>If taiga is working in asynchronous mode the result is a 202 Accepted and as response body a JSON of <a href="https://docs.taiga.io/api.html#object-importers-task-accepted">import project accepted</a>.</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="importers-jira">45.3. Jira</h3>
-<div class="sect3">
-<h4 id="importers-jira-auth-url">45.3.1. Auth url</h4>
-<div class="paragraph">
-<p>Get the url for authorize Taiga to access to your Jira account.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                If taiga is working in synchronous mode the result is a 200 OK
+                and as response body a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-github-import-project"
+                  >imported project result</a
+                >.
+              </p>
+            </li>
+            <li>
+              <p>
+                If taiga is working in asynchronous mode the result is a 202
+                Accepted and as response body a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-task-accepted"
+                  >import project accepted</a
+                >.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="importers-jira">45.3. Jira</h3>
+      <div class="sect3">
+        <h4 id="importers-jira-auth-url">45.3.1. Auth url</h4>
+        <div class="paragraph">
+          <p>Get the url for authorize Taiga to access to your Jira account.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/jira/auth_url?url<span class="tok-o">=</span>http://your.jira.server</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-jira-auth-url">importer auth url object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-jira-authorize">45.3.2. Authorize</h4>
-<div class="paragraph">
-<p>Complete the authorization process.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-jira-auth-url"
+                  >importer auth url object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-jira-authorize">45.3.2. Authorize</h4>
+        <div class="paragraph">
+          <p>Complete the authorization process.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{}'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/jira/authorize</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-jira-auth-token">importer auth token object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-jira-list-users">45.3.3. List users</h4>
-<div class="paragraph">
-<p>List the Jira project users.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-jira-auth-token"
+                  >importer auth token object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-jira-list-users">45.3.3. List users</h4>
+        <div class="paragraph">
+          <p>List the Jira project users.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -330,24 +448,32 @@
 <span class="tok-s1">        "url": "http://your.jira.server"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/jira/list_users</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-jira-list-users">list of importer users object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-jira-list-projects">45.3.4. List projects</h4>
-<div class="paragraph">
-<p>List your Jira projects.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-jira-list-users"
+                  >list of importer users object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-jira-list-projects">45.3.4. List projects</h4>
+        <div class="paragraph">
+          <p>List your Jira projects.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -355,24 +481,32 @@
 <span class="tok-s1">        "url": "http://your.jira.server"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/jira/list_projects</code></pre>
-</div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A 200 Ok and the response body is a JSON of <a href="https://docs.taiga.io/api.html#object-importers-jira-list-projects">list of importer projects object</a></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect3">
-<h4 id="importers-jira-import-project">45.3.5. Import project</h4>
-<div class="paragraph">
-<p>Ask the server to import a project from Jira.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                A 200 Ok and the response body is a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-jira-list-projects"
+                  >list of importer projects object</a
+                >
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="sect3">
+        <h4 id="importers-jira-import-project">45.3.5. Import project</h4>
+        <div class="paragraph">
+          <p>Ask the server to import a project from Jira.</p>
+        </div>
+        <div class="listingblock">
+          <div class="content">
+            <pre
+              class="pygments highlight"
+            ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -390,20 +524,33 @@
 <span class="tok-s1">        }</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/importers/jira/import</code></pre>
+          </div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>
+                If taiga is working in synchronous mode the result is a 200 OK
+                and as response body a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-jira-import-project"
+                  >imported project result</a
+                >.
+              </p>
+            </li>
+            <li>
+              <p>
+                If taiga is working in asynchronous mode the result is a 202
+                Accepted and as response body a JSON of
+                <a
+                  href="https://docs.taiga.io/api.html#object-importers-task-accepted"
+                  >import project accepted</a
+                >.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>If taiga is working in synchronous mode the result is a 200 OK and as response body a JSON of <a href="https://docs.taiga.io/api.html#object-importers-jira-import-project">imported project result</a>.</p>
-</li>
-<li>
-<p>If taiga is working in asynchronous mode the result is a 202 Accepted and as response body a JSON of <a href="https://docs.taiga.io/api.html#object-importers-task-accepted">import project accepted</a>.</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-</div>
-</div>
-

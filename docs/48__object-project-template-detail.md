@@ -1,4 +1,5 @@
 ## 48. Project templates detail
+
 ```json
 "created_date": "2014-04-22T14:48:43.596Z",
 "default_options": {
@@ -565,7 +566,9 @@
 "videoconferences": null,
 "videoconferences_extra_data": ""
 ```
+
 ### 48.1. Project list entry
+
 ```json
 "anon_permissions": [],
 "blocked_code": null,
@@ -676,7 +679,9 @@
 "videoconferences": null,
 "videoconferences_extra_data": null
 ```
+
 ### 48.2. Project detail
+
 ```json
 "anon_permissions": [],
 "blocked_code": null,
@@ -2048,7 +2053,9 @@
 "videoconferences": null,
 "videoconferences_extra_data": null
 ```
+
 ### 48.3. Project modules configuration
+
 ```json
 "bitbucket": {
 "secret": "f805de8e75fc407d8c8ed16cd40f9ba6",
@@ -2074,7 +2081,9 @@
 "webhooks_url": "http://localhost:8000/api/v1/gogs-hook?project=1"
 }
 ```
+
 ### 48.4. Project stats detail
+
 ```json
 "assigned_points": 364.5,
 "assigned_points_per_role": {
@@ -2153,7 +2162,9 @@
 "total_milestones": 6,
 "total_points": 313.0
 ```
+
 ### 48.5. Project issue stats detail
+
 ```json
 "closed_issues": 10,
 "issues_per_assigned_to": {
@@ -2761,7 +2772,9 @@
 "opened_issues": 17,
 "total_issues": 27
 ```
+
 ### 48.6. Project tag colors data detail
+
 ```json
 "ab": "#da2361",
 "accusamus": "#801cf7",
@@ -2921,19 +2934,25 @@
 "voluptatibus": null,
 "voluptatum": "#02d22f"
 ```
+
 ### 48.7. Project voter detail
+
 ```json
 "full_name": "GitHub",
 "id": 2,
 "username": "github-ecf32e2347fd4afda1b4914414a965cf"
 ```
+
 ### 48.8. Project watcher detail
+
 ```json
 "full_name": "Administrator",
 "id": 5,
 "username": "admin"
 ```
+
 ### 48.9. Membership detail
+
 ```json
 "color": "#002e33",
 "created_at": "2020-07-02T11:56:20.444Z",
@@ -2956,7 +2975,9 @@
 "user_email": "user8@taigaio.demo",
 "user_order": 6
 ```
+
 ### 48.10. Role detail
+
 ```json
 "computable": true,
 "id": 1,
@@ -3001,7 +3022,9 @@
 "project": 1,
 "slug": "ux"
 ```
+
 ### 48.11. Milestone detail
+
 ```json
 "closed": false,
 "closed_points": null,
@@ -3254,13 +3277,17 @@
 }
 ]
 ```
+
 ### 48.12. Milestone watcher detail
+
 ```json
 "full_name": "Vanesa Torres",
 "id": 6,
 "username": "user2114747470430251528"
 ```
+
 ### 48.13. Milestone stats detail
+
 ```json
 "completed_points": [],
 "completed_tasks": 4,
@@ -3376,7 +3403,9 @@
 "total_tasks": 12,
 "total_userstories": 3
 ```
+
 ### 48.14. Epic detail
+
 ```json
 "assigned_to": 15,
 "assigned_to_extra_info": {
@@ -3460,7 +3489,9 @@
 14
 ]
 ```
+
 ### 48.15. Epic detail (GET)
+
 ```json
 "assigned_to": 15,
 "assigned_to_extra_info": {
@@ -3544,7 +3575,9 @@
 14
 ]
 ```
+
 ### 48.16. Epic detail (LIST)
+
 ```json
 "assigned_to": 15,
 "assigned_to_extra_info": {
@@ -3612,7 +3645,9 @@
 14
 ]
 ```
+
 ### 48.17. Epic filters data detail
+
 ```json
 "assigned_to": [
 {
@@ -4528,19 +4563,25 @@
 }
 ]
 ```
+
 ### 48.18. Epic voter detail
+
 ```json
 "full_name": "Bego\u00f1a Flores",
 "id": 7,
 "username": "user1"
 ```
+
 ### 48.19. Epic watcher detail
+
 ```json
 "full_name": "BitBucket",
 "id": 1,
 "username": "bitbucket-39e1bd53be764862bb63edb881e16f8a"
 ```
+
 ### 48.20. Epic status detail
+
 ```json
 "color": "#999999",
 "id": 1,
@@ -4550,7 +4591,9 @@
 "project": 1,
 "slug": "patch-status-name"
 ```
+
 ### 48.21. Epic custom attribute detail
+
 ```json
 "created_date": "2020-07-02T11:57:22.124Z",
 "description": "nesciunt consectetur culpa ullam harum fugit veritatis eius dolorem assumenda",
@@ -4562,7 +4605,9 @@
 "project": 3,
 "type": "url"
 ```
+
 ### 48.22. Epic custom attributes values detail
+
 ```json
 "attributes_values": {
 "14": "240 min"
@@ -4570,13 +4615,17 @@
 "epic": 15,
 "version": 2
 ```
+
 ### 48.23. Epic related user story detail
+
 ```json
 "epic": 15,
 "order": 100,
 "user_story": 2
 ```
+
 ### 48.24. User story detail
+
 ```json
 "assigned_to": 9,
 "assigned_to_extra_info": {
@@ -4694,7 +4743,9 @@ null
 "version": 2,
 "watchers": []
 ```
+
 ### 48.25. User story detail (GET)
+
 ```json
 "assigned_to": 9,
 "assigned_to_extra_info": {
@@ -4812,8 +4863,11 @@ null
 "version": 2,
 "watchers": []
 ```
+
 neighbors is a read only field
+
 ### 48.26. User story detail (LIST)
+
 ```json
 "assigned_to": null,
 "assigned_to_extra_info": null,
@@ -4900,7 +4954,9 @@ null
 "version": 1,
 "watchers": []
 ```
+
 ### 48.27. Issue filters data detail
+
 ```json
 "assigned_to": [
 {
@@ -6051,11 +6107,17 @@ null
 }
 ]
 ```
+
 ### 48.28. User story voter detail
+
 inlcude::generated/user-stories-get-voters-output.adoc[]
+
 ### 48.29. User story watcher detail
+
 inlcude::generated/user-stories-get-watchers-output.adoc[]
+
 ### 48.30. User story status detail
+
 ```json
 "color": "#999999",
 "id": 1,
@@ -6067,7 +6129,9 @@ inlcude::generated/user-stories-get-watchers-output.adoc[]
 "slug": "patch-status-name",
 "wip_limit": null
 ```
+
 ### 48.31. Point detail
+
 ```json
 "id": 1,
 "name": "Patch name",
@@ -6075,7 +6139,9 @@ inlcude::generated/user-stories-get-watchers-output.adoc[]
 "project": 1,
 "value": null
 ```
+
 ### 48.32. User story custom attribute detail
+
 ```json
 "created_date": "2020-07-02T11:56:21.148Z",
 "description": "vel omnis culpa quisquam nulla",
@@ -6087,7 +6153,9 @@ inlcude::generated/user-stories-get-watchers-output.adoc[]
 "project": 1,
 "type": "richtext"
 ```
+
 ### 48.33. User story custom attributes values detail
+
 ```json
 "attributes_values": {
 "3": "240 min"
@@ -6095,7 +6163,9 @@ inlcude::generated/user-stories-get-watchers-output.adoc[]
 "user_story": 1,
 "version": 2
 ```
+
 ### 48.34. Task detail
+
 ```json
 "assigned_to": 15,
 "assigned_to_extra_info": {
@@ -6226,7 +6296,9 @@ null
 3
 ]
 ```
+
 ### 48.35. Task detail (GET)
+
 ```json
 "assigned_to": 15,
 "assigned_to_extra_info": {
@@ -6357,7 +6429,9 @@ null
 3
 ]
 ```
+
 ### 48.36. Task detail (LIST)
+
 ```json
 "assigned_to": 15,
 "assigned_to_extra_info": {
@@ -6476,7 +6550,9 @@ null
 6
 ]
 ```
+
 ### 48.37. Task filters data detail
+
 ```json
 "assigned_to": [
 {
@@ -6754,19 +6830,25 @@ null
 }
 ]
 ```
+
 ### 48.38. Task voter detail
+
 ```json
 "full_name": "Administrator",
 "id": 5,
 "username": "admin"
 ```
+
 ### 48.39. Task watcher detail
+
 ```json
 "full_name": "GitLab",
 "id": 3,
 "username": "gitlab-da51373c16de4169856606e6e6dd9b21"
 ```
+
 ### 48.40. Task status detail
+
 ```json
 "color": "#999999",
 "id": 1,
@@ -6776,7 +6858,9 @@ null
 "project": 1,
 "slug": "patch-status-name"
 ```
+
 ### 48.41. Task custom attribute detail
+
 ```json
 "created_date": "2020-07-02T11:56:21.156Z",
 "description": "a sequi saepe quibusdam culpa optio accusantium minima obcaecati",
@@ -6788,7 +6872,9 @@ null
 "project": 1,
 "type": "dropdown"
 ```
+
 ### 48.42. Task custom attributes values detail
+
 ```json
 "attributes_values": {
 "1": "240 min"
@@ -6796,7 +6882,9 @@ null
 "task": 1,
 "version": 2
 ```
+
 ### 48.43. Issue detail
+
 ```json
 "assigned_to": null,
 "assigned_to_extra_info": null,
@@ -6871,7 +6959,9 @@ null
 "version": 2,
 "watchers": []
 ```
+
 ### 48.44. Issue detail (GET)
+
 ```json
 "assigned_to": null,
 "assigned_to_extra_info": null,
@@ -6946,7 +7036,9 @@ null
 "version": 2,
 "watchers": []
 ```
+
 ### 48.45. Issue detail (LIST)
+
 ```json
 "assigned_to": null,
 "assigned_to_extra_info": null,
@@ -7042,7 +7134,9 @@ null
 13
 ]
 ```
+
 ### 48.46. Issue filters data detail
+
 ```json
 "assigned_to": [
 {
@@ -8156,19 +8250,25 @@ null
 }
 ]
 ```
+
 ### 48.47. Issue voters detail
+
 ```json
 "full_name": "GitHub",
 "id": 2,
 "username": "github-ecf32e2347fd4afda1b4914414a965cf"
 ```
+
 ### 48.48. Issue watchers detail
+
 ```json
 "full_name": "Vanesa Torres",
 "id": 6,
 "username": "user2114747470430251528"
 ```
+
 ### 48.49. Issue status detail
+
 ```json
 "color": "#8C2318",
 "id": 1,
@@ -8178,7 +8278,9 @@ null
 "project": 1,
 "slug": "patch-status-name"
 ```
+
 ### 48.50. Issue type detail
+
 ```json
 "color": "#89BAB4",
 "id": 1,
@@ -8186,7 +8288,9 @@ null
 "order": 1,
 "project": 1
 ```
+
 ### 48.51. Priority detail
+
 ```json
 "color": "#666666",
 "id": 1,
@@ -8194,7 +8298,9 @@ null
 "order": 1,
 "project": 1
 ```
+
 ### 48.52. Severity detail
+
 ```json
 "color": "#666666",
 "id": 1,
@@ -8202,7 +8308,9 @@ null
 "order": 1,
 "project": 1
 ```
+
 ### 48.53. Issue custom attribute detail
+
 ```json
 "created_date": "2020-07-02T11:56:21.171Z",
 "description": "voluptate rem perspiciatis ipsum",
@@ -8214,7 +8322,9 @@ null
 "project": 1,
 "type": "checkbox"
 ```
+
 ### 48.54. Issue custom attributes values detail
+
 ```json
 "attributes_values": {
 "5": "240 min"
@@ -8222,7 +8332,9 @@ null
 "issue": 22,
 "version": 2
 ```
+
 ### 48.55. Wiki page
+
 ```json
 "content": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\nEsse pariatur commodi similique tenetur nostrum quae eos sed dolorum natus, incidunt in expedita assumenda nulla libero, explicabo rem quia possimus repudiandae aut harum consequatur nesciunt provident? Ea officiis rem laborum eos temporibus veniam, nihil pariatur officiis voluptate, earum aliquid itaque modi officiis ullam a non nesciunt, explicabo voluptates reiciendis hic mollitia cupiditate iste beatae earum tenetur, minus doloribus amet esse?\n\nTempore voluptas consectetur, doloribus at corporis dolorem excepturi perferendis hic eaque? Sequi quibusdam tempore, iusto tempora corrupti assumenda est unde fugiat quibusdam autem aliquam neque architecto, ea quam sequi ratione similique officia veritatis, enim tempore perspiciatis corporis. Quis fugiat assumenda minima at optio explicabo pariatur numquam dolorum, aspernatur corrupti rerum.\n\nEveniet id dolor nobis error doloribus atque, doloremque enim impedit atque aperiam a placeat veniam ipsam debitis in fuga, perspiciatis cumque commodi dolorum optio nulla a architecto magnam quas. Eos ducimus deserunt beatae inventore sequi minus est quas temporibus, in facere accusantium nobis ullam dolorum autem harum doloribus at ad, ea praesentium vitae temporibus esse rem delectus veniam tempora at, asperiores ullam voluptatibus sunt saepe aut deleniti repudiandae rem animi dolorem unde? Eos ipsum quae in possimus impedit quaerat illo sequi eum, optio cumque sunt in iusto ex quas, consectetur quibusdam laborum molestiae perferendis animi placeat, nemo libero rem ratione sint blanditiis commodi aliquid, minus excepturi itaque cupiditate quisquam?\n\nMagnam nobis eaque odio repellat, praesentium modi eligendi, officiis nisi neque porro vitae optio numquam exercitationem delectus eos, minima quasi magni molestias quae vel officia necessitatibus, quas voluptate minima. Illum cum impedit vitae consequatur dicta, vel perspiciatis officiis quo, quisquam rerum voluptatum dolore eos consequatur ipsam nemo, quos omnis et veniam at, alias dolor necessitatibus quibusdam ex modi laboriosam. Sit laborum ex, earum facere nam fuga, in vel recusandae explicabo dicta sunt commodi animi quod sed, quam quaerat ipsa animi rerum quia facere cumque, non vero odit quas officia suscipit in culpa facere veniam aliquam? Iste numquam cupiditate deserunt consequatur, odit possimus cumque incidunt delectus, possimus sunt a labore quia rerum quo eaque repudiandae laborum, autem fuga ipsam nam neque, distinctio quis facilis ratione.\n\nConsectetur enim et eligendi quod illo itaque sit repudiandae veniam rerum vitae, rem repudiandae atque aut nobis officia officiis quod totam voluptatem in laboriosam, atque laudantium veniam magnam perferendis tenetur, aliquam ad reprehenderit rem inventore vero labore assumenda, ab nihil consectetur accusamus a. Animi odit quia quod aliquid quam magni facilis, esse laboriosam animi rem aspernatur quo molestias vitae.\n\nEum nesciunt harum corporis porro voluptates architecto error voluptate, velit laudantium repellat consequatur, vel tempore eos officiis id dolores earum ex at suscipit, eius tempore nobis, consectetur sequi incidunt nemo natus sed sapiente. Itaque tempora reprehenderit, non architecto libero distinctio qui sed voluptatem quasi iusto sunt corporis optio, officia ex doloremque in ut blanditiis magni possimus illum, amet fuga quasi nostrum, ut eos ex est eum architecto optio itaque alias. Pariatur quod quos laudantium impedit, officiis iusto quod corrupti vero dolorem.\n\nPerferendis dicta exercitationem amet ullam eaque in possimus eligendi provident ratione officia, earum velit ad deserunt eveniet, tempora id ut odio necessitatibus a, dolorum iste labore rerum in dicta cum voluptates, aperiam quos rerum quibusdam ducimus.\n\nQuam quo laudantium tenetur, porro vero distinctio asperiores ab minus sint dolorum consequuntur deserunt iure, corporis cumque perferendis illum velit veritatis odit asperiores natus enim at exercitationem, dolorem cum cupiditate iste, quas explicabo deleniti voluptate neque? Vero explicabo recusandae esse voluptate obcaecati velit fugiat quae cupiditate necessitatibus, pariatur alias ullam, numquam dolores maxime corrupti debitis ea praesentium facere? Ratione earum qui beatae dolor voluptatibus alias dicta repellat vero quis, ipsum ipsam impedit neque possimus quasi, temporibus iure accusantium officia facilis quas necessitatibus ut asperiores, exercitationem mollitia corporis ipsum sint tempore architecto quo ipsam laboriosam dolor officiis, praesentium ullam voluptatum? Repellendus vitae distinctio cumque architecto eius nesciunt voluptate, quisquam commodi eius at dolorum.\n\nPraesentium saepe facilis iste cum, mollitia molestiae cum aperiam fuga vitae sequi repellat nisi maxime perferendis quaerat, facilis corrupti fugit necessitatibus deleniti esse error quaerat temporibus voluptatum magnam recusandae, molestias ducimus temporibus aut culpa illo facere sed hic sequi voluptatem, autem adipisci atque nemo quam sapiente voluptas ipsam molestias possimus in? Beatae eveniet commodi similique incidunt nihil, doloremque necessitatibus ipsum similique laboriosam aliquam delectus reprehenderit earum? Quisquam nostrum consequuntur provident quis et possimus iusto, ad ea nisi eligendi debitis, alias at reiciendis accusantium officia veniam similique, officia odit rerum iure?",
 "created_date": "2020-07-02T11:56:43.109Z",
@@ -8244,13 +8356,17 @@ null
 "total_watchers": 0,
 "version": 2
 ```
+
 ### 48.56. Wiki page watcher detail
+
 ```json
 "full_name": "Vanesa Torres",
 "id": 6,
 "username": "user2114747470430251528"
 ```
+
 ### 48.57. Wiki link
+
 ```json
 "href": "numquam",
 "id": 1,
@@ -8258,7 +8374,9 @@ null
 "project": 1,
 "title": "numquam"
 ```
+
 ### 48.58. History entry comment
+
 ```json
 "comment": "Dolore iste earum ut accusantium magni sit quidem reiciendis cum quae?",
 "comment_html": "&lt;p&gt;Dolore iste earum ut accusantium magni sit quidem reiciendis cum quae?&lt;/p&gt;",
@@ -8285,7 +8403,9 @@ null
 "username": "user2114747470430251528"
 }
 ```
+
 ### 48.59. History entry
+
 ```json
 "comment": "Dolore iste earum ut accusantium magni sit quidem reiciendis cum quae?",
 "comment_html": "&lt;p&gt;Dolore iste earum ut accusantium magni sit quidem reiciendis cum quae?&lt;/p&gt;",
@@ -8313,7 +8433,9 @@ null
 },
 "values_diff": {}
 ```
+
 ### 48.60. Notify policy
+
 ```json
 "id": 7,
 "live_notify_level": 1,
@@ -8322,7 +8444,9 @@ null
 "project_name": "Project Example 0",
 "web_notify_level": true
 ```
+
 ### 48.61. Feedback
+
 ```json
 "comment": "Testing feedback",
 "created_date": "2020-07-03T08:40:59+0000",
@@ -8330,19 +8454,27 @@ null
 "full_name": "Vanesa Torres",
 "id": 1
 ```
+
 ### 48.62. Export detail for synch mode
+
 ```json
 "url": "http://localhost:8000/media/exports/1/project-0-0c8920cf44704a9f8d39de7f8c52d321.json"
 ```
+
 ### 48.63. Export accepted response
+
 ```json
 "export_id": "e338555a-3918-4203-8fc6-81b3f7933c79"
 ```
+
 ### 48.64. Import accepted response
+
 ```json
 "import_id": "e338555a-3918-4203-8fc6-81b3f7933c79"
 ```
+
 ### 48.65. Webhook
+
 ```json
 "id": 1,
 "key": "test-key",
@@ -8351,7 +8483,9 @@ null
 "project": 1,
 "url": "http://localhost:3000/htbin/test.py"
 ```
+
 ### 48.66. Webhook log
+
 ```json
 "created": "2020-07-03T08:40:52.867Z",
 "duration": 0.0,
@@ -8384,7 +8518,9 @@ null
 "url": "http://localhost:3000/htbin/test.py",
 "webhook": 1
 ```
+
 ### 48.67. Timeline entry detail
+
 ```json
 "content_type": 13,
 "created": "2020-07-03T08:40:37.973Z",
@@ -8444,7 +8580,9 @@ null
 "object_id": 1,
 "project": 1
 ```
+
 ### 48.68. Locale
+
 ```json
 {
 "bidi": false,
@@ -8562,7 +8700,9 @@ null
 "name": "\u4e2d\u6587(\u9999\u6e2f)"
 }
 ```
+
 ### 48.69. Watched
+
 ```json
 "assigned_to": 12,
 "assigned_to_extra_info": {
@@ -8610,7 +8750,9 @@ null
 "total_watchers": 1,
 "type": "epic"
 ```
+
 ### 48.70. Liked
+
 ```json
 {
 "assigned_to": null,
@@ -8670,7 +8812,9 @@ null
 "type": "project"
 }
 ```
+
 ### 48.71. Voted
+
 ```json
 "assigned_to": 5,
 "assigned_to_extra_info": {
@@ -8746,7 +8890,9 @@ null
 "total_watchers": 3,
 "type": "issue"
 ```
+
 ### 48.72. Contact
+
 ```json
 "comment": "Comment to admins",
 "created_date": "2020-07-03T08:40:56+0000",
@@ -8754,13 +8900,17 @@ null
 "project": 3,
 "user": 6
 ```
+
 ### 48.73. Discover stats
+
 ```json
 "projects": {
 "total": 6
 }
 ```
+
 ### 48.74. System stats
+
 ```json
 "projects": {
 "average_last_five_working_days": 0.0,
@@ -8790,15 +8940,21 @@ null
 "total": 172
 }
 ```
+
 ### 48.75. Importer Trello Auth Url
+
 ```json
 "url": "https://trello.com/1/OAuthAuthorizeToken?oauth_token=b000000000000000000a0&amp;scope=read,write,account&amp;expiration=1day&amp;name=Taiga&amp;return_url=http://localhost:9001/project/new/import/trello"
 ```
+
 ### 48.76. Importer Trello Auth Token
+
 ```json
 "token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
+
 ### 48.77. Importer Trello list users
+
 ```json
 {
 "email": null,
@@ -8818,7 +8974,9 @@ null
 }
 }
 ```
+
 ### 48.78. Importer Trello list projects
+
 ```json
 {
 "description": "My trello project",
@@ -8833,7 +8991,9 @@ null
 "name": "Other trello project"
 }
 ```
+
 ### 48.79. Importer Trello import project
+
 ```json
 "is_backlog_activated": false,
 "is_kanban_activated": true,
@@ -8842,15 +9002,21 @@ null
 ],
 "slug": "my-username-new-project-name"
 ```
+
 ### 48.80. Importer Github Auth Url
+
 ```json
 "url": "https://github.com/login/oauth/authorize?client_id=XXXXXX_get_a_valid_client_id_from_github_XXXXXX&amp;scope=user,repo"
 ```
+
 ### 48.81. Importer Github Auth Token
+
 ```json
 "token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
+
 ### 48.82. Importer Github list users
+
 ```json
 {
 "full_name": "Github user",
@@ -8870,7 +9036,9 @@ null
 "username": "other-github-user"
 }
 ```
+
 ### 48.83. Importer Github list projects
+
 ```json
 {
 "description": "My github project",
@@ -8885,7 +9053,9 @@ null
 "name": "Other github project"
 }
 ```
+
 ### 48.84. Importer Github import project
+
 ```json
 "is_backlog_activated": false,
 "is_kanban_activated": true,
@@ -8894,16 +9064,22 @@ null
 ],
 "slug": "my-username-new-project-name"
 ```
+
 ### 48.85. Importer Jira Auth Url
+
 ```json
 "url": "http://your.jira.server/plugins/servlet/oauth/authorize?oauth_token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
+
 ### 48.86. Importer Jira Auth Token
+
 ```json
 "token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 "url": "http://your.jira.server"
 ```
+
 ### 48.87. Importer Jira list users
+
 ```json
 {
 "email": null,
@@ -8923,7 +9099,9 @@ null
 }
 }
 ```
+
 ### 48.88. Importer Jira list projects
+
 ```json
 {
 "description": "My jira project",
@@ -8940,7 +9118,9 @@ null
 "type": "board"
 }
 ```
+
 ### 48.89. Importer Jira import project
+
 ```json
 "is_backlog_activated": false,
 "is_kanban_activated": true,
@@ -8949,7 +9129,9 @@ null
 ],
 "slug": "my-username-new-project-name"
 ```
+
 ### 48.90. Importer Import project task accepted
+
 ```json
 "task_id": "00000000-0000-0000-0000-000000000000"
 ```

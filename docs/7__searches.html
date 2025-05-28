@@ -1,33 +1,39 @@
 <div class="sect1">
-<h2 id="searches">7. Searches</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="searches-search">7.1. Search</h3>
-<div class="paragraph">
-<p>To search send a GET request with the following get parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong> (required): project id</p>
-</li>
-<li>
-<p><strong>text</strong>: string</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="searches">7. Searches</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="searches-search">7.1. Search</h3>
+      <div class="paragraph">
+        <p>To search send a GET request with the following get parameters:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project</strong> (required): project id</p>
+          </li>
+          <li>
+            <p><strong>text</strong>: string</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/search?project<span class="tok-o">=</span><span class="tok-m">1</span><span class="tok-se">\&amp;</span><span class="tok-nv">text</span><span class="tok-o">=</span>quas</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-search-results-detail"
+            >search results detail objects</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-search-results-detail">search results detail objects</a></p>
-</div>
-</div>
-</div>
-</div>
-

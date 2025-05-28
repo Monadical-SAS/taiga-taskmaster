@@ -7,20 +7,25 @@
 When creating or working with TypeScript monorepos, follow these mandatory configurations:
 
 ### Package Manager & Workspace Setup
+
 - Use **pnpm workspaces** exclusively for monorepo management
 - Create `pnpm-workspace.yaml` in the root:
+
 ```yaml
 packages:
-  - 'packages/*'
-  - 'apps/*'
+  - "packages/*"
+  - "apps/*"
 ```
+
 - All packages must be **ESModules** - set `"type": "module"` in root and all package-level `package.json` files
 - Use `workspace:*` protocol for internal dependencies
 
 ### TypeScript Configuration (Mandatory)
+
 Every TypeScript project must include **incremental compilation** and **composite builds**:
 
 **Root tsconfig.json:**
+
 ```json
 {
   "compilerOptions": {
@@ -60,12 +65,14 @@ Every TypeScript project must include **incremental compilation** and **composit
 ```
 
 **Package-level tsconfig.json requirements:**
+
 - Must extend root config or include same options
 - Must include `"composite": true` for all library packages
-- Must include `"incremental": true` 
+- Must include `"incremental": true`
 - Use appropriate `"lib"` array based on runtime (Node.js vs browser)
 
 ### ESLint Configuration (Mandatory)
+
 Install and configure ESLint with functional programming rules:
 
 ```bash
@@ -73,6 +80,7 @@ pnpm add -Dw eslint eslint-plugin-functional typescript-eslint
 ```
 
 **Root eslint.config.js:**
+
 ```javascript
 import functional from "eslint-plugin-functional";
 import tseslint from "typescript-eslint";
@@ -97,6 +105,7 @@ export default tseslint.config({
 ```
 
 ### Prettier Configuration (Mandatory)
+
 Install and configure Prettier for consistent code formatting:
 
 ```bash
@@ -104,6 +113,7 @@ pnpm add -Dw prettier
 ```
 
 **Root .prettierrc:**
+
 ```json
 {
   "semi": true,
@@ -116,6 +126,7 @@ pnpm add -Dw prettier
 ```
 
 ### Required Scripts in Root package.json
+
 ```json
 {
   "scripts": {
@@ -131,12 +142,14 @@ pnpm add -Dw prettier
 ```
 
 ### Installation Commands
+
 - Root dependencies: `pnpm install`
 - Workspace root deps: `pnpm add <package> -w`
 - Package-specific deps: `pnpm add <package> --filter <workspace>`
 - Internal dependencies: `pnpm add <internal-package> --workspace`
 
 ### Key Rules
+
 1. **Always enable incremental compilation**: Include `"incremental": true` and `"composite": true`
 2. **ESModule consistency**: Use `"type": "module"` in ALL package.json files
 3. **Functional programming**: ESLint functional rules are mandatory for code quality

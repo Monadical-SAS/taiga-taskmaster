@@ -1,281 +1,395 @@
 <div class="sect1">
-<h2 id="resolver">6. Resolver</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="resolver-projects">6.1. Projects</h3>
-<div class="paragraph">
-<p>To resolve the id of a project send a GET request with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong> (required): the project slug trying to be resolved</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="resolver">6. Resolver</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="resolver-projects">6.1. Projects</h3>
+      <div class="paragraph">
+        <p>
+          To resolve the id of a project send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>project</strong> (required): the project slug trying to be
+              resolved
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/resolver?project<span class="tok-o">=</span>project-0</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The response body is a JSON object containing the project id</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The response body is a JSON object containing the project id</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"project"</span><span class="tok-p">:</span> <span class="tok-mi">1</span>
 <span class="tok-p">}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="resolver-user-stories">6.2. User stories</h3>
-<div class="paragraph">
-<p>To resolve the id of a user story send a GET request with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong> (required): the project slug trying to be resolved</p>
-</li>
-<li>
-<p><strong>us</strong> (required): the user story ref trying to be resolved</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="resolver-user-stories">6.2. User stories</h3>
+      <div class="paragraph">
+        <p>
+          To resolve the id of a user story send a GET request with the
+          following parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>project</strong> (required): the project slug trying to be
+              resolved
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>us</strong> (required): the user story ref trying to be
+              resolved
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/resolver?project<span class="tok-o">=</span>project-0<span class="tok-se">\&amp;</span><span class="tok-nv">us</span><span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The response body is a JSON object containing the project and the user story ids</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The response body is a JSON object containing the project and the user
+          story ids
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"project"</span><span class="tok-p">:</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
     <span class="tok-nt">"us"</span><span class="tok-p">:</span> <span class="tok-mi">1</span>
 <span class="tok-p">}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="resolver-issues">6.3. Issues</h3>
-<div class="paragraph">
-<p>To resolve the id of an issue send a GET request with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong> (required): the project slug trying to be resolved</p>
-</li>
-<li>
-<p><strong>issue</strong> (required): the issue ref trying to be resolved</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="resolver-issues">6.3. Issues</h3>
+      <div class="paragraph">
+        <p>
+          To resolve the id of an issue send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>project</strong> (required): the project slug trying to be
+              resolved
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>issue</strong> (required): the issue ref trying to be
+              resolved
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/resolver?project<span class="tok-o">=</span>project-0<span class="tok-se">\&amp;</span><span class="tok-nv">issue</span><span class="tok-o">=</span><span class="tok-m">63</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The response body is a JSON object containing the project and the issue ids</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The response body is a JSON object containing the project and the
+          issue ids
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"issue"</span><span class="tok-p">:</span> <span class="tok-mi">22</span><span class="tok-p">,</span>
     <span class="tok-nt">"project"</span><span class="tok-p">:</span> <span class="tok-mi">1</span>
 <span class="tok-p">}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="resolver-tasks">6.4. Tasks</h3>
-<div class="paragraph">
-<p>To resolve the id of a task send a GET request with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong> (required): the project slug trying to be resolved</p>
-</li>
-<li>
-<p><strong>task</strong> (required): the task ref trying to be resolved</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="resolver-tasks">6.4. Tasks</h3>
+      <div class="paragraph">
+        <p>
+          To resolve the id of a task send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>project</strong> (required): the project slug trying to be
+              resolved
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>task</strong> (required): the task ref trying to be
+              resolved
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/resolver?project<span class="tok-o">=</span>project-0<span class="tok-se">\&amp;</span><span class="tok-nv">task</span><span class="tok-o">=</span><span class="tok-m">2</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The response body is a JSON object containing the project and the task ids</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The response body is a JSON object containing the project and the task
+          ids
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"project"</span><span class="tok-p">:</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
     <span class="tok-nt">"task"</span><span class="tok-p">:</span> <span class="tok-mi">1</span>
 <span class="tok-p">}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="resolver-milestones">6.5. Milestones</h3>
-<div class="paragraph">
-<p>To resolve the id of a milestone send a GET request with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong> (required): the project slug trying to be resolved</p>
-</li>
-<li>
-<p><strong>milestone</strong> (required): the milestone slug trying to be resolved</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="resolver-milestones">6.5. Milestones</h3>
+      <div class="paragraph">
+        <p>
+          To resolve the id of a milestone send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>project</strong> (required): the project slug trying to be
+              resolved
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>milestone</strong> (required): the milestone slug trying
+              to be resolved
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/resolver?project<span class="tok-o">=</span>project-0<span class="tok-se">\&amp;</span><span class="tok-nv">milestone</span><span class="tok-o">=</span>sprint-2020-5-8</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The response body is a JSON object containing the project and the milestone ids</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The response body is a JSON object containing the project and the
+          milestone ids
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"milestone"</span><span class="tok-p">:</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
     <span class="tok-nt">"project"</span><span class="tok-p">:</span> <span class="tok-mi">1</span>
 <span class="tok-p">}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="resolver-wiki-pages">6.6. Wiki pages</h3>
-<div class="paragraph">
-<p>To resolve the id of a wiki page send a GET request with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong> (required): the project slug trying to be resolved</p>
-</li>
-<li>
-<p><strong>wikipage</strong>(required): the wiki-page slug trying to be resolved</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="resolver-wiki-pages">6.6. Wiki pages</h3>
+      <div class="paragraph">
+        <p>
+          To resolve the id of a wiki page send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>project</strong> (required): the project slug trying to be
+              resolved
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>wikipage</strong>(required): the wiki-page slug trying to
+              be resolved
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/resolver?project<span class="tok-o">=</span>project-0<span class="tok-se">\&amp;</span><span class="tok-nv">wikipage</span><span class="tok-o">=</span>home</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The response body is a JSON object containing the project and the wiki page ids</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The response body is a JSON object containing the project and the wiki
+          page ids
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"project"</span><span class="tok-p">:</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
     <span class="tok-nt">"wikipage"</span><span class="tok-p">:</span> <span class="tok-mi">1</span>
 <span class="tok-p">}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="resolver-multiple-resolution">6.7. Multiple resolution</h3>
-<div class="paragraph">
-<p>To resolve the multiple ids you can send a GET mixing parameters from the previous examples:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="resolver-multiple-resolution">6.7. Multiple resolution</h3>
+      <div class="paragraph">
+        <p>
+          To resolve the multiple ids you can send a GET mixing parameters from
+          the previous examples:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/resolver?project<span class="tok-o">=</span>project-0<span class="tok-se">\&amp;</span><span class="tok-nv">task</span><span class="tok-o">=</span><span class="tok-m">2</span><span class="tok-se">\&amp;</span><span class="tok-nv">us</span><span class="tok-o">=</span><span class="tok-m">1</span><span class="tok-se">\&amp;</span><span class="tok-nv">wikipage</span><span class="tok-o">=</span>home</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The response body is a JSON object containing the project and the task ids</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The response body is a JSON object containing the project and the task
+          ids
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"project"</span><span class="tok-p">:</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
     <span class="tok-nt">"task"</span><span class="tok-p">:</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
     <span class="tok-nt">"us"</span><span class="tok-p">:</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
     <span class="tok-nt">"wikipage"</span><span class="tok-p">:</span> <span class="tok-mi">1</span>
 <span class="tok-p">}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="resolver-ref">6.8. By ref value</h3>
-<div class="paragraph">
-<p>To resolve an object if we don’t know its type we have to use <code>ref</code> GET parameter:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="resolver-ref">6.8. By ref value</h3>
+      <div class="paragraph">
+        <p>
+          To resolve an object if we don’t know its type we have to use
+          <code>ref</code> GET parameter:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/resolver?project<span class="tok-o">=</span>project-0<span class="tok-se">\&amp;</span><span class="tok-nv">ref</span><span class="tok-o">=</span><span class="tok-m">2</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The response body is a JSON object containing the project and the story, task or
-issue id.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The response body is a JSON object containing the project and the
+          story, task or issue id.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"project"</span><span class="tok-p">:</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
     <span class="tok-nt">"task"</span><span class="tok-p">:</span> <span class="tok-mi">1</span>
 <span class="tok-p">}</span></code></pre>
+        </div>
+      </div>
+      <div class="admonitionblock important">
+        <table>
+          <tbody>
+            <tr>
+              <td class="icon">
+                <div class="title"></div>
+              </td>
+              <td class="content">
+                <div class="title">Incompatibility between GET params</div>
+                <div class="paragraph">
+                  <p>
+                    Be careful because <code>ref</code> is inconpatible with
+                    <code>us</code>, <code>task</code> and
+                    <code>issue</code> parameters in requests with multiple
+                    resolutions.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="admonitionblock important">
-<table>
-<tbody><tr>
-<td class="icon">
-<div class="title"></div>
-</td>
-<td class="content">
-<div class="title">Incompatibility between GET params</div>
-<div class="paragraph">
-<p>Be careful because <code>ref</code> is inconpatible with <code>us</code>, <code>task</code> and <code>issue</code>
-parameters in requests with multiple resolutions.</p>
-</div>
-</td>
-</tr>
-</tbody></table>
-</div>
-</div>
-</div>
-</div>
-

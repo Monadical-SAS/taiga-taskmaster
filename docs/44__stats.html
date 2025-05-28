@@ -1,52 +1,74 @@
 <div class="sect1">
-<h2 id="stats">44. Stats</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="discover-stats">44.1. Get discover stats</h3>
-<div class="paragraph">
-<p>To get the discover stats send a GET request with the following parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="stats">44. Stats</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="discover-stats">44.1. Get discover stats</h3>
+      <div class="paragraph">
+        <p>
+          To get the discover stats send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/stats/discover</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-discover-stats">discover stats object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="system-stats">44.2. Get system stats</h3>
-<div class="paragraph">
-<p>To get the discover stats send a GET request with the following parameters:</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tbody><tr>
-<td class="icon">
-<div class="title"></div>
-</td>
-<td class="content">
-This API will only work if your instance has system stats enabled
-</td>
-</tr>
-</tbody></table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-discover-stats"
+            >discover stats object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="system-stats">44.2. Get system stats</h3>
+      <div class="paragraph">
+        <p>
+          To get the discover stats send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="admonitionblock note">
+        <table>
+          <tbody>
+            <tr>
+              <td class="icon">
+                <div class="title"></div>
+              </td>
+              <td class="content">
+                This API will only work if your instance has system stats
+                enabled
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/stats/system</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-system-stats"
+            >system stats object</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-system-stats">system stats object</a></p>
-</div>
-</div>
-</div>
-</div>
-

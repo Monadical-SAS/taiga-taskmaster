@@ -16,9 +16,7 @@
       "title": "Implement Core Types and Interfaces",
       "description": "Define TypeScript interfaces and types for the system based on the PRD requirements.",
       "status": "done",
-      "dependencies": [
-        1
-      ],
+      "dependencies": [1],
       "priority": "high",
       "details": "1. Implement Effect Schema integration in `/packages/common/src/index.ts` and `/packages/common/src/tasks.ts`\n2. Create comprehensive type system with branded types:\n   - TaskId, TaskText, TrackerTask, PrdText, NonEmptyString\n3. Implement TasksFileContent schema with dependency validation and filter logic\n4. Add SubtaskId handling with string parsing for taskmaster CLI compatibility\n5. Create robust test suite validating schema edge cases and dependency validation\n6. Implement runtime validation with Effect Schema decode/encode patterns\n7. Define interfaces for task generation and synchronization in separate packages\n8. Establish dependency injection architecture with proper typing\n9. Implement AsyncDisposable pattern for resource management",
       "testStrategy": "1. Create unit tests for each type definition\n2. Test schema validation with valid and invalid inputs\n3. Verify that type constraints are enforced correctly\n4. Test enum values match expected Taiga task statuses\n5. Ensure optional fields are handled correctly\n6. Verify dependency validation logic works correctly\n7. Test branded types enforce proper constraints\n8. Verify interface contracts are properly typed",
@@ -29,10 +27,7 @@
       "title": "Implement Authentication and HTTP Client",
       "description": "Create a Taiga API layer with authentication handling and implement necessary API endpoints following the interface-implementation pattern.",
       "status": "in-progress",
-      "dependencies": [
-        1,
-        2
-      ],
+      "dependencies": [1, 2],
       "priority": "high",
       "details": "see taiga-api/docs/todos/1-robust-auth/README.md for more info. you have to look at it and its references before proceeding.\n 1. Create separate packages:\n   - taiga-api-interface: Define interfaces for Taiga API endpoints\n   - taiga-api: Implement the interfaces with HTTP client\n2. Implement authentication for Taiga API:\n   - Normal login with Bearer token authentication\n   - Auth header generation\n3. Implement the following API endpoints based on Taiga API docs:\n   - Tasks (list, create, get, update, delete)\n   - User Stories (list, create, get, update, delete)\n   - Task Statuses (list, create, get, update, delete)\n   - Task Custom Attributes (list, create, get, update, delete)\n4. Add proper error handling and logging\n5. Use Effect Schema for validation of API responses\n6. Create TypeScript interfaces for all API models\n7. Follow the established interface-driven approach in the project architecture\n\nReference the Taiga API documentation from the docs/ directory for implementation details.",
       "testStrategy": "1. Unit test the HTTP client creation with different base URLs\n2. Test auth header generation with token configurations\n3. Mock API responses for each implemented endpoint\n4. Test error handling for various API error scenarios\n5. Verify schema validation works correctly for API responses\n6. Test each CRUD operation for all implemented endpoints\n7. Verify the implementation conforms to the established interfaces\n8. Test authentication flow with mock responses",
@@ -98,9 +93,7 @@
       "title": "Implement Tag Management System",
       "description": "Create utilities for generating, validating, and extracting information from Taiga task tags according to the PRD specifications.",
       "status": "pending",
-      "dependencies": [
-        2
-      ],
+      "dependencies": [2],
       "priority": "medium",
       "details": "1. Implement tag utilities in the common package following the established architecture\n2. Create functions for:\n   - Generating taskmaster tags with proper format\n   - Extracting master task IDs from tags\n   - Validating tag formats\n   - Finding master IDs in arrays of tags\n   - Creating project-specific tags\n3. Add proper error handling for invalid inputs\n4. Create unit tests for all tag utilities\n5. Ensure compatibility with the Taiga API requirements\n6. Integrate with the existing type system using branded types\n\nThe implementation should leverage the existing type system and follow functional programming patterns.",
       "testStrategy": "1. Test tag creation with various task IDs\n2. Verify project tag format is correct\n3. Test extraction of master IDs from valid and invalid tags\n4. Test finding master IDs in arrays of mixed tags\n5. Verify validation of taskmaster tags\n6. Test error handling when PROJECT_SLUG is not set\n7. Test with edge cases like very large IDs or special characters in project slugs\n8. Verify integration with branded types",
@@ -111,10 +104,7 @@
       "title": "Implement PRD Webhook Receiver Module",
       "description": "Create the webhook endpoint that receives PRD updates from Taiga and initiates the task generation process, implementing the existing interfaces.",
       "status": "pending",
-      "dependencies": [
-        2,
-        3
-      ],
+      "dependencies": [2, 3],
       "priority": "high",
       "details": "1. Implement Express endpoint for receiving webhook payloads\n2. Add JWT validation middleware for security\n3. Implement payload validation using the existing schemas\n4. Create controller that connects to the core business logic\n5. Add error handling and logging\n6. Implement PRD swimlane validation\n7. Connect to the task generation service through the established interfaces\n8. Create unit tests with mocked dependencies\n\nThe implementation should use dependency injection and follow the interface contracts defined in the core package.",
       "testStrategy": "1. Test webhook endpoint with valid and invalid payloads\n2. Mock Taiga client to test swimlane validation\n3. Test JWT validation middleware with valid and invalid tokens\n4. Verify error handling for various failure scenarios\n5. Test integration with task generator through the interfaces\n6. Verify correct HTTP status codes are returned\n7. Test handling of edge cases like malformed JSON\n8. Verify conformance to interface contracts",
@@ -125,9 +115,7 @@
       "title": "Implement Task Generation Service",
       "description": "Create a service that implements the taskmaster-interface to generate tasks from PRD content using the claude-task-master CLI tool.",
       "status": "pending",
-      "dependencies": [
-        2
-      ],
+      "dependencies": [2],
       "priority": "high",
       "details": "1. Implement the `GenerateTasksF` interface defined in the taskmaster-interface package\n2. Create wrapper around the claude-task-master CLI tool\n3. Implement file system operations for temporary files\n4. Add proper error handling and cleanup\n5. Implement validation of generated tasks using the existing schemas\n6. Create unit tests with mocked dependencies\n7. Add logging for debugging and monitoring\n8. Implement resource cleanup for proper resource management\n\nThe implementation should follow the interface contract and leverage the existing type system.",
       "testStrategy": "1. Mock file system operations to test task generation without actual file I/O\n2. Test handling of claude-task-master CLI execution with mocked exec function\n3. Verify proper cleanup of temporary files\n4. Test validation of generated tasks file\n5. Test error handling for various failure scenarios (file write errors, CLI execution errors, validation errors)\n6. Test with various PRD content inputs\n7. Verify atomic transaction behavior\n8. Verify conformance to the GenerateTasksF interface",
@@ -144,9 +132,7 @@
           "id": 2,
           "title": "Develop CLI Tool Wrapper with Execution Handling",
           "description": "Create a wrapper around the CLI tool that handles process execution, command-line arguments, and output parsing.",
-          "dependencies": [
-            1
-          ],
+          "dependencies": [1],
           "details": "Implement functionality to execute the claude-task-master CLI tool. Handle command-line argument formatting, environment variables, and working directory configuration. Implement robust error handling for process failures, timeouts, and unexpected outputs. Parse and transform the CLI output into the required task data structures.",
           "status": "pending"
         },
@@ -154,10 +140,7 @@
           "id": 3,
           "title": "Implement File System Operations for Temporary Files",
           "description": "Create utilities to manage temporary files needed during the task generation process.",
-          "dependencies": [
-            1,
-            2
-          ],
+          "dependencies": [1, 2],
           "details": "Develop functionality to create, write to, read from, and delete temporary files. Implement path generation for temporary files with unique identifiers. Handle file system exceptions appropriately. Create helper functions for common file operations used in the task generation workflow.",
           "status": "pending"
         },
@@ -165,10 +148,7 @@
           "id": 4,
           "title": "Implement Validation of Generated Tasks",
           "description": "Create validation logic to ensure generated tasks meet the required format and content specifications.",
-          "dependencies": [
-            1,
-            3
-          ],
+          "dependencies": [1, 3],
           "details": "Implement validation for task structure, content, and relationships using the existing schemas. Create validation rules for task properties such as title, description, and dependencies. Implement error collection and reporting mechanisms. Ensure validation failures provide clear, actionable error messages.",
           "status": "pending"
         },
@@ -176,10 +156,7 @@
           "id": 5,
           "title": "Implement Resource Cleanup",
           "description": "Implement proper resource cleanup to ensure all resources are properly managed and released.",
-          "dependencies": [
-            2,
-            3
-          ],
+          "dependencies": [2, 3],
           "details": "Create cleanup logic for temporary files, process handles, and other resources. Add safeguards to prevent resource leaks in error scenarios. Ensure all resources are properly released when they are no longer needed. Document the resource management approach for maintainers.",
           "status": "pending"
         },
@@ -187,13 +164,7 @@
           "id": 6,
           "title": "Create Unit Tests with Mocked Dependencies",
           "description": "Develop comprehensive unit tests for the Task Generation Service using mocked dependencies.",
-          "dependencies": [
-            1,
-            2,
-            3,
-            4,
-            5
-          ],
+          "dependencies": [1, 2, 3, 4, 5],
           "details": "Create tests for the task generation implementation with mocked dependencies. Implement tests for successful task generation scenarios. Add tests for error handling, validation failures, and edge cases. Create mocks for file system, CLI tool execution, and other external dependencies. Implement tests to verify proper resource cleanup.",
           "status": "pending"
         }
@@ -204,9 +175,7 @@
       "title": "Implement Markdown Rendering Engine",
       "description": "Create a service to transform task data into formatted Markdown content for Taiga task descriptions.",
       "status": "pending",
-      "dependencies": [
-        2
-      ],
+      "dependencies": [2],
       "priority": "medium",
       "details": "1. Implement markdown rendering utilities in the common package\n2. Create functions for:\n   - Rendering subtasks as markdown\n   - Generating dependency diagrams using Mermaid\n   - Rendering complete task descriptions\n3. Add proper error handling for invalid inputs\n4. Create unit tests for all rendering functions\n5. Ensure compatibility with Taiga markdown rendering\n6. Optimize for readability and visual clarity\n\nThe implementation should leverage the existing type system and follow functional programming patterns.",
       "testStrategy": "1. Test rendering of subtasks with various combinations of optional fields\n2. Verify dependency diagram generation with different dependency structures\n3. Test handling of missing tasks in dependency references\n4. Verify complete task rendering with all components\n5. Test with edge cases like very long titles or descriptions\n6. Verify Mermaid syntax is correctly generated\n7. Test with tasks that have no dependencies\n8. Verify integration with the existing type system",
@@ -217,12 +186,7 @@
       "title": "Implement Taiga Synchronizer Module",
       "description": "Create a service that implements the tasktracker-interface to synchronize generated tasks with Taiga, handling creation, updates, and conflict resolution.",
       "status": "pending",
-      "dependencies": [
-        3,
-        4,
-        6,
-        7
-      ],
+      "dependencies": [3, 4, 6, 7],
       "priority": "high",
       "details": "1. Implement the `SyncTasksF` interface defined in the tasktracker-interface package\n2. Create functions for:\n   - Finding existing tasks by master ID\n   - Creating new tasks in Taiga\n   - Updating existing tasks\n   - Managing swimlanes\n   - Handling batch operations\n3. Implement retry logic for API failures\n4. Add dead letter queue for failed operations\n5. Implement proper error handling and logging\n6. Create unit tests with mocked dependencies\n7. Add rate limiting protection\n\nThe implementation should follow the interface contract and leverage the existing HTTP client and type system.",
       "testStrategy": "1. Test task mapping from file content to tracker tasks\n2. Mock Taiga client to test finding existing tasks\n3. Test swimlane management (getting and creating)\n4. Verify batch processing with different batch sizes\n5. Test retry mechanism for failed operations\n6. Verify dead letter queue functionality for persistently failing tasks\n7. Test full synchronization workflow with various scenarios (new tasks, existing tasks, mixed)\n8. Test handling of API rate limits\n9. Verify conflict resolution strategy\n10. Verify conformance to the SyncTasksF interface",
@@ -239,9 +203,7 @@
           "id": 2,
           "title": "Develop Task Finding and Matching Logic",
           "description": "Create algorithms to find and match tasks between the local system and Taiga.",
-          "dependencies": [
-            1
-          ],
+          "dependencies": [1],
           "details": "Implement logic to query Taiga for existing tasks. Develop matching algorithms based on unique identifiers, titles, or other metadata. Create a mapping structure to maintain relationships between local and Taiga tasks. Handle edge cases like duplicate tasks or partially matched tasks.",
           "status": "pending"
         },
@@ -249,9 +211,7 @@
           "id": 3,
           "title": "Implement Task Creation and Update Operations",
           "description": "Build functionality to create new tasks in Taiga and update existing ones based on local changes.",
-          "dependencies": [
-            2
-          ],
+          "dependencies": [2],
           "details": "Implement methods to transform local task models to Taiga-compatible formats. Create operations for task creation with all required fields. Develop update logic that identifies changed fields and only updates necessary data. Implement conflict resolution strategies for concurrent modifications.",
           "status": "pending"
         },
@@ -259,9 +219,7 @@
           "id": 4,
           "title": "Develop Swimlane Management",
           "description": "Create functionality to manage Taiga swimlanes for organized task visualization.",
-          "dependencies": [
-            3
-          ],
+          "dependencies": [3],
           "details": "Implement methods to query existing swimlanes in Taiga. Create operations to create new swimlanes when needed. Develop logic to assign tasks to appropriate swimlanes based on task metadata or status. Handle swimlane updates when task properties change.",
           "status": "pending"
         },
@@ -269,9 +227,7 @@
           "id": 5,
           "title": "Implement Batch Processing with Rate Limiting",
           "description": "Build a system for processing tasks in batches while respecting Taiga API rate limits.",
-          "dependencies": [
-            3
-          ],
+          "dependencies": [3],
           "details": "Create a batch processing mechanism that groups tasks for efficient API calls. Implement rate limiting logic to prevent API throttling. Develop monitoring for API response headers to dynamically adjust request rates. Create a queuing system for pending operations when rate limits are reached.",
           "status": "pending"
         },
@@ -279,9 +235,7 @@
           "id": 6,
           "title": "Implement Retry Logic and Dead Letter Queue",
           "description": "Create robust error handling with retry mechanisms and a dead letter queue for failed synchronizations.",
-          "dependencies": [
-            5
-          ],
+          "dependencies": [5],
           "details": "Implement exponential backoff retry logic for transient failures. Create a dead letter queue to store tasks that repeatedly fail synchronization. Develop monitoring and alerting for DLQ items. Implement manual retry capabilities for administrators. Create detailed error logging for troubleshooting.",
           "status": "pending"
         },
@@ -289,14 +243,7 @@
           "id": 7,
           "title": "Create Unit Tests for Synchronization Scenarios",
           "description": "Develop comprehensive unit tests covering various synchronization scenarios and edge cases.",
-          "dependencies": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6
-          ],
+          "dependencies": [1, 2, 3, 4, 5, 6],
           "details": "Create tests for successful task creation and updates. Implement tests for error handling and retry logic. Develop tests for rate limiting behavior. Create tests for conflict resolution scenarios. Implement integration tests with mocked Taiga API responses. Create performance tests for batch processing.",
           "status": "pending"
         }
@@ -307,9 +254,7 @@
       "title": "Implement Error Handling and Logging System",
       "description": "Create a robust error handling and logging system to track and manage failures throughout the application.",
       "status": "pending",
-      "dependencies": [
-        1
-      ],
+      "dependencies": [1],
       "priority": "medium",
       "details": "1. Implement a centralized logging system using Effect or a similar library\n2. Create custom error types with proper categorization\n3. Implement global error handlers\n4. Add dead letter queue for failed operations\n5. Create structured logging with different levels\n6. Implement file-based and console logging\n7. Add context-aware error handling\n8. Create utilities for error reporting and monitoring\n\nThe implementation should integrate with the existing architecture and follow functional programming patterns.",
       "testStrategy": "1. Test logger with different log levels and message types\n2. Verify log files are created with correct formats\n3. Test custom error types with various error scenarios\n4. Verify global error handlers catch unhandled exceptions and rejections\n5. Test dead letter queue with different item types and error scenarios\n6. Verify error details are properly captured and formatted\n7. Test integration with other modules to ensure errors are properly logged\n8. Verify context is properly maintained in error handling",
@@ -320,9 +265,7 @@
       "title": "Implement Configuration Management",
       "description": "Create a centralized configuration system to manage environment variables and application settings.",
       "status": "pending",
-      "dependencies": [
-        1
-      ],
+      "dependencies": [1],
       "priority": "medium",
       "details": "1. Implement configuration management using Effect Schema for validation\n2. Create a centralized configuration module\n3. Add validation for all environment variables\n4. Implement sensible defaults where appropriate\n5. Add configuration for different environments (development, production, test)\n6. Create utilities for accessing configuration values\n7. Implement secure handling of sensitive configuration\n8. Add logging of configuration on startup (excluding sensitive values)\n\nThe implementation should leverage the existing schema validation system and follow functional programming patterns.",
       "testStrategy": "1. Test configuration validation with valid and invalid environment variables\n2. Verify default values are applied correctly\n3. Test type transformations (string to number)\n4. Verify error handling for missing required variables\n5. Test configuration overrides for test environment\n6. Verify sensitive values are properly sanitized in logs\n7. Test with various environment configurations\n8. Verify integration with the existing schema validation system",
@@ -333,12 +276,7 @@
       "title": "Implement Application Server",
       "description": "Create the main Express application server that integrates all modules and handles HTTP requests.",
       "status": "pending",
-      "dependencies": [
-        3,
-        5,
-        9,
-        10
-      ],
+      "dependencies": [3, 5, 9, 10],
       "priority": "high",
       "details": "1. Implement Express application with proper middleware\n2. Create dependency injection container for all services\n3. Connect webhook receiver to the core business logic\n4. Add health check endpoint\n5. Implement error handling middleware\n6. Add request logging\n7. Implement graceful shutdown\n8. Create server startup and initialization logic\n\nThe implementation should integrate all the existing modules through their interfaces and follow the established architecture.",
       "testStrategy": "1. Test application setup with various dependency configurations\n2. Verify middleware is correctly applied\n3. Test health check endpoint\n4. Verify JWT validation middleware is applied to API routes\n5. Test 404 handler for non-existent routes\n6. Test error handler with various error types\n7. Verify graceful shutdown behavior\n8. Test CORS and security headers\n9. Verify integration with all modules through their interfaces",
@@ -349,11 +287,7 @@
       "title": "Implement CLI Interface",
       "description": "Create a command-line interface for manual task generation and synchronization.",
       "status": "pending",
-      "dependencies": [
-        6,
-        8,
-        10
-      ],
+      "dependencies": [6, 8, 10],
       "priority": "low",
       "details": "1. Implement CLI using Commander or a similar library\n2. Create commands for:\n   - Generating tasks from a PRD file\n   - Syncing tasks with Taiga\n   - Validating task files\n   - Managing configuration\n3. Add proper error handling and logging\n4. Implement help text and documentation\n5. Create progress indicators for long-running operations\n6. Add validation of command arguments\n7. Implement colorized output for better readability\n\nThe implementation should leverage the existing modules through their interfaces.",
       "testStrategy": "1. Test CLI command parsing with various arguments\n2. Verify file reading and writing operations\n3. Test task generation with sample PRD files\n4. Test task synchronization with sample tasks files\n5. Verify error handling for invalid inputs\n6. Test with missing or invalid arguments\n7. Verify integration with task generator and synchronizer modules through their interfaces\n8. Test help text and documentation accuracy",
@@ -364,19 +298,7 @@
       "title": "Implement Unit and Integration Tests",
       "description": "Create comprehensive test suite for all modules and components of the system.",
       "status": "pending",
-      "dependencies": [
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12
-      ],
+      "dependencies": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       "priority": "medium",
       "details": "1. Implement unit tests for all modules\n2. Create integration tests for key workflows\n3. Add end-to-end tests for complete system\n4. Implement test utilities and mocks\n5. Set up test coverage reporting\n6. Create test fixtures and sample data\n7. Implement property-based testing for critical components\n8. Add performance tests for key operations\n\nThe tests should verify both the interfaces and implementations, ensuring the system works correctly as a whole.",
       "testStrategy": "1. Create unit tests for all utility functions\n2. Test each module in isolation with mocked dependencies\n3. Create integration tests for key workflows\n4. Test error handling and edge cases\n5. Verify code coverage meets thresholds\n6. Test with both valid and invalid inputs\n7. Create end-to-end tests for complete workflows\n8. Test performance with large datasets\n9. Verify interface conformance for all implementations",
@@ -393,9 +315,7 @@
           "id": 2,
           "title": "Implement unit tests for core utilities and functions",
           "description": "Create thorough unit tests for all core utility functions and isolated components",
-          "dependencies": [
-            1
-          ],
+          "dependencies": [1],
           "details": "Write unit tests for all core utility functions, ensuring high code coverage. Test edge cases, error handling, and normal operation paths. Focus on testing each function in isolation with appropriate mocks. Include tests for data transformations, validation logic, and helper functions.",
           "status": "pending"
         },
@@ -403,10 +323,7 @@
           "id": 3,
           "title": "Develop integration tests for key workflows",
           "description": "Create integration tests that verify interactions between multiple components",
-          "dependencies": [
-            1,
-            2
-          ],
+          "dependencies": [1, 2],
           "details": "Implement integration tests for key workflows that span multiple components. Test the interaction between components, ensuring they work together correctly. Focus on critical paths through the system, including data flow between modules, state transitions, and component interactions.",
           "status": "pending"
         },
@@ -414,10 +331,7 @@
           "id": 4,
           "title": "Create end-to-end tests for complete system",
           "description": "Develop comprehensive end-to-end tests that verify the entire system works correctly",
-          "dependencies": [
-            1,
-            3
-          ],
+          "dependencies": [1, 3],
           "details": "Build end-to-end tests that exercise the complete system from user input to final output. Create test scenarios that mimic real user workflows. Include tests for UI interactions, API calls, database operations, and any external service integrations. Ensure tests run in an environment that closely resembles production.",
           "status": "pending"
         },
@@ -425,9 +339,7 @@
           "id": 5,
           "title": "Implement property-based testing for critical components",
           "description": "Use property-based testing to verify invariants and properties of critical system components",
-          "dependencies": [
-            2
-          ],
+          "dependencies": [2],
           "details": "Apply property-based testing techniques to critical components where traditional example-based testing is insufficient. Define properties that should hold true for all valid inputs. Generate random test cases to verify these properties. Focus on components with complex logic, data transformations, or algorithmic implementations.",
           "status": "pending"
         },
@@ -435,10 +347,7 @@
           "id": 6,
           "title": "Set up performance testing for key operations",
           "description": "Create performance tests to ensure system meets performance requirements",
-          "dependencies": [
-            3,
-            4
-          ],
+          "dependencies": [3, 4],
           "details": "Develop performance tests for key operations and critical paths. Establish performance baselines and thresholds. Test system behavior under various load conditions. Measure response times, throughput, and resource utilization. Implement automated performance regression testing to catch performance degradations early.",
           "status": "pending"
         }
@@ -449,9 +358,7 @@
       "title": "Implement Docker Containerization",
       "description": "Create Docker configuration for containerized deployment of the application.",
       "status": "pending",
-      "dependencies": [
-        11
-      ],
+      "dependencies": [11],
       "priority": "low",
       "details": "1. Create Dockerfile for the application\n2. Set up multi-stage build for optimization\n3. Create docker-compose.yml for local development\n4. Add volume mounts for persistent data\n5. Configure environment variables\n6. Set up health checks\n7. Implement graceful shutdown handling\n8. Create Docker-specific documentation\n\nThe Docker configuration should support both development and production environments.",
       "testStrategy": "1. Verify Docker image builds successfully\n2. Test container startup with various environment configurations\n3. Verify volume mounting for persistent data\n4. Test container restart behavior\n5. Verify application functionality within container\n6. Test with docker-compose\n7. Verify logs are correctly written to mounted volumes\n8. Test container resource usage under load",
@@ -462,22 +369,7 @@
       "title": "Create Documentation and Deployment Guide",
       "description": "Create comprehensive documentation for the system, including setup, usage, and deployment instructions.",
       "status": "pending",
-      "dependencies": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14
-      ],
+      "dependencies": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
       "priority": "medium",
       "details": "1. Create comprehensive README.md with system overview\n2. Write detailed API documentation\n3. Create deployment guide for various environments\n4. Document configuration options and environment variables\n5. Create usage examples and tutorials\n6. Document architecture and design decisions\n7. Create troubleshooting guide\n8. Add diagrams for visual clarity\n\nThe documentation should be clear, comprehensive, and accessible to both developers and users.",
       "testStrategy": "1. Verify README contains all required sections\n2. Check deployment guide for completeness\n3. Verify API documentation accuracy\n4. Test documentation with users unfamiliar with the system\n5. Verify all environment variables are documented\n6. Check for broken links or references\n7. Verify code examples are correct and up-to-date\n8. Test deployment following the documented steps",

@@ -2,31 +2,38 @@ import {
   type TasksFileContent,
   NonEmptyString,
   PrdText,
-  castNonEmptyString
-} from '@taiga-task-master/common';
-import type { TrackerTask } from '@taiga-task-master/tasktracker-interface';
-import { Option } from 'effect';
+  castNonEmptyString,
+} from "@taiga-task-master/common";
+import type { TrackerTask } from "@taiga-task-master/tasktracker-interface";
+import { Option } from "effect";
 
 export type GenerateTasksDeps = {
-  savePrd: (path: NonEmptyString, prd: PrdText) => Promise<AsyncDisposable>
+  savePrd: (path: NonEmptyString, prd: PrdText) => Promise<AsyncDisposable>;
   cli: {
-    generate: (prdPath: NonEmptyString, tasksJsonPath: NonEmptyString) => Promise<TrackerTask[]>
-  }
-  readTasksJson: (tasksJsonPath: NonEmptyString) => Promise<TasksFileContent>,
-  tasksFromJson: (tasksJson: TasksFileContent) => TrackerTask[]
-}
+    generate: (
+      prdPath: NonEmptyString,
+      tasksJsonPath: NonEmptyString
+    ) => Promise<TrackerTask[]>;
+  };
+  readTasksJson: (tasksJsonPath: NonEmptyString) => Promise<TasksFileContent>;
+  tasksFromJson: (tasksJson: TasksFileContent) => TrackerTask[];
+};
 
-export type GenerateTasksF = (di: GenerateTasksDeps) =>
-  (prd: PrdText, current: Option.Option<TasksFileContent>) => Promise<TrackerTask[]>
+export type GenerateTasksF = (
+  di: GenerateTasksDeps
+) => (
+  prd: PrdText,
+  current: Option.Option<TasksFileContent>
+) => Promise<TrackerTask[]>;
 
 export const generateTasks: GenerateTasksF = (di) => async (prd, current) => {
   if (Option.isSome(current)) {
-    throw new Error("panic! PRD update not implemented")
+    throw new Error("panic! PRD update not implemented");
   }
-  const path = castNonEmptyString('scripts/prd.txt');
-    await using _letFileGo = await di.savePrd(path, prd);
-  const outputPath = castNonEmptyString('tasks/tasks.json')
+  const path = castNonEmptyString("scripts/prd.txt");
+  await using _letFileGo = await di.savePrd(path, prd);
+  const outputPath = castNonEmptyString("tasks/tasks.json");
   await di.cli.generate(path, outputPath); // don't clean up here
   const tasksJson = await di.readTasksJson(outputPath);
   return di.tasksFromJson(tasksJson);
-}
+};

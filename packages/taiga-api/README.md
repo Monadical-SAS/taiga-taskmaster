@@ -13,20 +13,20 @@ This package implements the Taiga API layer following the interface definitions 
 ## Usage
 
 ```typescript
-import { taigaApiFactory } from '@taiga-task-master/taiga-api';
+import { taigaApiFactory } from "@taiga-task-master/taiga-api";
 
 const api = taigaApiFactory.create({
-  baseUrl: 'https://api.taiga.io' as any, // cast to Url type
+  baseUrl: "https://api.taiga.io" as any, // cast to Url type
   defaultHeaders: {
-    'Authorization': 'Bearer your-token' as any // cast to HeaderKey/HeaderValue
-  }
+    Authorization: "Bearer your-token" as any, // cast to HeaderKey/HeaderValue
+  },
 });
 
 // Login
 const authResponse = await api.auth.login({
-  username: 'user@example.com',
-  password: 'password',
-  type: 'normal'
+  username: "user@example.com",
+  password: "password",
+  type: "normal",
 });
 
 // List tasks

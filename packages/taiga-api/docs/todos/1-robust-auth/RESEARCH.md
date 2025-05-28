@@ -10,7 +10,11 @@ The most effective approach to preventing race conditions in token refresh opera
 
 ```typescript
 interface EnhancedAuthState {
-  authStatus: 'unauthenticated' | 'authenticating' | 'authenticated' | 'refresh_failed';
+  authStatus:
+    | "unauthenticated"
+    | "authenticating"
+    | "authenticated"
+    | "refresh_failed";
   currentAuthToken: AuthToken | null;
   currentRefreshToken: RefreshToken | null;
   refreshPromise: Promise | null; // Critical for deduplication
@@ -20,12 +24,12 @@ interface EnhancedAuthState {
 
 class AuthManager {
   private state: EnhancedAuthState = {
-    authStatus: 'unauthenticated',
+    authStatus: "unauthenticated",
     currentAuthToken: null,
     currentRefreshToken: null,
     refreshPromise: null,
     requestQueue: [],
-    maxQueueSize: 20
+    maxQueueSize: 20,
   };
 
   async refreshToken(): Promise {
@@ -36,7 +40,7 @@ class AuthManager {
 
     // Create new refresh promise and store it
     this.state.refreshPromise = this.performTokenRefresh();
-    
+
     try {
       await this.state.refreshPromise;
     } finally {
@@ -45,18 +49,18 @@ class AuthManager {
   }
 
   private async performTokenRefresh(): Promise {
-    this.state.authStatus = 'authenticating';
-    
+    this.state.authStatus = "authenticating";
+
     try {
-      const response = await this.httpClient.post('/auth/refresh', {
-        refresh: this.state.currentRefreshToken
+      const response = await this.httpClient.post("/auth/refresh", {
+        refresh: this.state.currentRefreshToken,
       });
-      
+
       this.state.currentAuthToken = response.auth_token;
       this.state.currentRefreshToken = response.refresh;
-      this.state.authStatus = 'authenticated';
+      this.state.authStatus = "authenticated";
     } catch (error) {
-      this.state.authStatus = 'refresh_failed';
+      this.state.authStatus = "refresh_failed";
       throw error;
     }
   }
@@ -70,16 +74,16 @@ This implementation leverages a shared promise instance to coordinate multiple c
 For more granular control over concurrent operations, semaphore patterns provide bounded concurrency limits[5]. This approach is particularly useful when you need to limit the number of requests that can be queued while waiting for authentication resolution.
 
 ```typescript
-import { getSemaphore } from '@henrygd/semaphore';
+import { getSemaphore } from "@henrygd/semaphore";
 
 class ConcurrencyControlledAuthClient {
-  private authSemaphore = getSemaphore('auth-operations', 1);
-  private requestSemaphore = getSemaphore('pending-requests', 20);
+  private authSemaphore = getSemaphore("auth-operations", 1);
+  private requestSemaphore = getSemaphore("pending-requests", 20);
 
   async executeWithAuth(operation: () => Promise): Promise {
     // Limit concurrent requests waiting for auth
     await this.requestSemaphore.acquire();
-    
+
     try {
       return await this.withRetryOnAuth(operation);
     } finally {
@@ -144,7 +148,7 @@ class PromiseCoordinatedAuthClient {
     } catch (error) {
       if (this.isAuthError(error) && request.retryCount  {
     this.pendingRequests.push(request);
-    
+
     if (!this.isRefreshing) {
       this.isRefreshing = true;
       try {
@@ -161,7 +165,7 @@ class PromiseCoordinatedAuthClient {
 
   private async processPendingRequests(): Promise {
     const requests = [...this.pendingRequests];
-    
+
     for (const request of requests) {
       request.retryCount++;
       this.executeRequest(request);
@@ -190,19 +194,19 @@ interface RequestBuffer {
 class BoundedRequestBuffer implements RequestBuffer {
   private buffer: QueuedRequest[] = [];
   private processing = false;
-  
+
   constructor(
     private maxSize: number = 50,
-    private overflowStrategy: 'reject' | 'drop-oldest' = 'reject'
+    private overflowStrategy: "reject" | "drop-oldest" = "reject"
   ) {}
 
   add(request: QueuedRequest): boolean {
     if (this.isFull()) {
-      if (this.overflowStrategy === 'drop-oldest') {
+      if (this.overflowStrategy === "drop-oldest") {
         const dropped = this.buffer.shift();
-        dropped?.reject(new Error('Request dropped due to buffer overflow'));
+        dropped?.reject(new Error("Request dropped due to buffer overflow"));
       } else {
-        request.reject(new Error('Request buffer full'));
+        request.reject(new Error("Request buffer full"));
         return false;
       }
     }
@@ -214,7 +218,7 @@ class BoundedRequestBuffer implements RequestBuffer {
 
   private async processIfIdle(): Promise {
     if (this.processing || this.buffer.length === 0) return;
-    
+
     this.processing = true;
     try {
       while (this.buffer.length > 0) {
@@ -253,9 +257,9 @@ Circuit breakers provide protection against cascading failures and automatic rec
 
 ```typescript
 enum CircuitState {
-  CLOSED = 'closed',
-  OPEN = 'open',
-  HALF_OPEN = 'half-open'
+  CLOSED = "closed",
+  OPEN = "open",
+  HALF_OPEN = "half-open",
 }
 
 interface CircuitBreakerConfig {
@@ -279,7 +283,7 @@ class AuthenticationCircuitBreaker {
         this.state = CircuitState.HALF_OPEN;
         this.halfOpenAttempts = 0;
       } else {
-        throw new Error('Circuit breaker is OPEN - service unavailable');
+        throw new Error("Circuit breaker is OPEN - service unavailable");
       }
     }
 
@@ -344,7 +348,7 @@ class ExponentialBackoffRetry {
     shouldRetry: (error: any) => boolean = () => true
   ): Promise {
     let lastError: any;
-    
+
     for (let attempt = 1; attempt  {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -360,15 +364,15 @@ The exponential backoff implementation includes configurable jitter to distribut
 State machines provide explicit modeling of authentication states and valid transitions, preventing invalid state combinations[12][13][18]. This approach ensures that authentication flows are predictable and secure.
 
 ```typescript
-type AuthenticationState = 
+type AuthenticationState =
   | 'unauthenticated'
-  | 'authenticating' 
+  | 'authenticating'
   | 'authenticated'
   | 'refreshing'
   | 'refresh_failed'
   | 'logged_out';
 
-type AuthenticationEvent = 
+type AuthenticationEvent =
   | { type: 'LOGIN_START'; credentials: AuthCredentials }
   | { type: 'LOGIN_SUCCESS'; user: User; tokens: TokenPair }
   | { type: 'LOGIN_FAILURE'; error: AuthError }
@@ -434,10 +438,10 @@ class AuthenticationStateMachine {
   private performTransition(event: AuthenticationEvent, targetState: AuthenticationState): void {
     // Execute entry actions based on the transition
     this.executeActions(event, targetState);
-    
+
     // Update state
     this.state = targetState;
-    
+
     // Notify observers
     this.notifyStateChange();
   }
@@ -450,19 +454,19 @@ class AuthenticationStateMachine {
         this.context.error = null;
         this.context.retryCount = 0;
         break;
-        
+
       case 'REFRESH_SUCCESS':
         this.context.tokens = event.tokens;
         this.context.error = null;
         this.context.retryCount = 0;
         break;
-        
+
       case 'LOGIN_FAILURE':
       case 'REFRESH_FAILURE':
         this.context.error = event.error;
         this.context.retryCount++;
         break;
-        
+
       case 'LOGOUT':
         this.context.user = null;
         this.context.tokens = null;
@@ -509,30 +513,33 @@ class SecureCredentialManager {
   async storeCredentials(credentials: {
     accessToken: string;
     refreshToken: string;
-    username?: string;  // For fallback authentication
-    encryptedPassword?: string;  // Encrypted, for fallback only
+    username?: string; // For fallback authentication
+    encryptedPassword?: string; // Encrypted, for fallback only
   }): Promise {
     await Promise.all([
-      this.store.store('access_token', credentials.accessToken),
-      this.store.store('refresh_token', credentials.refreshToken),
-      credentials.username && this.store.store('username', credentials.username),
-      credentials.encryptedPassword && this.store.store('encrypted_password', credentials.encryptedPassword)
+      this.store.store("access_token", credentials.accessToken),
+      this.store.store("refresh_token", credentials.refreshToken),
+      credentials.username &&
+        this.store.store("username", credentials.username),
+      credentials.encryptedPassword &&
+        this.store.store("encrypted_password", credentials.encryptedPassword),
     ]);
   }
 
   async getStoredCredentials(): Promise {
-    const [accessToken, refreshToken, username, encryptedPassword] = await Promise.all([
-      this.store.retrieve('access_token'),
-      this.store.retrieve('refresh_token'),
-      this.store.retrieve('username'),
-      this.store.retrieve('encrypted_password')
-    ]);
+    const [accessToken, refreshToken, username, encryptedPassword] =
+      await Promise.all([
+        this.store.retrieve("access_token"),
+        this.store.retrieve("refresh_token"),
+        this.store.retrieve("username"),
+        this.store.retrieve("encrypted_password"),
+      ]);
 
     return {
       accessToken,
       refreshToken,
       username,
-      encryptedPassword
+      encryptedPassword,
     };
   }
 
@@ -552,7 +559,7 @@ class BrowserCredentialStore implements CredentialStore {
   async store(key: string, value: string): Promise {
     // Use secure storage (localStorage with encryption or sessionStorage)
     // Never store passwords in plain text
-    if (key === 'encrypted_password') {
+    if (key === "encrypted_password") {
       // Additional encryption layer for sensitive data
       const encrypted = await this.encrypt(value);
       sessionStorage.setItem(key, encrypted);
@@ -564,11 +571,11 @@ class BrowserCredentialStore implements CredentialStore {
   async retrieve(key: string): Promise {
     const value = sessionStorage.getItem(key);
     if (!value) return null;
-    
-    if (key === 'encrypted_password') {
+
+    if (key === "encrypted_password") {
       return await this.decrypt(value);
     }
-    
+
     return value;
   }
 
@@ -577,8 +584,13 @@ class BrowserCredentialStore implements CredentialStore {
   }
 
   async clear(): Promise {
-    const keysToRemove = ['access_token', 'refresh_token', 'username', 'encrypted_password'];
-    keysToRemove.forEach(key => sessionStorage.removeItem(key));
+    const keysToRemove = [
+      "access_token",
+      "refresh_token",
+      "username",
+      "encrypted_password",
+    ];
+    keysToRemove.forEach((key) => sessionStorage.removeItem(key));
   }
 
   private async encrypt(value: string): Promise {
@@ -692,17 +704,17 @@ class NetworkErrorClassifier {
 
   private shouldRetryError(error: any): boolean {
     const classified = this.errorClassifier.classifyError(error);
-    
+
     switch (classified.type) {
       case ErrorType.NETWORK:
       case ErrorType.SERVER:
       case ErrorType.TIMEOUT:
         return true;
-        
+
       case ErrorType.AUTHENTICATION:
         // Handle auth errors separately
         return this.handleAuthError(error);
-        
+
       default:
         return false;
     }
@@ -759,7 +771,7 @@ class ConnectionMonitor {
 
   onConnectionChange(callback: (online: boolean) => void): () => void {
     this.listeners.push(callback);
-    
+
     // Return unsubscribe function
     return () => {
       const index = this.listeners.indexOf(callback);
@@ -861,7 +873,7 @@ Implementing comprehensive type-safe error handling ensures that all error scena
 
 ```typescript
 // Define discriminated union types for different error scenarios
-type AuthError = 
+type AuthError =
   | { type: 'INVALID_CREDENTIALS'; message: string }
   | { type: 'TOKEN_EXPIRED'; expiredAt: Date }
   | { type: 'REFRESH_FAILED'; reason: string }
@@ -875,7 +887,7 @@ type NetworkError = {
 };
 
 // Result type for operations that can fail
-type Result = 
+type Result =
   | { success: true; data: T }
   | { success: false; error: E };
 
@@ -903,15 +915,15 @@ class TypeSafeAuthClient {
     if (error.status === 401) {
       return { type: 'INVALID_CREDENTIALS', message: 'Invalid username or password' };
     }
-    
+
     if (error.status === 429) {
       const retryAfter = parseInt(error.headers['retry-after']) || 60;
       return { type: 'RATE_LIMITED', retryAfter };
     }
 
     if (this.isNetworkError(error)) {
-      return { 
-        type: 'NETWORK_ERROR', 
+      return {
+        type: 'NETWORK_ERROR',
         networkDetails: {
           code: error.code,
           message: error.message,
@@ -926,19 +938,19 @@ class TypeSafeAuthClient {
   // Usage example with exhaustive error handling
   async authenticateWithFallback(credentials: AuthCredentials): Promise> {
     const loginResult = await this.login(credentials);
-    
+
     if (!loginResult.success) {
       // TypeScript ensures all error cases are handled
       switch (loginResult.error.type) {
         case 'INVALID_CREDENTIALS':
           return { success: false, error: `Login failed: ${loginResult.error.message}` };
-          
+
         case 'RATE_LIMITED':
           return { success: false, error: `Rate limited. Retry after ${loginResult.error.retryAfter} seconds` };
-          
+
         case 'NETWORK_ERROR':
           return { success: false, error: `Network error: ${loginResult.error.networkDetails.message}` };
-          
+
         case 'TOKEN_EXPIRED':
         case 'REFRESH_FAILED':
           return { success: false, error: 'Authentication service error' };
@@ -980,7 +992,7 @@ class FunctionalAuthClient {
 
   validateToken = (token: string): AuthResult =>
     TE.tryCatch(
-      () => this.httpClient.get('/auth/validate', { 
+      () => this.httpClient.get('/auth/validate', {
         headers: { Authorization: `Bearer ${token}` }
       }),
       (error) => this.classifyAuthError(error)
@@ -1008,10 +1020,10 @@ class FunctionalAuthClient {
   // Composable request with authentication
   authenticatedRequest = (
     request: () => Promise
-  ): AuthResult => 
+  ): AuthResult =>
     pipe(
       this.getCurrentToken(),
-      TE.chain((token) => 
+      TE.chain((token) =>
         TE.tryCatch(
           () => this.addAuthHeader(request, token),
           (error) => this.classifyAuthError(error)
@@ -1021,7 +1033,7 @@ class FunctionalAuthClient {
         if (error.type === 'TOKEN_EXPIRED') {
           return pipe(
             this.refreshCurrentToken(),
-            TE.chain(() => 
+            TE.chain(() =>
               TE.tryCatch(
                 () => request(),
                 (error) => this.classifyAuthError(error)
@@ -1035,7 +1047,7 @@ class FunctionalAuthClient {
 
   private getCurrentToken = (): AuthResult =>
     TE.fromEither(
-      this.state.currentAuthToken 
+      this.state.currentAuthToken
         ? E.right(this.state.currentAuthToken)
         : E.left({ type: 'TOKEN_EXPIRED' as const, expiredAt: new Date() })
     );
@@ -1092,7 +1104,7 @@ class InterceptableHttpClient {
 
   addInterceptor(interceptor: RequestInterceptor): () => void {
     this.interceptors.push(interceptor);
-    
+
     // Return removal function
     return () => {
       const index = this.interceptors.indexOf(interceptor);
@@ -1106,10 +1118,10 @@ class InterceptableHttpClient {
     try {
       // Apply request interceptors
       const processedConfig = await this.applyRequestInterceptors(config);
-      
+
       // Make the actual request
       const response = await this.makeRequest(processedConfig);
-      
+
       // Apply response interceptors
       return await this.applyResponseInterceptors(response);
     } catch (error) {
@@ -1120,31 +1132,31 @@ class InterceptableHttpClient {
 
   private async applyRequestInterceptors(config: RequestConfig): Promise {
     let processedConfig = config;
-    
+
     for (const interceptor of this.interceptors) {
       if (interceptor.onRequest) {
         processedConfig = await interceptor.onRequest(processedConfig);
       }
     }
-    
+
     return processedConfig;
   }
 
   private async applyResponseInterceptors(response: HttpResponse): Promise> {
     let processedResponse = response;
-    
+
     for (const interceptor of this.interceptors) {
       if (interceptor.onResponse) {
         processedResponse = await interceptor.onResponse(processedResponse);
       }
     }
-    
+
     return processedResponse;
   }
 
   private async applyErrorInterceptors(error: any): Promise {
     let processedError = error;
-    
+
     for (const interceptor of this.interceptors) {
       if (interceptor.onError) {
         try {
@@ -1154,7 +1166,7 @@ class InterceptableHttpClient {
         }
       }
     }
-    
+
     return processedError;
   }
 }
@@ -1190,7 +1202,7 @@ class AuthenticationInterceptor implements RequestInterceptor {
     if (error.status === 401 && !this.isAuthEndpoint(error.config?.url)) {
       return await this.circuitBreaker.execute(async () => {
         await this.authManager.refreshToken();
-        
+
         // Retry the original request
         const retryConfig = {
           ...error.config,
@@ -1266,7 +1278,7 @@ class MiddlewareHttpClient {
 
     const middleware = this.middleware[index];
     const next = () => this.executeMiddleware(context, index + 1);
-    
+
     return await middleware(context, next);
   }
 }
@@ -1293,13 +1305,13 @@ const authMiddleware: MiddlewareFunction = async (context, next) => {
       // Handle auth error and retry
       await authManager.refreshToken();
       context.retryCount++;
-      
+
       if (context.retryCount  {
   const timeout = context.config.timeout || 30000;
-  
+
   return await Promise.race([
     next(),
-    new Promise((_, reject) => 
+    new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Request timeout')), timeout)
     )
   ]);
@@ -1342,10 +1354,10 @@ const retryMiddleware: MiddlewareFunction = async (context, next) => {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
-        
+
         if (error.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
-          
+
           try {
             const newToken = await this.forceTokenRefresh();
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -1356,7 +1368,7 @@ const retryMiddleware: MiddlewareFunction = async (context, next) => {
             throw refreshError;
           }
         }
-        
+
         throw error;
       }
     );
@@ -1364,7 +1376,7 @@ const retryMiddleware: MiddlewareFunction = async (context, next) => {
 
   private async getOrRefreshToken(): Promise {
     const currentToken = this.tokenStorage.getAccessToken();
-    
+
     if (currentToken && !this.isTokenExpired(currentToken)) {
       return currentToken;
     }
@@ -1379,7 +1391,7 @@ const retryMiddleware: MiddlewareFunction = async (context, next) => {
     }
 
     this.refreshTokenPromise = this.performTokenRefresh();
-    
+
     try {
       const newToken = await this.refreshTokenPromise;
       return newToken;
@@ -1390,7 +1402,7 @@ const retryMiddleware: MiddlewareFunction = async (context, next) => {
 
   private async performTokenRefresh(): Promise {
     const refreshToken = this.tokenStorage.getRefreshToken();
-    
+
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
@@ -1429,21 +1441,21 @@ class EnterpriseAuthClient {
   async authenticateUser(credentials: AuthCredentials): Promise {
     // Implement security checks
     await this.securityManager.validateCredentials(credentials);
-    
+
     // Attempt authentication with circuit breaker protection
     return await this.connectionManager.executeWithCircuitBreaker(async () => {
       const authResponse = await this.performAuthentication(credentials);
-      
+
       // Securely store tokens
       await this.tokenManager.storeTokens(authResponse.tokens);
-      
+
       // Setup automatic token refresh
       this.tokenManager.scheduleTokenRefresh(authResponse.tokens.expires_in);
-      
+
       return {
         user: authResponse.user,
         tokens: authResponse.tokens,
-        permissions: authResponse.permissions
+        permissions: authResponse.permissions,
       };
     });
   }
@@ -1451,15 +1463,15 @@ class EnterpriseAuthClient {
   async makeAuthenticatedRequest(request: RequestConfig): Promise {
     return await this.connectionManager.executeWithRetry(async () => {
       const token = await this.tokenManager.getValidToken();
-      
+
       const authenticatedRequest = {
         ...request,
         headers: {
           ...request.headers,
           Authorization: `Bearer ${token}`,
-          'X-Client-Version': this.getClientVersion(),
-          'X-Request-ID': this.generateRequestId()
-        }
+          "X-Client-Version": this.getClientVersion(),
+          "X-Request-ID": this.generateRequestId(),
+        },
       };
 
       return await this.performRequest(authenticatedRequest);
@@ -1470,12 +1482,12 @@ class EnterpriseAuthClient {
   private setupProactiveTokenRefresh(): void {
     setInterval(async () => {
       const token = this.tokenManager.getCurrentToken();
-      
+
       if (token && this.tokenManager.shouldRefreshProactively(token)) {
         try {
           await this.tokenManager.refreshToken();
         } catch (error) {
-          console.warn('Proactive token refresh failed:', error);
+          console.warn("Proactive token refresh failed:", error);
           // Don't throw - let reactive refresh handle it
         }
       }
@@ -1490,18 +1502,18 @@ class TokenManager {
     const now = Date.now();
     const tokenAge = now - token.issued_at;
     const tokenLifetime = token.expires_in * 1000;
-    
-    return tokenAge > (tokenLifetime * this.proactiveRefreshThreshold);
+
+    return tokenAge > tokenLifetime * this.proactiveRefreshThreshold;
   }
 
   scheduleTokenRefresh(expiresIn: number): void {
     const refreshTime = expiresIn * 1000 * this.proactiveRefreshThreshold;
-    
+
     setTimeout(async () => {
       try {
         await this.refreshToken();
       } catch (error) {
-        console.warn('Scheduled token refresh failed:', error);
+        console.warn("Scheduled token refresh failed:", error);
       }
     }, refreshTime);
   }
@@ -1550,7 +1562,7 @@ class PerformanceOptimizedAuthClient {
 
   private async executeRequest(request: QueuedRequest): Promise {
     const startTime = performance.now();
-    
+
     try {
       const connection = await this.connectionPool.acquire();
       try {
@@ -1575,7 +1587,7 @@ class PerformanceOptimizedAuthClient {
       // Remove oldest entries
       const entries = Array.from(this.tokenCache.entries());
       entries.sort((a, b) => a[1].lastAccessed - b[1].lastAccessed);
-      
+
       const toRemove = entries.slice(0, this.tokenCache.size - this.maxCacheSize);
       toRemove.forEach(([key]) => this.tokenCache.delete(key));
     }
@@ -1614,7 +1626,7 @@ class ConnectionPool {
 
   release(connection: Connection): void {
     this.busy.delete(connection);
-    
+
     if (this.waitingQueue.length > 0) {
       const waitingResolver = this.waitingQueue.shift()!;
       this.busy.add(connection);
@@ -1680,7 +1692,7 @@ describe('AuthClient Race Conditions', () => {
 
     // Assert: Refresh was called only once despite 3 concurrent 401s
     expect(refreshTokenSpy).toHaveBeenCalledTimes(1);
-    
+
     // Assert: Each original request was retried exactly once
     expect(mockHttpClient.get).toHaveBeenCalledTimes(6); // 3 initial + 3 retries
   });
@@ -1690,7 +1702,7 @@ describe('AuthClient Race Conditions', () => {
     authClient = new AuthClient(mockHttpClient, { maxQueueSize });
 
     // Setup: Simulate slow refresh that blocks queue processing
-    mockHttpClient.post.mockImplementation(() => 
+    mockHttpClient.post.mockImplementation(() =>
       new Promise(resolve => setTimeout(resolve, 1000))
     );
 
@@ -1698,7 +1710,7 @@ describe('AuthClient Race Conditions', () => {
     mockHttpClient.get.mockRejectedValue(new HttpError(401, 'Unauthorized'));
 
     // Execute: Try to queue more requests than the limit
-    const requests = Array.from({ length: 10 }, (_, i) => 
+    const requests = Array.from({ length: 10 }, (_, i) =>
       authClient.get(`/api/data${i}`)
     );
 
@@ -1707,7 +1719,7 @@ describe('AuthClient Race Conditions', () => {
     // Assert: Some requests were rejected due to queue overflow
     const rejectedCount = results.filter(r => r.status === 'rejected').length;
     expect(rejectedCount).toBeGreaterThan(0);
-    
+
     // Assert: Queue size never exceeded the limit
     expect(authClient.getQueueSize()).toBeLessThanOrEqual(maxQueueSize);
   });
@@ -1721,7 +1733,7 @@ describe('AuthClient Race Conditions', () => {
 
     // Execute: Make requests while offline
     const offlineRequest = authClient.get('/api/data');
-    
+
     // Verify request is queued, not executed
     expect(mockHttpClient.get).not.toHaveBeenCalled();
 
@@ -1767,23 +1779,23 @@ describe('AuthClient Property Tests', () => {
       fc.array(fc.integer(1, 100), { minLength: 1, maxLength: 50 }),
       async (requestCounts) => {
         const authClient = new AuthClient(mockHttpClient);
-        
+
         // Generate concurrent requests based on property
         const allRequests = requestCounts.flatMap(count =>
           Array.from({ length: count }, () => authClient.get('/api/test'))
         );
 
         const results = await Promise.allSettled(allRequests);
-        
+
         // Property: Either all requests succeed or all fail consistently
         const successes = results.filter(r => r.status === 'fulfilled').length;
         const failures = results.filter(r => r.status === 'rejected').length;
-        
+
         // If any request succeeded, the token refresh must have worked
         if (successes > 0) {
           expect(authClient.hasValidToken()).toBe(true);
         }
-        
+
         // Token refresh should be called at most once regardless of concurrent load
         expect(refreshTokenSpy).toHaveBeenCalledTimes(1);
       }
@@ -1799,7 +1811,7 @@ The testing approach covers race conditions, queue overflow scenarios, and netwo
 Integration tests validate the authentication client's behavior under realistic network conditions and service interactions.
 
 ```typescript
-describe('AuthClient Integration Tests', () => {
+describe("AuthClient Integration Tests", () => {
   let testServer: TestServer;
   let authClient: AuthClient;
 
@@ -1818,95 +1830,95 @@ describe('AuthClient Integration Tests', () => {
       timeout: 5000,
       retryConfig: {
         maxRetries: 3,
-        retryDelay: 100
-      }
+        retryDelay: 100,
+      },
     });
   });
 
-  it('should handle authentication flow with real network delays', async () => {
+  it("should handle authentication flow with real network delays", async () => {
     // Setup: Configure server responses with realistic delays
-    testServer.addRoute('POST', '/auth/login', {
+    testServer.addRoute("POST", "/auth/login", {
       delay: 500,
       response: {
-        access_token: 'test_token',
-        refresh_token: 'test_refresh',
-        expires_in: 3600
-      }
+        access_token: "test_token",
+        refresh_token: "test_refresh",
+        expires_in: 3600,
+      },
     });
 
-    testServer.addRoute('GET', '/api/protected', {
+    testServer.addRoute("GET", "/api/protected", {
       requiresAuth: true,
-      response: { data: 'protected_data' }
+      response: { data: "protected_data" },
     });
 
     // Execute: Full authentication flow
-    await authClient.login({ username: 'test', password: 'test' });
-    const result = await authClient.get('/api/protected');
+    await authClient.login({ username: "test", password: "test" });
+    const result = await authClient.get("/api/protected");
 
     // Assert: Authentication and request succeeded
-    expect(result.data).toBe('protected_data');
+    expect(result.data).toBe("protected_data");
   });
 
-  it('should handle token refresh during high concurrent load', async () => {
+  it("should handle token refresh during high concurrent load", async () => {
     // Setup: Short-lived token that will expire during test
-    testServer.addRoute('POST', '/auth/login', {
+    testServer.addRoute("POST", "/auth/login", {
       response: {
-        access_token: 'short_token',
-        refresh_token: 'test_refresh',
-        expires_in: 1 // 1 second expiration
-      }
+        access_token: "short_token",
+        refresh_token: "test_refresh",
+        expires_in: 1, // 1 second expiration
+      },
     });
 
-    testServer.addRoute('POST', '/auth/refresh', {
+    testServer.addRoute("POST", "/auth/refresh", {
       delay: 200, // Simulate network delay
       response: {
-        access_token: 'new_token',
-        refresh_token: 'new_refresh',
-        expires_in: 3600
-      }
+        access_token: "new_token",
+        refresh_token: "new_refresh",
+        expires_in: 3600,
+      },
     });
 
-    testServer.addRoute('GET', '/api/data', {
+    testServer.addRoute("GET", "/api/data", {
       requiresAuth: true,
-      response: { data: 'test_data' }
+      response: { data: "test_data" },
     });
 
     // Execute: Login and wait for token expiration
-    await authClient.login({ username: 'test', password: 'test' });
+    await authClient.login({ username: "test", password: "test" });
     await sleep(1100); // Wait for token to expire
 
     // Make many concurrent requests
-    const requests = Array.from({ length: 20 }, () => 
-      authClient.get('/api/data')
+    const requests = Array.from({ length: 20 }, () =>
+      authClient.get("/api/data")
     );
 
     const results = await Promise.all(requests);
 
     // Assert: All requests succeeded despite token expiration
     expect(results).toHaveLength(20);
-    results.forEach(result => {
-      expect(result.data).toBe('test_data');
+    results.forEach((result) => {
+      expect(result.data).toBe("test_data");
     });
 
     // Assert: Token refresh was called only once
-    expect(testServer.getCallCount('POST', '/auth/refresh')).toBe(1);
+    expect(testServer.getCallCount("POST", "/auth/refresh")).toBe(1);
   });
 
-  it('should recover from network interruptions', async () => {
+  it("should recover from network interruptions", async () => {
     // Setup: Simulate network failure and recovery
-    testServer.addRoute('GET', '/api/data', {
+    testServer.addRoute("GET", "/api/data", {
       responses: [
-        { error: 'ECONNREFUSED', count: 3 }, // First 3 calls fail
-        { response: { data: 'success' } }     // 4th call succeeds
-      ]
+        { error: "ECONNREFUSED", count: 3 }, // First 3 calls fail
+        { response: { data: "success" } }, // 4th call succeeds
+      ],
     });
 
     // Execute: Request with automatic retry
-    const result = await authClient.get('/api/data');
+    const result = await authClient.get("/api/data");
 
     // Assert: Request eventually succeeded
-    expect(result.data).toBe('success');
-    expect(testServer.getCallCount('GET', '/api/data')).toBe(4);
+    expect(result.data).toBe("success");
+    expect(testServer.getCallCount("GET", "/api/data")).toBe(4);
   });
 });
 
@@ -1931,13 +1943,16 @@ class TestServer {
     this.routes.set(key, config);
   }
 
-  private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise {
+  private async handleRequest(
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ): Promise {
     const key = `${req.method}:${req.url}`;
     const config = this.routes.get(key);
-    
+
     if (!config) {
       res.statusCode = 404;
-      res.end('Not found');
+      res.end("Not found");
       return;
     }
 
@@ -1947,7 +1962,7 @@ class TestServer {
     // Handle authentication requirement
     if (config.requiresAuth && !this.isAuthenticated(req)) {
       res.statusCode = 401;
-      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      res.end(JSON.stringify({ error: "Unauthorized" }));
       return;
     }
 
@@ -1965,7 +1980,7 @@ class TestServer {
 
     // Send success response
     res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader("Content-Type", "application/json");
     res.end(JSON.stringify(config.response));
   }
 
@@ -2030,4 +2045,5 @@ Citations:
 [42] https://dzone.com/articles/type-safe-state-machines-in-typescript
 
 ---
+
 Answer from Perplexity: pplx.ai/share

@@ -1,65 +1,80 @@
 <div class="sect1">
-<h2 id="issue-types">29. Issue types</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="issue-types-list">29.1. List</h3>
-<div class="paragraph">
-<p>To list issue types send a GET request with the following parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="issue-types">29. Issue types</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="issue-types-list">29.1. List</h3>
+      <div class="paragraph">
+        <p>
+          To list issue types send a GET request with the following parameters:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/issue-types</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-issue-type-detail">issue type detail objects</a></p>
-</div>
-<div class="paragraph">
-<p>The results can be filtered using the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong>: project id</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-issue-type-detail"
+            >issue type detail objects</a
+          >
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>The results can be filtered using the following parameters:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project</strong>: project id</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/issue-types?project<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="issue-types-create">29.2. Create</h3>
-<div class="paragraph">
-<p>To create issue types send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>color</strong>: in hexadecimal</p>
-</li>
-<li>
-<p><strong>name</strong> (required)</p>
-</li>
-<li>
-<p><strong>order</strong>: integer</p>
-</li>
-<li>
-<p><strong>project</strong>: (required): project id</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="issue-types-create">29.2. Create</h3>
+      <div class="paragraph">
+        <p>
+          To create issue types send a POST request with the following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>color</strong>: in hexadecimal</p>
+          </li>
+          <li>
+            <p><strong>name</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>order</strong>: integer</p>
+          </li>
+          <li>
+            <p><strong>project</strong>: (required): project id</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -69,11 +84,13 @@
 <span class="tok-s1">        "project": 1</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/issue-types</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -81,85 +98,129 @@
 <span class="tok-s1">        "project": 1</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/issue-types</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-issue-type-detail">issue type detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="issue-types-get">29.3. Get</h3>
-<div class="paragraph">
-<p>To get an issue type send a GET request specifying the issue type id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 Created
+          and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-issue-type-detail"
+            >issue type detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="issue-types-get">29.3. Get</h3>
+      <div class="paragraph">
+        <p>
+          To get an issue type send a GET request specifying the issue type id
+          in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/issue-types/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-issue-type-detail">issue type detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="issue-types-edit">29.4. Edit</h3>
-<div class="paragraph">
-<p>To edit issue types send a PUT or a PATCH specifying the issue type id in the url.
-In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-issue-type-detail"
+            >issue type detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="issue-types-edit">29.4. Edit</h3>
+      <div class="paragraph">
+        <p>
+          To edit issue types send a PUT or a PATCH specifying the issue type id
+          in the url. In a PATCH request you just need to send the modified
+          data, in a PUT one the whole object must be sent.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "name": "Patch type name"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/issue-types/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-issue-type-detail">issue type detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="issue-types-delete">29.5. Delete</h3>
-<div class="paragraph">
-<p>To delete issue statuses send a DELETE specifying the issue type id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-issue-type-detail"
+            >issue type detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="issue-types-delete">29.5. Delete</h3>
+      <div class="paragraph">
+        <p>
+          To delete issue statuses send a DELETE specifying the issue type id in
+          the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/issue-types/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="issue-types-bulk-update-order">29.6. Bulk update order</h3>
-<div class="paragraph">
-<p>To update the order of multiple issue types at the same time send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong> (required)</p>
-</li>
-<li>
-<p><strong>bulk_issue_types</strong>: list where each element is a list, the first element is the status id and the second the new order</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="issue-types-bulk-update-order">29.6. Bulk update order</h3>
+      <div class="paragraph">
+        <p>
+          To update the order of multiple issue types at the same time send a
+          POST request with the following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project</strong> (required)</p>
+          </li>
+          <li>
+            <p>
+              <strong>bulk_issue_types</strong>: list where each element is a
+              list, the first element is the status id and the second the new
+              order
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -176,12 +237,14 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 <span class="tok-s1">        "project": 1</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/issue-types/bulk_update_order</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the update is successful, the HTTP response is a 204 NO CONTENT
+          with an empty body response
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>When the update is successful, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-</div>
-</div>
-

@@ -1,351 +1,493 @@
 <div class="sect1">
-<h2 id="users">37. Users</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="users-list">37.1. List</h3>
-<div class="paragraph">
-<p>To list users send a GET request with the following parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="users">37. Users</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="users-list">37.1. List</h3>
+      <div class="paragraph">
+        <p>To list users send a GET request with the following parameters:</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-user-detail">user detail objects</a></p>
-</div>
-<div class="paragraph">
-<p>The results can be filtered using the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong>: project id</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-user-detail"
+            >user detail objects</a
+          >
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>The results can be filtered using the following parameters:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project</strong>: project id</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users?project<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-get">37.2. Get</h3>
-<div class="paragraph">
-<p>To get a user send a GET request specifying the user id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-get">37.2. Get</h3>
+      <div class="paragraph">
+        <p>
+          To get a user send a GET request specifying the user id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/6</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-user-detail">user detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-me">37.3. Me</h3>
-<div class="paragraph">
-<p>To get your own user send a GET request to the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-user-detail"
+            >user detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-me">37.3. Me</h3>
+      <div class="paragraph">
+        <p>To get your own user send a GET request to the url</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/me</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-user-detail">user detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-stats">37.4. Get user stats</h3>
-<div class="paragraph">
-<p>To get the stats from a user send a GET request specifying the user id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-user-detail"
+            >user detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-stats">37.4. Get user stats</h3>
+      <div class="paragraph">
+        <p>
+          To get the stats from a user send a GET request specifying the user id
+          in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/6/stats</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-user-stats-detail">user stats object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-watched">37.5. Get watched content</h3>
-<div class="paragraph">
-<p>To get the user watched content send a GET request specifying the user id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-user-stats-detail"
+            >user stats object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-watched">37.5. Get watched content</h3>
+      <div class="paragraph">
+        <p>
+          To get the user watched content send a GET request specifying the user
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/1/watched</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a list of JSON <a href="https://docs.taiga.io/api.html#object-watched-detail">watched detail object</a></p>
-</div>
-<div class="paragraph">
-<p>The results can be filtered using the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>type</strong>: of the content. Possible values: project, userstory, task and issue</p>
-</li>
-<li>
-<p><strong>q</strong>: text to search in the subject of the element</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a list of JSON
+          <a href="https://docs.taiga.io/api.html#object-watched-detail"
+            >watched detail object</a
+          >
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>The results can be filtered using the following parameters:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>type</strong>: of the content. Possible values: project,
+              userstory, task and issue
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>q</strong>: text to search in the subject of the element
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/1/watched?type<span class="tok-o">=</span>project<span class="tok-se">\&amp;</span><span class="tok-nv">q</span><span class="tok-o">=</span><span class="tok-nb">test</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-liked">37.6. Get liked content</h3>
-<div class="paragraph">
-<p>To get the user liked content send a GET request specifying the user id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-liked">37.6. Get liked content</h3>
+      <div class="paragraph">
+        <p>
+          To get the user liked content send a GET request specifying the user
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/6/liked</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a list of JSON <a href="https://docs.taiga.io/api.html#object-liked-detail">liked detail object</a></p>
-</div>
-<div class="paragraph">
-<p>The results can be filtered using the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>q</strong>: text to search in the subject of the element</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a list of JSON
+          <a href="https://docs.taiga.io/api.html#object-liked-detail"
+            >liked detail object</a
+          >
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>The results can be filtered using the following parameters:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>q</strong>: text to search in the subject of the element
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/6/liked?q<span class="tok-o">=</span><span class="tok-nb">test</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-voted">37.7. Get voted content</h3>
-<div class="paragraph">
-<p>To get the user voted content send a GET request specifying the user id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-voted">37.7. Get voted content</h3>
+      <div class="paragraph">
+        <p>
+          To get the user voted content send a GET request specifying the user
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/6/voted</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a list of JSON <a href="https://docs.taiga.io/api.html#object-voted-detail">voted detail object</a></p>
-</div>
-<div class="paragraph">
-<p>The results can be filtered using the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>type</strong>: of the content. Possible values: userstory, task and issue</p>
-</li>
-<li>
-<p><strong>q</strong>: text to search in the subject of the element</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a list of JSON
+          <a href="https://docs.taiga.io/api.html#object-voted-detail"
+            >voted detail object</a
+          >
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>The results can be filtered using the following parameters:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>type</strong>: of the content. Possible values: userstory,
+              task and issue
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>q</strong>: text to search in the subject of the element
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/6/liked?q<span class="tok-o">=</span><span class="tok-nb">test</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-edit">37.8. Edit</h3>
-<div class="paragraph">
-<p>To edit users send a PUT or a PATCH specifying the user id in the url.
-In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-edit">37.8. Edit</h3>
+      <div class="paragraph">
+        <p>
+          To edit users send a PUT or a PATCH specifying the user id in the url.
+          In a PATCH request you just need to send the modified data, in a PUT
+          one the whole object must be sent.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "username": "patchedusername"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/6</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-user-detail">user detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-delete">37.9. Delete</h3>
-<div class="paragraph">
-<p>To delete users send a DELETE specifying the user id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-user-detail"
+            >user detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-delete">37.9. Delete</h3>
+      <div class="paragraph">
+        <p>To delete users send a DELETE specifying the user id in the url</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">ADMIN_AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/10</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-get-contacts">37.10. Get contacts</h3>
-<div class="paragraph">
-<p>To get a user contacts send a GET request specifying the user id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-get-contacts">37.10. Get contacts</h3>
+      <div class="paragraph">
+        <p>
+          To get a user contacts send a GET request specifying the user id in
+          the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/6/contacts</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The results can be filtered using the following parameter:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>q</strong>: text to search in username, full name or email</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a list of JSON <a href="https://docs.taiga.io/api.html#object-contact-detail">contact detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-cancel">37.11. Cancel</h3>
-<div class="paragraph">
-<p>To cancel a user account send a POST with the following data</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The results can be filtered using the following parameter:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>q</strong>: text to search in username, full name or email
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a list of JSON
+          <a href="https://docs.taiga.io/api.html#object-contact-detail"
+            >contact detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-cancel">37.11. Cancel</h3>
+      <div class="paragraph">
+        <p>To cancel a user account send a POST with the following data</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "cancel_token": "eyJ1c2VyX2NhbmNlbF9hY2NvdW50X2lkIjo2fQ:1jrHFD:5svMIhFOCpm86JDngtP1CRNPlMs"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/cancel</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-change-avatar">37.12. Change avatar</h3>
-<div class="paragraph">
-<p>To change your user avatar send a POST with the following data</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-change-avatar">37.12. Change avatar</h3>
+      <div class="paragraph">
+        <p>To change your user avatar send a POST with the following data</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: multipart/form-data"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -F <span class="tok-nv">avatar</span><span class="tok-o">=</span>@test.png <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/change_avatar</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the change is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-user-detail">user detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-remove-avatar">37.13. Remove avatar</h3>
-<div class="paragraph">
-<p>To remove your user avatar send a POST with the following data</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the change is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-user-detail"
+            >user detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-remove-avatar">37.13. Remove avatar</h3>
+      <div class="paragraph">
+        <p>To remove your user avatar send a POST with the following data</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/remove_avatar</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the change is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-user-detail">user detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-change-email">37.14. Change email</h3>
-<div class="paragraph">
-<p>To change your user email send a POST with the following data</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the change is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-user-detail"
+            >user detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-change-email">37.14. Change email</h3>
+      <div class="paragraph">
+        <p>To change your user email send a POST with the following data</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "email_token": "email-token"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/change_email</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the change is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-user-detail">user detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-change-password">37.15. Change password</h3>
-<div class="paragraph">
-<p>To change your user password send a POST with the following data</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the change is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-user-detail"
+            >user detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-change-password">37.15. Change password</h3>
+      <div class="paragraph">
+        <p>To change your user password send a POST with the following data</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -353,53 +495,76 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 <span class="tok-s1">        "password": "new-password"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/change_password</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the change succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-password-recovery">37.16. Password recovery</h3>
-<div class="paragraph">
-<p>To request a user password recovery send a POST with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>username</strong> (required): this field also supports the user email</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the change succeeded, the HTTP response is a 204 NO CONTENT with
+          an empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-password-recovery">37.16. Password recovery</h3>
+      <div class="paragraph">
+        <p>
+          To request a user password recovery send a POST with the following
+          data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>username</strong> (required): this field also supports the
+              user email
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "username": "user1"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/password_recovery</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the password recovery request succeeded, the HTTP response is a 200 OK and the response body is a JSON object:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the password recovery request succeeded, the HTTP response is a
+          200 OK and the response body is a JSON object:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"detail"</span><span class="tok-p">:</span> <span class="tok-s2">"Mail sended successful!"</span>
 <span class="tok-p">}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="users-change-password-from-recovery">37.17. Change password from recovery</h3>
-<div class="paragraph">
-<p>To change a user password from a request recovery send a POST with the following data</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="users-change-password-from-recovery">
+        37.17. Change password from recovery
+      </h3>
+      <div class="paragraph">
+        <p>
+          To change a user password from a request recovery send a POST with the
+          following data
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -407,12 +572,14 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 <span class="tok-s1">        "token": "password-token"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/users/change_password_from_recovery</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the password change succeeded, the HTTP response is a 204 NO
+          CONTENT with an empty body response
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>When the password change succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-</div>
-</div>
-

@@ -1,146 +1,202 @@
 <div class="sect1">
-<h2 id="projects">10. Projects</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="projects-list">10.1. List</h3>
-<div class="paragraph">
-<p>To list projects send a GET request with the following parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="projects">10. Projects</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="projects-list">10.1. List</h3>
+      <div class="paragraph">
+        <p>
+          To list projects send a GET request with the following parameters:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-project-list-entry">project list entry objects</a></p>
-</div>
-<div class="paragraph">
-<p>The results can be filtered using the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>member</strong>: member id</p>
-</li>
-<li>
-<p><strong>members</strong>: member ids</p>
-</li>
-<li>
-<p><strong>is_looking_for_people</strong>: the project is looking for new members</p>
-</li>
-<li>
-<p><strong>is_featured</strong>: the project has been highlighted by the instance staff</p>
-</li>
-<li>
-<p><strong>is_backlog_activated</strong>: backlog is active</p>
-</li>
-<li>
-<p><strong>is_kanban_activated</strong>: kanban is active</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-project-list-entry"
+            >project list entry objects</a
+          >
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>The results can be filtered using the following parameters:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>member</strong>: member id</p>
+          </li>
+          <li>
+            <p><strong>members</strong>: member ids</p>
+          </li>
+          <li>
+            <p>
+              <strong>is_looking_for_people</strong>: the project is looking for
+              new members
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>is_featured</strong>: the project has been highlighted by
+              the instance staff
+            </p>
+          </li>
+          <li>
+            <p><strong>is_backlog_activated</strong>: backlog is active</p>
+          </li>
+          <li>
+            <p><strong>is_kanban_activated</strong>: kanban is active</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects?member<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The results can be ordered using the order_by parameter with the values:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>memberships__user_order</strong>: the project order specified by the user</p>
-</li>
-<li>
-<p><strong>total_fans</strong>: total fans for the project</p>
-</li>
-<li>
-<p><strong>total_fans_last_week</strong>: number of new fans in the last week</p>
-</li>
-<li>
-<p><strong>total_fans_last_month</strong>: number of new fans in the last month</p>
-</li>
-<li>
-<p><strong>total_fans_last_year</strong>: number of new fans in the last year</p>
-</li>
-<li>
-<p><strong>total_activity</strong>: number of history entries for the project</p>
-</li>
-<li>
-<p><strong>total_activity_last_week</strong>: number of history entries generated in the last week</p>
-</li>
-<li>
-<p><strong>total_activity_last_month</strong>: number of history entries generated in the last month</p>
-</li>
-<li>
-<p><strong>total_activity_last_year</strong>: number of history entries generated in the last year</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The results can be ordered using the order_by parameter with the
+          values:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>memberships__user_order</strong>: the project order
+              specified by the user
+            </p>
+          </li>
+          <li>
+            <p><strong>total_fans</strong>: total fans for the project</p>
+          </li>
+          <li>
+            <p>
+              <strong>total_fans_last_week</strong>: number of new fans in the
+              last week
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>total_fans_last_month</strong>: number of new fans in the
+              last month
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>total_fans_last_year</strong>: number of new fans in the
+              last year
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>total_activity</strong>: number of history entries for the
+              project
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>total_activity_last_week</strong>: number of history
+              entries generated in the last week
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>total_activity_last_month</strong>: number of history
+              entries generated in the last month
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>total_activity_last_year</strong>: number of history
+              entries generated in the last year
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects?member<span class="tok-o">=</span><span class="tok-m">1</span><span class="tok-se">\&amp;</span><span class="tok-nv">order_by</span><span class="tok-o">=</span>memberships__user_order</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-create">10.2. Create</h3>
-<div class="paragraph">
-<p>To create projects send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>name</strong> (required)</p>
-</li>
-<li>
-<p><strong>description</strong> (required)</p>
-</li>
-<li>
-<p><strong>creation_template</strong>: base template for the project</p>
-</li>
-<li>
-<p><strong>is_backlog_activated</strong></p>
-</li>
-<li>
-<p><strong>is_issues_activated</strong></p>
-</li>
-<li>
-<p><strong>is_kanban_activated</strong></p>
-</li>
-<li>
-<p><strong>is_private</strong></p>
-</li>
-<li>
-<p><strong>is_wiki_activated</strong></p>
-</li>
-<li>
-<p><strong>videoconferences</strong>: "whereby-com",  "jitsi", "talky"  or "custom", the third party used for meetups if enabled</p>
-</li>
-<li>
-<p><strong>videoconferences_extra_data</strong>: string used for the videoconference chat url generation</p>
-</li>
-<li>
-<p><strong>total_milestones</strong></p>
-</li>
-<li>
-<p><strong>total_story_points</strong></p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-create">10.2. Create</h3>
+      <div class="paragraph">
+        <p>To create projects send a POST request with the following data:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>name</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>description</strong> (required)</p>
+          </li>
+          <li>
+            <p>
+              <strong>creation_template</strong>: base template for the project
+            </p>
+          </li>
+          <li>
+            <p><strong>is_backlog_activated</strong></p>
+          </li>
+          <li>
+            <p><strong>is_issues_activated</strong></p>
+          </li>
+          <li>
+            <p><strong>is_kanban_activated</strong></p>
+          </li>
+          <li>
+            <p><strong>is_private</strong></p>
+          </li>
+          <li>
+            <p><strong>is_wiki_activated</strong></p>
+          </li>
+          <li>
+            <p>
+              <strong>videoconferences</strong>: "whereby-com", "jitsi", "talky"
+              or "custom", the third party used for meetups if enabled
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>videoconferences_extra_data</strong>: string used for the
+              videoconference chat url generation
+            </p>
+          </li>
+          <li>
+            <p><strong>total_milestones</strong></p>
+          </li>
+          <li>
+            <p><strong>total_story_points</strong></p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -148,11 +204,13 @@
 <span class="tok-s1">        "name": "Beta project"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -170,54 +228,86 @@
 <span class="tok-s1">        "videoconferences_extra_data": null</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-detail">project detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-get">10.3. Get</h3>
-<div class="paragraph">
-<p>To get a project send a GET request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 Created
+          and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-project-detail"
+            >project detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-get">10.3. Get</h3>
+      <div class="paragraph">
+        <p>
+          To get a project send a GET request specifying the project id in the
+          url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-detail">project detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-get-by-slug">10.4. Get by slug</h3>
-<div class="paragraph">
-<p>To get a project send a GET request specifying the project slug as parameter:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-project-detail"
+            >project detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-get-by-slug">10.4. Get by slug</h3>
+      <div class="paragraph">
+        <p>
+          To get a project send a GET request specifying the project slug as
+          parameter:
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/by_slug?slug<span class="tok-o">=</span>project-0</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-detail">project detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-edit">10.5. Edit</h3>
-<div class="paragraph">
-<p>To edit projects send a PUT or a PATCH specifying the project id in the url. In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PUT <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-project-detail"
+            >project detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-edit">10.5. Edit</h3>
+      <div class="paragraph">
+        <p>
+          To edit projects send a PUT or a PATCH specifying the project id in
+          the url. In a PATCH request you just need to send the modified data,
+          in a PUT one the whole object must be sent.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PUT <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -225,48 +315,69 @@
 <span class="tok-s1">        "name": "Beta project put"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "name": "Beta project patch"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the edit is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-detail">project detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-delete">10.6. Delete</h3>
-<div class="paragraph">
-<p>To delete projects send a DELETE specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the edit is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-project-detail"
+            >project detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-delete">10.6. Delete</h3>
+      <div class="paragraph">
+        <p>
+          To delete projects send a DELETE specifying the project id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-bulk-update-order">10.7. Bulk update order</h3>
-<div class="paragraph">
-<p>To update the projects order for the logged in user send a POST request with a json list where each element is a json object with two attributes, the project id and the new order</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-bulk-update-order">10.7. Bulk update order</h3>
+      <div class="paragraph">
+        <p>
+          To update the projects order for the logged in user send a POST
+          request with a json list where each element is a json object with two
+          attributes, the project id and the new order
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'[</span>
@@ -280,37 +391,55 @@
 <span class="tok-s1">        }</span>
 <span class="tok-s1">    ]'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/bulk_update_order</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the update is successful, the HTTP response is a 200 OK and the response body is empty</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-get-modules">10.8. Get modules configuration</h3>
-<div class="paragraph">
-<p>To get a project modules configuration send a GET request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the update is successful, the HTTP response is a 200 OK and the
+          response body is empty
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-get-modules">10.8. Get modules configuration</h3>
+      <div class="paragraph">
+        <p>
+          To get a project modules configuration send a GET request specifying
+          the project id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/modules</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-modules-detail">project modules configuration object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-edit-modules">10.9. Edit modules configuration</h3>
-<div class="paragraph">
-<p>To edit a project modules configuration send a PATCH specifying the project id in the url.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-project-modules-detail"
+            >project modules configuration object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-edit-modules">10.9. Edit modules configuration</h3>
+      <div class="paragraph">
+        <p>
+          To edit a project modules configuration send a PATCH specifying the
+          project id in the url.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -319,81 +448,121 @@
 <span class="tok-s1">        }</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/modules</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When edition succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-stats">10.10. Stats</h3>
-<div class="paragraph">
-<p>To get a project stats send a GET request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When edition succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-stats">10.10. Stats</h3>
+      <div class="paragraph">
+        <p>
+          To get a project stats send a GET request specifying the project id in
+          the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/stats</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-stats-detail">project stats object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-issue-stats">10.11. Issue stats</h3>
-<div class="paragraph">
-<p>To get a project issue stats send a GET request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-project-stats-detail"
+            >project stats object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-issue-stats">10.11. Issue stats</h3>
+      <div class="paragraph">
+        <p>
+          To get a project issue stats send a GET request specifying the project
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/issues_stats</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-issue-stats-detail">project issue stats object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-tag-colors">10.12. Tag colors</h3>
-<div class="paragraph">
-<p>To get a project tag colors stats send a GET request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a
+            href="https://docs.taiga.io/api.html#object-project-issue-stats-detail"
+            >project issue stats object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-tag-colors">10.12. Tag colors</h3>
+      <div class="paragraph">
+        <p>
+          To get a project tag colors stats send a GET request specifying the
+          project id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/tags_colors</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-tags-colors-detail">project tag colors object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-create-tag">10.13. Create tag</h3>
-<div class="paragraph">
-<p>To create tags send a POST request specifying the project id in the url with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>tag</strong> (required)</p>
-</li>
-<li>
-<p><strong>color</strong>: HEX color</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a
+            href="https://docs.taiga.io/api.html#object-project-tags-colors-detail"
+            >project tag colors object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-create-tag">10.13. Create tag</h3>
+      <div class="paragraph">
+        <p>
+          To create tags send a POST request specifying the project id in the
+          url with the following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>tag</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>color</strong>: HEX color</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -401,20 +570,25 @@
 <span class="tok-s1">        "tag": "testing-tag"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/create_tag</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-edit-tag">10.14. Edit tag</h3>
-<div class="paragraph">
-<p>To edit a tag send a POST specifying the project id in the url.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-edit-tag">10.14. Edit tag</h3>
+      <div class="paragraph">
+        <p>To edit a tag send a POST specifying the project id in the url.</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -423,40 +597,50 @@
 <span class="tok-s1">        "to_tag": "testing-tag-updated"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/edit_tag</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the edit is successful, the HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-delete-tag">10.15. Delete-tag</h3>
-<div class="paragraph">
-<p>To delete a tag send a POST specifying the project id in the url.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the edit is successful, the HTTP response is a 200 OK with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-delete-tag">10.15. Delete-tag</h3>
+      <div class="paragraph">
+        <p>To delete a tag send a POST specifying the project id in the url.</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "tag": "testing-tag-updated"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/delete_tag</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the edit is successful, the HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-mix-tags">10.16. Mix tags</h3>
-<div class="paragraph">
-<p>To mix tags send a POST specifying the project id in the url.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the edit is successful, the HTTP response is a 200 OK with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-mix-tags">10.16. Mix tags</h3>
+      <div class="paragraph">
+        <p>To mix tags send a POST specifying the project id in the url.</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -469,135 +653,183 @@
 <span class="tok-s1">        "to_tag": "cum"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/mix_tags</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the edit is successful, the HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-like">10.17. Like a project</h3>
-<div class="paragraph">
-<p>To like a project send a POST request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the edit is successful, the HTTP response is a 200 OK with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-like">10.17. Like a project</h3>
+      <div class="paragraph">
+        <p>
+          To like a project send a POST request specifying the project id in the
+          url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/like</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-unlike">10.18. Unlike a project</h3>
-<div class="paragraph">
-<p>To unlike a project send a POST request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-unlike">10.18. Unlike a project</h3>
+      <div class="paragraph">
+        <p>
+          To unlike a project send a POST request specifying the project id in
+          the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/unlike</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-fans">10.19. List project fans</h3>
-<div class="paragraph">
-<p>To get the list of fans from a project send a GET request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-fans">10.19. List project fans</h3>
+      <div class="paragraph">
+        <p>
+          To get the list of fans from a project send a GET request specifying
+          the project id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/fans</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-project-voter-detail">project voter object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-watch">10.20. Watch a project</h3>
-<div class="paragraph">
-<p>To watch a project send a POST request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-project-voter-detail"
+            >project voter object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-watch">10.20. Watch a project</h3>
+      <div class="paragraph">
+        <p>
+          To watch a project send a POST request specifying the project id in
+          the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "notify_level": 3</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/watch</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-unwatch">10.21. Stop watching project</h3>
-<div class="paragraph">
-<p>To stop watching a project send a POST request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-unwatch">10.21. Stop watching project</h3>
+      <div class="paragraph">
+        <p>
+          To stop watching a project send a POST request specifying the project
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/unwatch</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-watchers">10.22. List project watchers</h3>
-<div class="paragraph">
-<p>To get the list of watchers from a project send a GET request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-watchers">10.22. List project watchers</h3>
+      <div class="paragraph">
+        <p>
+          To get the list of watchers from a project send a GET request
+          specifying the project id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/watchers</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-project-watcher-detail">project watcher object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-create-template">10.23. Create template</h3>
-<div class="paragraph">
-<p>To create a template from a selected project send a POST request specifying the project id in the url with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>name</strong> (required)</p>
-</li>
-<li>
-<p><strong>description</strong> (required)</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-project-watcher-detail"
+            >project watcher object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-create-template">10.23. Create template</h3>
+      <div class="paragraph">
+        <p>
+          To create a template from a selected project send a POST request
+          specifying the project id in the url with the following parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>name</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>description</strong> (required)</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">ADMIN_AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -605,153 +837,216 @@
 <span class="tok-s1">        "template_name": "Beta template"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/create_template</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-template-detail">project template detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-leave">10.24. Leave</h3>
-<div class="paragraph">
-<p>To leave a project send a POST request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 Created
+          and the response body is a JSON
+          <a
+            href="https://docs.taiga.io/api.html#object-project-template-detail"
+            >project template detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-leave">10.24. Leave</h3>
+      <div class="paragraph">
+        <p>
+          To leave a project send a POST request specifying the project id in
+          the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/2/leave</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-change-logo">10.25. Change logo</h3>
-<div class="paragraph">
-<p>To change your project logo send a POST with the following data</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-change-logo">10.25. Change logo</h3>
+      <div class="paragraph">
+        <p>To change your project logo send a POST with the following data</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: multipart/form-data"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -F <span class="tok-nv">logo</span><span class="tok-o">=</span>@test.png <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/change_logo</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the change is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-detail">project detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-remove-logo">10.26. Remove logo</h3>
-<div class="paragraph">
-<p>To remove your project logo send a POST with the following data</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the change is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-project-detail"
+            >project detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-remove-logo">10.26. Remove logo</h3>
+      <div class="paragraph">
+        <p>To remove your project logo send a POST with the following data</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/remove_logo</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the change is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-detail">project detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-transfer-validate-token">10.27. Transfer validate-token</h3>
-<div class="paragraph">
-<p>To check if a transfer token for one project is valid for your user send a POST request specifying the project id in the url and containing the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>token</strong>: valid transfer token received by email.</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the change is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-project-detail"
+            >project detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-transfer-validate-token">
+        10.27. Transfer validate-token
+      </h3>
+      <div class="paragraph">
+        <p>
+          To check if a transfer token for one project is valid for your user
+          send a POST request specifying the project id in the url and
+          containing the following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>token</strong>: valid transfer token received by email.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "token": "6:1jrHFD:8NuXY5qtgY406k-oQrs_o9KMu-s"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/transfer_validate_token</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-transfer-request">10.28. Transfer request</h3>
-<div class="paragraph">
-<p>To request to the owner the transfer of a project send a POST request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-transfer-request">10.28. Transfer request</h3>
+      <div class="paragraph">
+        <p>
+          To request to the owner the transfer of a project send a POST request
+          specifying the project id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/transfer_request</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-transfer-start">10.29. Transfer start</h3>
-<div class="paragraph">
-<p>To start the transfer of one of your projects to another user send a POST request specifying the project id in the url and containing the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>user</strong>: user id of other admin member of the project.</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-transfer-start">10.29. Transfer start</h3>
+      <div class="paragraph">
+        <p>
+          To start the transfer of one of your projects to another user send a
+          POST request specifying the project id in the url and containing the
+          following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>user</strong>: user id of other admin member of the
+              project.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "user": 5</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/transfer_start</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-transfer-accept">10.30. Transfer accept</h3>
-<div class="paragraph">
-<p>To accept the transfer of one project to your user send a POST request specifying the project id in the url and containing the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>token</strong>: valid transfer token received by email.</p>
-</li>
-<li>
-<p><strong>reason</strong>: text included in the email response to the project owner.</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-transfer-accept">10.30. Transfer accept</h3>
+      <div class="paragraph">
+        <p>
+          To accept the transfer of one project to your user send a POST request
+          specifying the project id in the url and containing the following
+          data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>token</strong>: valid transfer token received by email.
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>reason</strong>: text included in the email response to
+              the project owner.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -759,30 +1054,41 @@
 <span class="tok-s1">        "token": "6:1jrHFD:8NuXY5qtgY406k-oQrs_o9KMu-s"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/3/transfer_accept</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-transfer-reject">10.31. Transfer reject</h3>
-<div class="paragraph">
-<p>To reject the transfer of one project to your user send a POST request specifying the project id in the url and containing the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>token</strong>: valid transfer token received by email.</p>
-</li>
-<li>
-<p><strong>reason</strong>: text included in the email response to the project owner.</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-transfer-reject">10.31. Transfer reject</h3>
+      <div class="paragraph">
+        <p>
+          To reject the transfer of one project to your user send a POST request
+          specifying the project id in the url and containing the following
+          data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>
+              <strong>token</strong>: valid transfer token received by email.
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>reason</strong>: text included in the email response to
+              the project owner.
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -790,20 +1096,25 @@
 <span class="tok-s1">        "token": "6:1jrHFD:8NuXY5qtgY406k-oQrs_o9KMu-s"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/1/transfer_reject</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="projects-duplicate">10.32. Duplicate</h3>
-<div class="paragraph">
-<p>To duplicate a project (create a new one with the same status, colors, attributes…​) send a POST request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="projects-duplicate">10.32. Duplicate</h3>
+      <div class="paragraph">
+        <p>
+          To duplicate a project (create a new one with the same status, colors,
+          attributes…​) send a POST request specifying the project id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -817,12 +1128,17 @@
 <span class="tok-s1">        ]</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/projects/3/duplicate</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 Created
+          and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-project-detail"
+            >project detail object</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-project-detail">project detail object</a></p>
-</div>
-</div>
-</div>
-</div>
-

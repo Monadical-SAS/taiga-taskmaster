@@ -7,7 +7,5 @@
     "incremental": true
   },
   "include": ["src/**/*"],
-  "references": [
-    { "path": "../taiga-api" }
-  ]
+  "references": [{ "path": "../taiga-api" }]
 }

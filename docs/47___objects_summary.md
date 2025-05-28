@@ -1,5 +1,7 @@
 ## 47. Objects Summary
+
 ### 47.1. Attachment
+
 ```json
 "attached_file": "attachments/f/7/0/0/b89c9d9aaf3de48f2486e1f5dc2f897a321bfa861cc5cb59b5936f0ebc40/sample_attachment_2.txt",
 "created_date": "2020-07-02T11:57:14.266Z",
@@ -19,6 +21,7 @@
 "thumbnail_card_url": null,
 "url": "http://localhost:8000/media/attachments/f/7/0/0/b89c9d9aaf3de48f2486e1f5dc2f897a321bfa861cc5cb59b5936f0ebc40/sample_attachment_2.txt"
 ```
+
 ```json
 "description": "description paragraph",
 "icon_url": null,
@@ -26,7 +29,9 @@
 "name": "example application",
 "web": "http://example.com"
 ```
+
 ### 47.2. Application token object
+
 ```json
 "application": {
 "description": "description paragraph",
@@ -40,17 +45,23 @@
 "next_url": "http://example.com?auth_code=bd7c35d8-2138-4fe6-8109-09b9935b7736",
 "user": 6
 ```
+
 ### 47.3. Authorization code object
+
 ```json
 "auth_code": "bd7c35d8-2138-4fe6-8109-09b9935b7736",
 "next_url": "http://example.com?auth_code=bd7c35d8-2138-4fe6-8109-09b9935b7736",
 "state": "random-state"
 ```
+
 ### 47.4. Cyphered token object
+
 ```json
 "token": "00000000-0000-0000-0000-000000000001"
 ```
+
 ### 47.5. User detail
+
 ```json
 "accepted_terms": true,
 "big_photo": null,
@@ -83,7 +94,9 @@
 "username": "patchedusername",
 "uuid": "e9296d489b6a42d79048df2f3789b396"
 ```
+
 ### 47.6. User contact detail
+
 ```json
 "big_photo": null,
 "bio": "",
@@ -106,7 +119,9 @@
 "timezone": "",
 "username": "user5"
 ```
+
 ### 47.7. User authentication-detail
+
 ```json
 "accepted_terms": true,
 "auth_token": "eyJ1c2VyX2F1dGhlbnRpY2F0aW9uX2lkIjoxNn0:1jrHFG:QR38NU7tHvPzl_s7BvgWEgnoxIc",
@@ -138,12 +153,16 @@
 "username": "test-username",
 "uuid": "c30015cc735e4b33b008139b58f13791"
 ```
+
 ### 47.8. Refresh authentication code
+
 ```json
 "auth_token": "eyJ1c2VyX2F1dGhlbnRpY2F0aW9uX2lkIjoxNn0:1jrHFF:0lezpY0AUIQ0klewdxTHXjRPAdA",
 "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTYyNzI5OTQzMiwianRpIjoiMmNkMmNhNzQwYjRiNGZkNzk0ZDlmMDlmNWYwNzAwMTkiLCJ1c2VyX2lkIjo1fQ.vez_-n6y9yQo2uFgXTPB5YdJHFKUIAsCrNVJ29_T3wM"
 ```
+
 ### 47.9. User stats detail
+
 ```json
 "roles": [
 "Design",
@@ -155,7 +174,9 @@
 "total_num_contacts": 11,
 "total_num_projects": 11
 ```
+
 ### 47.10. Search results detail
+
 ```json
 "count": 31,
 "epics": [
@@ -383,7 +404,9 @@
 }
 ]
 ```
+
 ### 47.11. User storage data
+
 ```json
 "created_date": "2020-07-03T08:40:53.885Z",
 "key": "favorite-forest",

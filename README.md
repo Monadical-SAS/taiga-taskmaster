@@ -19,8 +19,9 @@ pnpm test
 ## Architecture
 
 The system uses interface/implementation separation with three main modules:
+
 - Module 1: PRD webhook handling with JWT validation
-- Module 2: Task generation with atomic file operations  
+- Module 2: Task generation with atomic file operations
 - Module 3: Taiga API integration with tag management
 
 ## Development
@@ -30,4 +31,3 @@ pnpm dev       # Start development mode
 pnpm lint      # Check code style
 pnpm type-check # Verify TypeScript
 ```
-

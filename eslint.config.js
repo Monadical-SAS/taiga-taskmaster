@@ -3,7 +3,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/node_modules/**", "**/taiga-api-test/**"]
+    ignores: ["**/dist/**", "**/node_modules/**", "**/taiga-api-test/**"],
   },
   ...tseslint.configs.recommended,
   {
@@ -22,7 +22,7 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "warn",
-        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "functional/functional-parameters": "off",
       "functional/prefer-immutable-types": "off",

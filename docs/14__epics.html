@@ -1,92 +1,106 @@
 <div class="sect1">
-<h2 id="epics">14. Epics</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="epics-list">14.1. List</h3>
-<div class="paragraph">
-<p>To list epics send a GET request with the following parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="epics">14. Epics</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="epics-list">14.1. List</h3>
+      <div class="paragraph">
+        <p>To list epics send a GET request with the following parameters:</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-epic-detail-list">epic list objects</a></p>
-</div>
-<div class="paragraph">
-<p>The results can be filtered using the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong>: project id</p>
-</li>
-<li>
-<p><strong>project__slug</strong>: project slug</p>
-</li>
-<li>
-<p><strong>assigned_to</strong>: assigned to user id</p>
-</li>
-<li>
-<p><strong>status__is_closed</strong>: boolean indicating if the epic status is closed</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-epic-detail-list"
+            >epic list objects</a
+          >
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>The results can be filtered using the following parameters:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project</strong>: project id</p>
+          </li>
+          <li>
+            <p><strong>project__slug</strong>: project slug</p>
+          </li>
+          <li>
+            <p><strong>assigned_to</strong>: assigned to user id</p>
+          </li>
+          <li>
+            <p>
+              <strong>status__is_closed</strong>: boolean indicating if the epic
+              status is closed
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics?project<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-create">14.2. Create</h3>
-<div class="paragraph">
-<p>To create epics send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>assigned_to</strong>: user id</p>
-</li>
-<li>
-<p><strong>blocked_note</strong>: reason why the epic is blocked</p>
-</li>
-<li>
-<p><strong>description</strong>: string</p>
-</li>
-<li>
-<p><strong>is_blocked</strong>: boolean</p>
-</li>
-<li>
-<p><strong>is_closed</strong>: boolean</p>
-</li>
-<li>
-<p><strong>color</strong>: HEX color</p>
-</li>
-<li>
-<p><strong>project</strong> (required): project id</p>
-</li>
-<li>
-<p><strong>subject</strong> (required)</p>
-</li>
-<li>
-<p><strong>tags</strong>: array of strings</p>
-</li>
-<li>
-<p><strong>watchers</strong>: array of watcher id’s</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-create">14.2. Create</h3>
+      <div class="paragraph">
+        <p>To create epics send a POST request with the following data:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>assigned_to</strong>: user id</p>
+          </li>
+          <li>
+            <p><strong>blocked_note</strong>: reason why the epic is blocked</p>
+          </li>
+          <li>
+            <p><strong>description</strong>: string</p>
+          </li>
+          <li>
+            <p><strong>is_blocked</strong>: boolean</p>
+          </li>
+          <li>
+            <p><strong>is_closed</strong>: boolean</p>
+          </li>
+          <li>
+            <p><strong>color</strong>: HEX color</p>
+          </li>
+          <li>
+            <p><strong>project</strong> (required): project id</p>
+          </li>
+          <li>
+            <p><strong>subject</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>tags</strong>: array of strings</p>
+          </li>
+          <li>
+            <p><strong>watchers</strong>: array of watcher id’s</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -108,11 +122,13 @@
 <span class="tok-s1">        "watchers": []</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -120,65 +136,95 @@
 <span class="tok-s1">        "subject": "New epic"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-epic-detail">epic detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-get">14.3. Get</h3>
-<div class="paragraph">
-<p>To get an epic send a GET request specifying the epic id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 Created
+          and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-epic-detail"
+            >epic detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-get">14.3. Get</h3>
+      <div class="paragraph">
+        <p>
+          To get an epic send a GET request specifying the epic id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-epic-detail-get">epic detail (GET) object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-get-by-ref">14.4. Get by ref</h3>
-<div class="paragraph">
-<p>To get an epic send a GET request specifying the epic reference and one of the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>project (project id)</p>
-</li>
-<li>
-<p>project__slug</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-epic-detail-get"
+            >epic detail (GET) object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-get-by-ref">14.4. Get by ref</h3>
+      <div class="paragraph">
+        <p>
+          To get an epic send a GET request specifying the epic reference and
+          one of the following parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>project (project id)</p>
+          </li>
+          <li>
+            <p>project__slug</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/by_ref?ref<span class="tok-o">=</span><span class="tok-m">121</span><span class="tok-se">\&amp;</span><span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">3</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-epic-detail-get">epic detail (GET) object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-edit">14.5. Edit</h3>
-<div class="paragraph">
-<p>To edit epics send a PUT or a PATCH specifying the epic id in the url.
-In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-epic-detail-get"
+            >epic detail (GET) object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-edit">14.5. Edit</h3>
+      <div class="paragraph">
+        <p>
+          To edit epics send a PUT or a PATCH specifying the epic id in the url.
+          In a PATCH request you just need to send the modified data, in a PUT
+          one the whole object must be sent.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -186,50 +232,66 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 <span class="tok-s1">        "version": 1</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-epic-detail">epic detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-delete">14.6. Delete</h3>
-<div class="paragraph">
-<p>To delete epics send a DELETE specifying the epic id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-epic-detail"
+            >epic detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-delete">14.6. Delete</h3>
+      <div class="paragraph">
+        <p>To delete epics send a DELETE specifying the epic id in the url</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-bulk-create">14.7. Bulk creation</h3>
-<div class="paragraph">
-<p>To create multiple epics at the same time send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project_id</strong> (required)</p>
-</li>
-<li>
-<p><strong>status_id</strong> (optional)</p>
-</li>
-<li>
-<p><strong>bulk_epics</strong>: epic subjects, one per line</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-bulk-create">14.7. Bulk creation</h3>
+      <div class="paragraph">
+        <p>
+          To create multiple epics at the same time send a POST request with the
+          following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project_id</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>status_id</strong> (optional)</p>
+          </li>
+          <li>
+            <p><strong>bulk_epics</strong>: epic subjects, one per line</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -237,64 +299,100 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 <span class="tok-s1">        "project_id": 1</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/bulk_create</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-epic-detail">epic detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-get-filters-data">14.8. Filters data</h3>
-<div class="paragraph">
-<p>To get the epic filters data send a GET request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK and the
+          response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-epic-detail"
+            >epic detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-get-filters-data">14.8. Filters data</h3>
+      <div class="paragraph">
+        <p>
+          To get the epic filters data send a GET request specifying the project
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/filters_data?project<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-epic-filters-data">epic filters data object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-related-user-stories-list">14.9. List related userstories</h3>
-<div class="paragraph">
-<p>To get the list of related user stories from an epic send a GET request specifying the epic id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-epic-filters-data"
+            >epic filters data object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-related-user-stories-list">
+        14.9. List related userstories
+      </h3>
+      <div class="paragraph">
+        <p>
+          To get the list of related user stories from an epic send a GET
+          request specifying the epic id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15/related_userstories</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail">epic related user story detail objects</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-related-user-stories-create">14.10. Create related userstory</h3>
-<div class="paragraph">
-<p>To create an epic related user story send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>epic</strong>: related epic id</p>
-</li>
-<li>
-<p><strong>user_story</strong>: related user story id</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a
+            href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail"
+            >epic related user story detail objects</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-related-user-stories-create">
+        14.10. Create related userstory
+      </h3>
+      <div class="paragraph">
+        <p>
+          To create an epic related user story send a POST request with the
+          following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>epic</strong>: related epic id</p>
+          </li>
+          <li>
+            <p><strong>user_story</strong>: related user story id</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -302,85 +400,137 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 <span class="tok-s1">        "user_story": 1</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15/related_userstories</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail">epic related user story detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-related-user-stories-get">14.11. Get related userstory</h3>
-<div class="paragraph">
-<p>To get a related user story from an epic send a GET request specifying the epic and user story ids in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 Created
+          and the response body is a JSON
+          <a
+            href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail"
+            >epic related user story detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-related-user-stories-get">14.11. Get related userstory</h3>
+      <div class="paragraph">
+        <p>
+          To get a related user story from an epic send a GET request specifying
+          the epic and user story ids in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15/related_userstories/2</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail">epic related user story detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-related-user-stories-edit">14.12. Edit related userstory</h3>
-<div class="paragraph">
-<p>To edit epic related user stories send a PUT or a PATCH specifying the epic and user story ids in the url.
-In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a
+            href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail"
+            >epic related user story detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-related-user-stories-edit">
+        14.12. Edit related userstory
+      </h3>
+      <div class="paragraph">
+        <p>
+          To edit epic related user stories send a PUT or a PATCH specifying the
+          epic and user story ids in the url. In a PATCH request you just need
+          to send the modified data, in a PUT one the whole object must be sent.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "order": 100</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15/related_userstories/2</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail">epic related user story detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-related-user-stories-delete">14.13. Delete related userstory</h3>
-<div class="paragraph">
-<p>To delete epic related user stories send a DELETE specifying the epic and the userstory ids in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a
+            href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail"
+            >epic related user story detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-related-user-stories-delete">
+        14.13. Delete related userstory
+      </h3>
+      <div class="paragraph">
+        <p>
+          To delete epic related user stories send a DELETE specifying the epic
+          and the userstory ids in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15/related_userstories/2</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-related-user-stories-bulk-create">14.14. Bulk related userstories creation</h3>
-<div class="paragraph">
-<p>To create multiple related user stories at the same time send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project_id</strong> (required)</p>
-</li>
-<li>
-<p><strong>bulk_userstories</strong>: user stories subjects, one per line</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-related-user-stories-bulk-create">
+        14.14. Bulk related userstories creation
+      </h3>
+      <div class="paragraph">
+        <p>
+          To create multiple related user stories at the same time send a POST
+          request with the following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project_id</strong> (required)</p>
+          </li>
+          <li>
+            <p>
+              <strong>bulk_userstories</strong>: user stories subjects, one per
+              line
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -388,168 +538,231 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 <span class="tok-s1">        "project_id": 3</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15/related_userstories/bulk_create</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail">epic related user story detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-upvote">14.15. Vote an epic</h3>
-<div class="paragraph">
-<p>To vote epics send a POST request specifying the epic id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 OK and the
+          response body is a JSON list of
+          <a
+            href="https://docs.taiga.io/api.html#object-epic-related-user-story-detail"
+            >epic related user story detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-upvote">14.15. Vote an epic</h3>
+      <div class="paragraph">
+        <p>
+          To vote epics send a POST request specifying the epic id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/3/upvote</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-downvote">14.16. Remove vote from an epic</h3>
-<div class="paragraph">
-<p>To remove a vote from an epic send a POST request specifying the epic id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-downvote">14.16. Remove vote from an epic</h3>
+      <div class="paragraph">
+        <p>
+          To remove a vote from an epic send a POST request specifying the epic
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/3/downvote</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When remove of the vote succeeded, the HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-voters">14.17. Get epic voters list</h3>
-<div class="paragraph">
-<p>To get the list of voters from an epic send a GET request specifying the epic id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When remove of the vote succeeded, the HTTP response is a 200 OK with
+          an empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-voters">14.17. Get epic voters list</h3>
+      <div class="paragraph">
+        <p>
+          To get the list of voters from an epic send a GET request specifying
+          the epic id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/1/voters</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-epic-voter-detail">epic voter object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-watch">14.18. Watch an epic</h3>
-<div class="paragraph">
-<p>To watch an epic send a POST request specifying the epic id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-epic-voter-detail"
+            >epic voter object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-watch">14.18. Watch an epic</h3>
+      <div class="paragraph">
+        <p>
+          To watch an epic send a POST request specifying the epic id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15/watch</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-unwatch">14.19. Stop watching an epic</h3>
-<div class="paragraph">
-<p>To stop watching an epic send a POST request specifying the epic id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-unwatch">14.19. Stop watching an epic</h3>
+      <div class="paragraph">
+        <p>
+          To stop watching an epic send a POST request specifying the epic id in
+          the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15/unwatch</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-watchers">14.20. List epic watchers</h3>
-<div class="paragraph">
-<p>To get the list of watchers from an epic send a GET request specifying the epic id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-watchers">14.20. List epic watchers</h3>
+      <div class="paragraph">
+        <p>
+          To get the list of watchers from an epic send a GET request specifying
+          the epic id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/15/watchers</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-epic-watcher-detail">epic watcher object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-list-attachments">14.21. List attachments</h3>
-<div class="paragraph">
-<p>To list epic attachments send a GET request with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong>: project id</p>
-</li>
-<li>
-<p><strong>object_id</strong>: epic id</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-epic-watcher-detail"
+            >epic watcher object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-list-attachments">14.21. List attachments</h3>
+      <div class="paragraph">
+        <p>
+          To list epic attachments send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project</strong>: project id</p>
+          </li>
+          <li>
+            <p><strong>object_id</strong>: epic id</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/attachments?object_id<span class="tok-o">=</span><span class="tok-m">773</span><span class="tok-se">\&amp;</span><span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail objects</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-create-attachment">14.22. Create attachment</h3>
-<div class="paragraph">
-<p>To create epic attachments send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>object_id</strong> (required): epic id</p>
-</li>
-<li>
-<p><strong>project</strong> (required): project id</p>
-</li>
-<li>
-<p><strong>attached_file</strong> (required): attaching file</p>
-</li>
-<li>
-<p><strong>description</strong></p>
-</li>
-<li>
-<p><strong>is_deprecated</strong></p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-attachment-detail"
+            >attachment detail objects</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-create-attachment">14.22. Create attachment</h3>
+      <div class="paragraph">
+        <p>
+          To create epic attachments send a POST request with the following
+          data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>object_id</strong> (required): epic id</p>
+          </li>
+          <li>
+            <p><strong>project</strong> (required): project id</p>
+          </li>
+          <li>
+            <p><strong>attached_file</strong> (required): attaching file</p>
+          </li>
+          <li>
+            <p><strong>description</strong></p>
+          </li>
+          <li>
+            <p><strong>is_deprecated</strong></p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: multipart/form-data"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -F <span class="tok-nv">attached_file</span><span class="tok-o">=</span>@test.png <span class="tok-se">\</span>
@@ -557,67 +770,101 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 -F <span class="tok-nv">object_id</span><span class="tok-o">=</span><span class="tok-m">15</span> <span class="tok-se">\</span>
 -F <span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">3</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/attachments</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-get-attachment">14.23. Get attachment</h3>
-<div class="paragraph">
-<p>To get an epic attachment send a GET request specifying the epic attachment id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 Created
+          and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-attachment-detail"
+            >attachment detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-get-attachment">14.23. Get attachment</h3>
+      <div class="paragraph">
+        <p>
+          To get an epic attachment send a GET request specifying the epic
+          attachment id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/attachments/773</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-edit-attachment">14.24. Edit attachment</h3>
-<div class="paragraph">
-<p>To edit epic attachments send a PUT or a PATCH specifying the epic attachment id in the url.
-In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-attachment-detail"
+            >attachment detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-edit-attachment">14.24. Edit attachment</h3>
+      <div class="paragraph">
+        <p>
+          To edit epic attachments send a PUT or a PATCH specifying the epic
+          attachment id in the url. In a PATCH request you just need to send the
+          modified data, in a PUT one the whole object must be sent.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "description": "Updated description"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/attachments/773</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="epics-delete-attachment">14.25. Delete attachment</h3>
-<div class="paragraph">
-<p>To delete epic attachments send a DELETE specifying the epic attachment id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-attachment-detail"
+            >attachment detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="epics-delete-attachment">14.25. Delete attachment</h3>
+      <div class="paragraph">
+        <p>
+          To delete epic attachments send a DELETE specifying the epic
+          attachment id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/epics/attachments/773</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-</div>
-</div>
-

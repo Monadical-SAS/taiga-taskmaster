@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import { NonEmptyString, Url } from '@taiga-task-master/common';
+import { NonEmptyString, Url } from "@taiga-task-master/common";
 
 // ============================================================================
 // Authentication Types
@@ -8,16 +8,12 @@ import { NonEmptyString, Url } from '@taiga-task-master/common';
 export const AuthCredentials = Schema.Struct({
   username: Schema.String,
   password: Schema.String,
-  type: Schema.Literal("normal")
+  type: Schema.Literal("normal"),
 });
 
-export const AuthToken = NonEmptyString.pipe(
-  Schema.brand('AuthToken')
-);
+export const AuthToken = NonEmptyString.pipe(Schema.brand("AuthToken"));
 
-export const RefreshToken = NonEmptyString.pipe(
-  Schema.brand('RefreshToken')
-);
+export const RefreshToken = NonEmptyString.pipe(Schema.brand("RefreshToken"));
 
 export const AuthResponse = Schema.Struct({
   id: Schema.Number,
@@ -27,16 +23,16 @@ export const AuthResponse = Schema.Struct({
   auth_token: AuthToken,
   refresh: RefreshToken,
   accepted_terms: Schema.Boolean,
-  read_new_terms: Schema.Boolean
+  read_new_terms: Schema.Boolean,
 });
 
 export const RefreshRequest = Schema.Struct({
-  refresh: Schema.String
+  refresh: Schema.String,
 });
 
 export const RefreshResponse = Schema.Struct({
   auth_token: AuthToken,
-  refresh: RefreshToken
+  refresh: RefreshToken,
 });
 
 export type AuthToken = Schema.Schema.Type<typeof AuthToken>;
@@ -74,13 +70,9 @@ export const HttpStatus = Schema.Number.pipe(
   Schema.brand("HttpStatus")
 );
 
-export const HeaderKey = NonEmptyString.pipe(
-  Schema.brand("HeaderKey")
-);
+export const HeaderKey = NonEmptyString.pipe(Schema.brand("HeaderKey"));
 
-export const HeaderValue = NonEmptyString.pipe(
-  Schema.brand("HeaderValue")
-);
+export const HeaderValue = NonEmptyString.pipe(Schema.brand("HeaderValue"));
 
 export type HttpStatus = Schema.Schema.Type<typeof HttpStatus>;
 export type HeaderKey = Schema.Schema.Type<typeof HeaderKey>;
@@ -96,7 +88,7 @@ export const TaskStatus = Schema.Struct({
   color: Schema.String,
   is_closed: Schema.Boolean,
   order: Schema.Number,
-  project: ProjectId
+  project: ProjectId,
 });
 
 export const TaskDetail = Schema.Struct({
@@ -105,12 +97,14 @@ export const TaskDetail = Schema.Struct({
   subject: Schema.String,
   description: Schema.String,
   status: StatusId,
-  status_extra_info: Schema.optional(Schema.Struct({
-    id: StatusId,
-    name: Schema.String,
-    color: Schema.String,
-    is_closed: Schema.Boolean
-  })),
+  status_extra_info: Schema.optional(
+    Schema.Struct({
+      id: StatusId,
+      name: Schema.String,
+      color: Schema.String,
+      is_closed: Schema.Boolean,
+    })
+  ),
   project: ProjectId,
   assigned_to: Schema.NullOr(UserId),
   user_story: Schema.NullOr(UserStoryId),
@@ -124,7 +118,7 @@ export const TaskDetail = Schema.Struct({
   tags: Schema.Array(Schema.Tuple(Schema.String, Schema.NullOr(Schema.String))),
   watchers: Schema.Array(UserId),
   is_watcher: Schema.Boolean,
-  version: Schema.Number
+  version: Schema.Number,
 });
 
 export const CreateTaskRequest = Schema.Struct({
@@ -138,7 +132,7 @@ export const CreateTaskRequest = Schema.Struct({
   is_blocked: Schema.optional(Schema.Boolean),
   blocked_note: Schema.optional(Schema.String),
   tags: Schema.optional(Schema.Array(Schema.String)),
-  watchers: Schema.optional(Schema.Array(UserId))
+  watchers: Schema.optional(Schema.Array(UserId)),
 });
 
 export const UpdateTaskRequest = Schema.Struct({
@@ -152,7 +146,7 @@ export const UpdateTaskRequest = Schema.Struct({
   blocked_note: Schema.optional(Schema.String),
   tags: Schema.optional(Schema.Array(Schema.String)),
   watchers: Schema.optional(Schema.Array(UserId)),
-  version: Schema.Number
+  version: Schema.Number,
 });
 
 export type TaskStatus = Schema.Schema.Type<typeof TaskStatus>;
@@ -171,7 +165,7 @@ export const UserStoryStatus = Schema.Struct({
   is_closed: Schema.Boolean,
   is_archived: Schema.Boolean,
   order: Schema.Number,
-  project: ProjectId
+  project: ProjectId,
 });
 
 export const UserStoryDetail = Schema.Struct({
@@ -180,13 +174,15 @@ export const UserStoryDetail = Schema.Struct({
   subject: Schema.String,
   description: Schema.String,
   status: StatusId,
-  status_extra_info: Schema.optional(Schema.Struct({
-    id: StatusId,
-    name: Schema.String,
-    color: Schema.String,
-    is_closed: Schema.Boolean,
-    is_archived: Schema.Boolean
-  })),
+  status_extra_info: Schema.optional(
+    Schema.Struct({
+      id: StatusId,
+      name: Schema.String,
+      color: Schema.String,
+      is_closed: Schema.Boolean,
+      is_archived: Schema.Boolean,
+    })
+  ),
   project: ProjectId,
   assigned_to: Schema.NullOr(UserId),
   milestone: Schema.NullOr(Schema.Number),
@@ -202,10 +198,12 @@ export const UserStoryDetail = Schema.Struct({
   watchers: Schema.Array(UserId),
   is_watcher: Schema.Boolean,
   version: Schema.Number,
-  points: Schema.optional(Schema.Record({key: Schema.String, value: Schema.Number})),
+  points: Schema.optional(
+    Schema.Record({ key: Schema.String, value: Schema.Number })
+  ),
   backlog_order: Schema.Number,
   kanban_order: Schema.Number,
-  sprint_order: Schema.Number
+  sprint_order: Schema.Number,
 });
 
 export const CreateUserStoryRequest = Schema.Struct({
@@ -221,10 +219,12 @@ export const CreateUserStoryRequest = Schema.Struct({
   team_requirement: Schema.optional(Schema.Boolean),
   tags: Schema.optional(Schema.Array(Schema.String)),
   watchers: Schema.optional(Schema.Array(UserId)),
-  points: Schema.optional(Schema.Record({
-    key: Schema.String,
-    value: Schema.Number
-  }))
+  points: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.Number,
+    })
+  ),
 });
 
 export const UpdateUserStoryRequest = Schema.Struct({
@@ -239,16 +239,23 @@ export const UpdateUserStoryRequest = Schema.Struct({
   team_requirement: Schema.optional(Schema.Boolean),
   tags: Schema.optional(Schema.Array(Schema.String)),
   watchers: Schema.optional(Schema.Array(UserId)),
-  points: Schema.optional(Schema.Record({
-    key: Schema.String, value: Schema.Number
-  })),
-  version: Schema.Number
+  points: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.Number,
+    })
+  ),
+  version: Schema.Number,
 });
 
 export type UserStoryStatus = Schema.Schema.Type<typeof UserStoryStatus>;
 export type UserStoryDetail = Schema.Schema.Type<typeof UserStoryDetail>;
-export type CreateUserStoryRequest = Schema.Schema.Type<typeof CreateUserStoryRequest>;
-export type UpdateUserStoryRequest = Schema.Schema.Type<typeof UpdateUserStoryRequest>;
+export type CreateUserStoryRequest = Schema.Schema.Type<
+  typeof CreateUserStoryRequest
+>;
+export type UpdateUserStoryRequest = Schema.Schema.Type<
+  typeof UpdateUserStoryRequest
+>;
 
 // ============================================================================
 // Task Custom Attributes Types
@@ -261,25 +268,31 @@ export const TaskCustomAttribute = Schema.Struct({
   order: Schema.Number,
   project: ProjectId,
   created_date: Schema.String,
-  modified_date: Schema.String
+  modified_date: Schema.String,
 });
 
 export const CreateTaskCustomAttributeRequest = Schema.Struct({
   name: Schema.String,
   description: Schema.optional(Schema.String),
   order: Schema.optional(Schema.Number),
-  project: ProjectId
+  project: ProjectId,
 });
 
 export const UpdateTaskCustomAttributeRequest = Schema.Struct({
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
-  order: Schema.optional(Schema.Number)
+  order: Schema.optional(Schema.Number),
 });
 
-export type TaskCustomAttribute = Schema.Schema.Type<typeof TaskCustomAttribute>;
-export type CreateTaskCustomAttributeRequest = Schema.Schema.Type<typeof CreateTaskCustomAttributeRequest>;
-export type UpdateTaskCustomAttributeRequest = Schema.Schema.Type<typeof UpdateTaskCustomAttributeRequest>;
+export type TaskCustomAttribute = Schema.Schema.Type<
+  typeof TaskCustomAttribute
+>;
+export type CreateTaskCustomAttributeRequest = Schema.Schema.Type<
+  typeof CreateTaskCustomAttributeRequest
+>;
+export type UpdateTaskCustomAttributeRequest = Schema.Schema.Type<
+  typeof UpdateTaskCustomAttributeRequest
+>;
 
 // ============================================================================
 // API Service Interfaces
@@ -291,7 +304,11 @@ export interface AuthService {
 }
 
 export interface TasksService {
-  list: (filters?: { project?: ProjectId; status?: StatusId; user_story?: UserStoryId }) => Promise<readonly TaskDetail[]>;
+  list: (filters?: {
+    project?: ProjectId;
+    status?: StatusId;
+    user_story?: UserStoryId;
+  }) => Promise<readonly TaskDetail[]>;
   create: (task: CreateTaskRequest) => Promise<TaskDetail>;
   get: (id: TaskId) => Promise<TaskDetail>;
   update: (id: TaskId, task: UpdateTaskRequest) => Promise<TaskDetail>;
@@ -299,26 +316,43 @@ export interface TasksService {
 }
 
 export interface UserStoriesService {
-  list: (filters?: { project?: ProjectId; status?: StatusId; milestone?: number }) => Promise<readonly UserStoryDetail[]>;
+  list: (filters?: {
+    project?: ProjectId;
+    status?: StatusId;
+    milestone?: number;
+  }) => Promise<readonly UserStoryDetail[]>;
   create: (userStory: CreateUserStoryRequest) => Promise<UserStoryDetail>;
   get: (id: UserStoryId) => Promise<UserStoryDetail>;
-  update: (id: UserStoryId, userStory: UpdateUserStoryRequest) => Promise<UserStoryDetail>;
+  update: (
+    id: UserStoryId,
+    userStory: UpdateUserStoryRequest
+  ) => Promise<UserStoryDetail>;
   delete: (id: UserStoryId) => Promise<void>;
 }
 
 export interface TaskStatusesService {
   list: (filters?: { project?: ProjectId }) => Promise<readonly TaskStatus[]>;
-  create: (status: Omit<TaskStatus, 'id'>) => Promise<TaskStatus>;
+  create: (status: Omit<TaskStatus, "id">) => Promise<TaskStatus>;
   get: (id: StatusId) => Promise<TaskStatus>;
-  update: (id: StatusId, status: Partial<Omit<TaskStatus, 'id'>>) => Promise<TaskStatus>;
+  update: (
+    id: StatusId,
+    status: Partial<Omit<TaskStatus, "id">>
+  ) => Promise<TaskStatus>;
   delete: (id: StatusId) => Promise<void>;
 }
 
 export interface TaskCustomAttributesService {
-  list: (filters?: { project?: ProjectId }) => Promise<readonly TaskCustomAttribute[]>;
-  create: (attribute: CreateTaskCustomAttributeRequest) => Promise<TaskCustomAttribute>;
+  list: (filters?: {
+    project?: ProjectId;
+  }) => Promise<readonly TaskCustomAttribute[]>;
+  create: (
+    attribute: CreateTaskCustomAttributeRequest
+  ) => Promise<TaskCustomAttribute>;
   get: (id: CustomAttributeId) => Promise<TaskCustomAttribute>;
-  update: (id: CustomAttributeId, attribute: UpdateTaskCustomAttributeRequest) => Promise<TaskCustomAttribute>;
+  update: (
+    id: CustomAttributeId,
+    attribute: UpdateTaskCustomAttributeRequest
+  ) => Promise<TaskCustomAttribute>;
   delete: (id: CustomAttributeId) => Promise<void>;
 }
 
@@ -346,11 +380,29 @@ export interface HttpResponse<T> {
 }
 
 export interface HttpClient {
-  get: (path: string, options?: RequestOptions & { params?: Record<string, unknown> }) => Promise<HttpResponse<unknown>>;
-  post: (path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<unknown>>;
-  put: (path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<unknown>>;
-  patch: (path: string, data?: unknown, options?: RequestOptions) => Promise<HttpResponse<unknown>>;
-  delete: (path: string, options?: RequestOptions) => Promise<HttpResponse<void>>;
+  get: (
+    path: string,
+    options?: RequestOptions & { params?: Record<string, unknown> }
+  ) => Promise<HttpResponse<unknown>>;
+  post: (
+    path: string,
+    data?: unknown,
+    options?: RequestOptions
+  ) => Promise<HttpResponse<unknown>>;
+  put: (
+    path: string,
+    data?: unknown,
+    options?: RequestOptions
+  ) => Promise<HttpResponse<unknown>>;
+  patch: (
+    path: string,
+    data?: unknown,
+    options?: RequestOptions
+  ) => Promise<HttpResponse<unknown>>;
+  delete: (
+    path: string,
+    options?: RequestOptions
+  ) => Promise<HttpResponse<void>>;
 }
 
 // ============================================================================

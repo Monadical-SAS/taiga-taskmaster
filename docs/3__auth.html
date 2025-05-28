@@ -1,27 +1,34 @@
 <div class="sect1">
-<h2 id="auth">3. Auth</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="auth-normal-login">3.1. Normal login</h3>
-<div class="paragraph">
-<p>To login a user send a POST request containing the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>type</strong> with value "normal"</p>
-</li>
-<li>
-<p><strong>username</strong> (required): this field also supports the user email</p>
-</li>
-<li>
-<p><strong>password</strong> (required)</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+  <h2 id="auth">3. Auth</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="auth-normal-login">3.1. Normal login</h3>
+      <div class="paragraph">
+        <p>
+          To login a user send a POST request containing the following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>type</strong> with value "normal"</p>
+          </li>
+          <li>
+            <p>
+              <strong>username</strong> (required): this field also supports the
+              user email
+            </p>
+          </li>
+          <li>
+            <p><strong>password</strong> (required)</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "password": "password",</span>
@@ -29,122 +36,171 @@
 <span class="tok-s1">        "username": "test-username"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/auth</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the login is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-auth-user-detail">user auth detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="auth-github-login">3.2. Github login</h3>
-<div class="paragraph">
-<p>To login a user via GitHub send a POST request containing the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>type</strong> with value "github"</p>
-</li>
-<li>
-<p><strong>code</strong> (required): your github authentication code</p>
-</li>
-<li>
-<p><strong>token</strong> (optional): generated when creating a project’s membership (for accept invitations to projects)</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the login is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-auth-user-detail"
+            >user auth detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="auth-github-login">3.2. Github login</h3>
+      <div class="paragraph">
+        <p>
+          To login a user via GitHub send a POST request containing the
+          following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>type</strong> with value "github"</p>
+          </li>
+          <li>
+            <p>
+              <strong>code</strong> (required): your github authentication code
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>token</strong> (optional): generated when creating a
+              project’s membership (for accept invitations to projects)
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
   -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
   -d <span class="tok-s1">'{</span>
 <span class="tok-s1">          "type": "github",</span>
 <span class="tok-s1">          "code": "'</span><span class="tok-si">${</span><span class="tok-nv">GITHUB_CODE</span><span class="tok-si">}</span><span class="tok-s1">'"</span>
 <span class="tok-s1">      }'</span> <span class="tok-se">\</span>
   https://api.taiga.io/api/v1/auth</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the login is successful, the HTTP response is a 200 OK and the response body is a JSON
-<a href="https://docs.taiga.io/api.html#object-auth-user-detail">user auth detail object</a></p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tbody><tr>
-<td class="icon">
-<div class="title"></div>
-</td>
-<td class="content">
-<div class="title">Get GitHub autorized code</div>
-<div class="paragraph">
-<p>To get the GitHub code you have to follow the first step <em>Redirect users to request GitHub access</em>
-described in <a href="https://developer.github.com/v3/oauth/#web-application-flow">GitHub Documentation for
-Developers - API - OAuth - Web Application Flow</a>.</p>
-</div>
-<div class="paragraph">
-<p>Taiga needs privileges to get the user email from Github so you have to use the scope user:email.</p>
-</div>
-</td>
-</tr>
-</tbody></table>
-</div>
-</div>
-<div class="sect2">
-<h3 id="auth-refresh">3.3. Refresh auth token</h3>
-<div class="paragraph">
-<p>To refresh the auth token send a POST request containing the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>refresh</strong> (required): the refresh token</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the login is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-auth-user-detail"
+            >user auth detail object</a
+          >
+        </p>
+      </div>
+      <div class="admonitionblock note">
+        <table>
+          <tbody>
+            <tr>
+              <td class="icon">
+                <div class="title"></div>
+              </td>
+              <td class="content">
+                <div class="title">Get GitHub autorized code</div>
+                <div class="paragraph">
+                  <p>
+                    To get the GitHub code you have to follow the first step
+                    <em>Redirect users to request GitHub access</em> described
+                    in
+                    <a
+                      href="https://developer.github.com/v3/oauth/#web-application-flow"
+                      >GitHub Documentation for Developers - API - OAuth - Web
+                      Application Flow</a
+                    >.
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    Taiga needs privileges to get the user email from Github so
+                    you have to use the scope user:email.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="auth-refresh">3.3. Refresh auth token</h3>
+      <div class="paragraph">
+        <p>
+          To refresh the auth token send a POST request containing the following
+          data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>refresh</strong> (required): the refresh token</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTYyNzI5OTQzMiwianRpIjoiMmNkMmNhNzQwYjRiNGZkNzk0ZDlmMDlmNWYwNzAwMTkiLCJ1c2VyX2lkIjo1fQ.vez_-n6y9yQo2uFgXTPB5YdJHFKUIAsCrNVJ29_T3wM"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/auth/refresh</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the refresh is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-auth-refresh-detail">refresh token detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="auth-public-registry">3.4. Public registry</h3>
-<div class="paragraph">
-<p>To register a user without invitation send a POST request containing the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>type</strong> with value "public"</p>
-</li>
-<li>
-<p><strong>username</strong> (required)</p>
-</li>
-<li>
-<p><strong>password</strong> (required)</p>
-</li>
-<li>
-<p><strong>email</strong> (required)</p>
-</li>
-<li>
-<p><strong>full_name</strong> (required)</p>
-</li>
-<li>
-<p><strong>accepted_terms</strong> (required): boolean</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the refresh is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-auth-refresh-detail"
+            >refresh token detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="auth-public-registry">3.4. Public registry</h3>
+      <div class="paragraph">
+        <p>
+          To register a user without invitation send a POST request containing
+          the following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>type</strong> with value "public"</p>
+          </li>
+          <li>
+            <p><strong>username</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>password</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>email</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>full_name</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>accepted_terms</strong> (required): boolean</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "accepted_terms": "true",</span>
@@ -155,45 +211,68 @@ Developers - API - OAuth - Web Application Flow</a>.</p>
 <span class="tok-s1">        "username": "test-username2"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/auth/register</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the registration is successful, the HTTP response is a 201 CREATED and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-auth-user-detail">user auth detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="auth-private-registry">3.5. Private registry</h3>
-<div class="paragraph">
-<p>To add a user into a project via invitation send a POST request containing the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>type</strong> with value "private"</p>
-</li>
-<li>
-<p><strong>existing</strong> (required): indicates if the user is member or not</p>
-</li>
-<li>
-<p><strong>token</strong> (required): generated when creating a project’s membership</p>
-</li>
-<li>
-<p><strong>username</strong> (required)</p>
-</li>
-<li>
-<p><strong>password</strong> (required)</p>
-</li>
-<li>
-<p><strong>email</strong> (required only if the user doesn’t exist in the platform)</p>
-</li>
-<li>
-<p><strong>full_name</strong> (required only if the user doesn’t exist in the platform)</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the registration is successful, the HTTP response is a 201
+          CREATED and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-auth-user-detail"
+            >user auth detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="auth-private-registry">3.5. Private registry</h3>
+      <div class="paragraph">
+        <p>
+          To add a user into a project via invitation send a POST request
+          containing the following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>type</strong> with value "private"</p>
+          </li>
+          <li>
+            <p>
+              <strong>existing</strong> (required): indicates if the user is
+              member or not
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>token</strong> (required): generated when creating a
+              project’s membership
+            </p>
+          </li>
+          <li>
+            <p><strong>username</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>password</strong> (required)</p>
+          </li>
+          <li>
+            <p>
+              <strong>email</strong> (required only if the user doesn’t exist in
+              the platform)
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>full_name</strong> (required only if the user doesn’t
+              exist in the platform)
+            </p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "accepted_terms": "true",</span>
@@ -206,12 +285,17 @@ Developers - API - OAuth - Web Application Flow</a>.</p>
 <span class="tok-s1">        "username": "test-username"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/auth/register</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the registration is successful, the HTTP response is a 201
+          CREATED and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-auth-user-detail"
+            >user auth detail object</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>When the registration is successful, the HTTP response is a 201 CREATED and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-auth-user-detail">user auth detail object</a></p>
-</div>
-</div>
-</div>
-</div>
-

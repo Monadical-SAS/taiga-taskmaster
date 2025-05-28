@@ -1,146 +1,163 @@
 <div class="sect1">
-<h2 id="tasks">23. Tasks</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="tasks-list">23.1. List</h3>
-<div class="paragraph">
-<p>To list tasks send a GET request with the following parameters:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="tasks">23. Tasks</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="tasks-list">23.1. List</h3>
+      <div class="paragraph">
+        <p>To list tasks send a GET request with the following parameters:</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-task-detail-list">task list objects</a></p>
-</div>
-<div class="paragraph">
-<p>The results can be filtered using the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong>: project id</p>
-</li>
-<li>
-<p><strong>status</strong>: status id</p>
-</li>
-<li>
-<p><strong>tags</strong>: separated by ","</p>
-</li>
-<li>
-<p><strong>user_story</strong>: user story id</p>
-</li>
-<li>
-<p><strong>role</strong>: role id</p>
-</li>
-<li>
-<p><strong>owner</strong>: owner id</p>
-</li>
-<li>
-<p><strong>milestone</strong>: milestone id</p>
-</li>
-<li>
-<p><strong>watchers</strong>: watching user id</p>
-</li>
-<li>
-<p><strong>assigned_to</strong>: assigned to user id</p>
-</li>
-<li>
-<p><strong>status__is_closed</strong>: (true|false)</p>
-</li>
-<li>
-<p><strong>exclude_status</strong>: status id</p>
-</li>
-<li>
-<p><strong>exclude_tags</strong>: separared by ","</p>
-</li>
-<li>
-<p><strong>exclude_role</strong>: role id</p>
-</li>
-<li>
-<p><strong>exclude_owner</strong>: owner id</p>
-</li>
-<li>
-<p><strong>exclude_assigned_to</strong>: assigned to user id</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>the "exclude_" params work excluding from the response the results with which they match.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-task-detail-list"
+            >task list objects</a
+          >
+        </p>
+      </div>
+      <div class="paragraph">
+        <p>The results can be filtered using the following parameters:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project</strong>: project id</p>
+          </li>
+          <li>
+            <p><strong>status</strong>: status id</p>
+          </li>
+          <li>
+            <p><strong>tags</strong>: separated by ","</p>
+          </li>
+          <li>
+            <p><strong>user_story</strong>: user story id</p>
+          </li>
+          <li>
+            <p><strong>role</strong>: role id</p>
+          </li>
+          <li>
+            <p><strong>owner</strong>: owner id</p>
+          </li>
+          <li>
+            <p><strong>milestone</strong>: milestone id</p>
+          </li>
+          <li>
+            <p><strong>watchers</strong>: watching user id</p>
+          </li>
+          <li>
+            <p><strong>assigned_to</strong>: assigned to user id</p>
+          </li>
+          <li>
+            <p><strong>status__is_closed</strong>: (true|false)</p>
+          </li>
+          <li>
+            <p><strong>exclude_status</strong>: status id</p>
+          </li>
+          <li>
+            <p><strong>exclude_tags</strong>: separared by ","</p>
+          </li>
+          <li>
+            <p><strong>exclude_role</strong>: role id</p>
+          </li>
+          <li>
+            <p><strong>exclude_owner</strong>: owner id</p>
+          </li>
+          <li>
+            <p><strong>exclude_assigned_to</strong>: assigned to user id</p>
+          </li>
+        </ul>
+      </div>
+      <div class="paragraph">
+        <p>
+          the "exclude_" params work excluding from the response the results
+          with which they match.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks?project<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-create">23.2. Create</h3>
-<div class="paragraph">
-<p>To create tasks send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>assigned_to</strong>: user id</p>
-</li>
-<li>
-<p><strong>blocked_note</strong>: reason why the task is blocked</p>
-</li>
-<li>
-<p><strong>description</strong>: string</p>
-</li>
-<li>
-<p><strong>is_blocked</strong>: boolean</p>
-</li>
-<li>
-<p><strong>is_closed</strong>: boolean</p>
-</li>
-<li>
-<p><strong>milestone</strong>: milestone id</p>
-</li>
-<li>
-<p><strong>project</strong> (required): project id</p>
-</li>
-<li>
-<p><strong>user_story</strong>: user story id</p>
-</li>
-<li>
-<p><strong>status</strong>: status id</p>
-</li>
-<li>
-<p><strong>subject</strong> (required)</p>
-</li>
-<li>
-<p><strong>tags</strong>: array of strings</p>
-</li>
-<li>
-<p><strong>us_order</strong>: order in the user story,</p>
-</li>
-<li>
-<p><strong>taskboard_order</strong>: order in the taskboard,</p>
-</li>
-<li>
-<p><strong>is_iocaine</strong>: boolean,</p>
-</li>
-<li>
-<p><strong>external_reference</strong>: tuple of ("service", serviceId),</p>
-</li>
-<li>
-<p><strong>watchers</strong>: array of watcher id’s</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-create">23.2. Create</h3>
+      <div class="paragraph">
+        <p>To create tasks send a POST request with the following data:</p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>assigned_to</strong>: user id</p>
+          </li>
+          <li>
+            <p><strong>blocked_note</strong>: reason why the task is blocked</p>
+          </li>
+          <li>
+            <p><strong>description</strong>: string</p>
+          </li>
+          <li>
+            <p><strong>is_blocked</strong>: boolean</p>
+          </li>
+          <li>
+            <p><strong>is_closed</strong>: boolean</p>
+          </li>
+          <li>
+            <p><strong>milestone</strong>: milestone id</p>
+          </li>
+          <li>
+            <p><strong>project</strong> (required): project id</p>
+          </li>
+          <li>
+            <p><strong>user_story</strong>: user story id</p>
+          </li>
+          <li>
+            <p><strong>status</strong>: status id</p>
+          </li>
+          <li>
+            <p><strong>subject</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>tags</strong>: array of strings</p>
+          </li>
+          <li>
+            <p><strong>us_order</strong>: order in the user story,</p>
+          </li>
+          <li>
+            <p><strong>taskboard_order</strong>: order in the taskboard,</p>
+          </li>
+          <li>
+            <p><strong>is_iocaine</strong>: boolean,</p>
+          </li>
+          <li>
+            <p>
+              <strong>external_reference</strong>: tuple of ("service",
+              serviceId),
+            </p>
+          </li>
+          <li>
+            <p><strong>watchers</strong>: array of watcher id’s</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -165,11 +182,13 @@
 <span class="tok-s1">        "watchers": []</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -177,47 +196,67 @@
 <span class="tok-s1">        "subject": "Customer personal data"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-task-detail">task detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-get">23.3. Get</h3>
-<div class="paragraph">
-<p>To get a task send a GET request specifying the task id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 Created
+          and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-task-detail"
+            >task detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-get">23.3. Get</h3>
+      <div class="paragraph">
+        <p>
+          To get a task send a GET request specifying the task id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-task-detail-get">task detail (GET) object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-get-by-ref">23.4. Get by ref</h3>
-<div class="paragraph">
-<p>To get a task send a GET request specifying the task reference and one of the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>project (project id)</p>
-</li>
-<li>
-<p>project__slug</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="json"><span></span><span class="tok-p">{</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-task-detail-get"
+            >task detail (GET) object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-get-by-ref">23.4. Get by ref</h3>
+      <div class="paragraph">
+        <p>
+          To get a task send a GET request specifying the task reference and one
+          of the following parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>project (project id)</p>
+          </li>
+          <li>
+            <p>project__slug</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="json"><span></span><span class="tok-p">{</span>
     <span class="tok-nt">"assigned_to"</span><span class="tok-p">:</span> <span class="tok-mi">15</span><span class="tok-p">,</span>
     <span class="tok-nt">"assigned_to_extra_info"</span><span class="tok-p">:</span> <span class="tok-p">{</span>
         <span class="tok-nt">"big_photo"</span><span class="tok-p">:</span> <span class="tok-kc">null</span><span class="tok-p">,</span>
@@ -348,21 +387,31 @@
         <span class="tok-mi">6</span>
     <span class="tok-p">]</span>
 <span class="tok-p">}</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-task-detail-get">task detail (GET) object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-edit">23.5. Edit</h3>
-<div class="paragraph">
-<p>To edit tasks send a PUT or a PATCH specifying the task id in the url.
-In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-task-detail-get"
+            >task detail (GET) object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-edit">23.5. Edit</h3>
+      <div class="paragraph">
+        <p>
+          To edit tasks send a PUT or a PATCH specifying the task id in the url.
+          In a PATCH request you just need to send the modified data, in a PUT
+          one the whole object must be sent.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -370,56 +419,72 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 <span class="tok-s1">        "version": 1</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-task-detail">task detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-delete">23.6. Delete</h3>
-<div class="paragraph">
-<p>To delete tasks send a DELETE specifying the task id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-task-detail"
+            >task detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-delete">23.6. Delete</h3>
+      <div class="paragraph">
+        <p>To delete tasks send a DELETE specifying the task id in the url</p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-bulk-create">23.7. Bulk creation</h3>
-<div class="paragraph">
-<p>To create multiple tasks at the same time send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project_id</strong> (required)</p>
-</li>
-<li>
-<p><strong>status_id</strong></p>
-</li>
-<li>
-<p><strong>sprint_id</strong>: milestone id (optional)</p>
-</li>
-<li>
-<p><strong>us_id</strong>: user story id (optional)</p>
-</li>
-<li>
-<p><strong>bulk_tasks</strong>: task subjects, one per line</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-bulk-create">23.7. Bulk creation</h3>
+      <div class="paragraph">
+        <p>
+          To create multiple tasks at the same time send a POST request with the
+          following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project_id</strong> (required)</p>
+          </li>
+          <li>
+            <p><strong>status_id</strong></p>
+          </li>
+          <li>
+            <p><strong>sprint_id</strong>: milestone id (optional)</p>
+          </li>
+          <li>
+            <p><strong>us_id</strong>: user story id (optional)</p>
+          </li>
+          <li>
+            <p><strong>bulk_tasks</strong>: task subjects, one per line</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
@@ -428,185 +493,258 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 <span class="tok-s1">        "project_id": 1</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/bulk_create</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-task-detail">task detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-get-filters-data">23.8. Filters data</h3>
-<div class="paragraph">
-<p>To get the task filters data send a GET request specifying the project id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK and the
+          response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-task-detail"
+            >task detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-get-filters-data">23.8. Filters data</h3>
+      <div class="paragraph">
+        <p>
+          To get the task filters data send a GET request specifying the project
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/filters_data?project<span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-task-filters-data">task filters data object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-upvote">23.9. Vote a task</h3>
-<div class="paragraph">
-<p>To vote tasks send a POST request specifying the task id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-task-filters-data"
+            >task filters data object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-upvote">23.9. Vote a task</h3>
+      <div class="paragraph">
+        <p>
+          To vote tasks send a POST request specifying the task id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/1/upvote</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-downvote">23.10. Remove vote from a task</h3>
-<div class="paragraph">
-<p>To remove a vote from a task send a POST request specifying the task id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-downvote">23.10. Remove vote from a task</h3>
+      <div class="paragraph">
+        <p>
+          To remove a vote from a task send a POST request specifying the task
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/1/downvote</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When remove of the vote succeeded, the HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-voters">23.11. Get task voters list</h3>
-<div class="paragraph">
-<p>To get the list of voters from a task send a GET request specifying the task id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When remove of the vote succeeded, the HTTP response is a 200 OK with
+          an empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-voters">23.11. Get task voters list</h3>
+      <div class="paragraph">
+        <p>
+          To get the list of voters from a task send a GET request specifying
+          the task id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/1/voters</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-task-voter-detail">task voter object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-watch">23.12. Watch a task</h3>
-<div class="paragraph">
-<p>To watch a task send a POST request specifying the task id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-task-voter-detail"
+            >task voter object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-watch">23.12. Watch a task</h3>
+      <div class="paragraph">
+        <p>
+          To watch a task send a POST request specifying the task id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/1/watch</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-unwatch">23.13. Stop watching a task</h3>
-<div class="paragraph">
-<p>To stop watching a task send a POST request specifying the task id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-unwatch">23.13. Stop watching a task</h3>
+      <div class="paragraph">
+        <p>
+          To stop watching a task send a POST request specifying the task id in
+          the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/1/unwatch</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-watchers">23.14. List task watchers</h3>
-<div class="paragraph">
-<p>To get the list of watchers from a task send a GET request specifying the task id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>The HTTP response is a 200 OK with an empty body response</p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-watchers">23.14. List task watchers</h3>
+      <div class="paragraph">
+        <p>
+          To get the list of watchers from a task send a GET request specifying
+          the task id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/1/watchers</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-userstory-watcher-detail">task watcher object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-list-attachments">23.15. List attachments</h3>
-<div class="paragraph">
-<p>To list task attachments send a GET request with the following parameters:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>project</strong>: project id</p>
-</li>
-<li>
-<p><strong>object_id</strong>: task id</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a
+            href="https://docs.taiga.io/api.html#object-userstory-watcher-detail"
+            >task watcher object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-list-attachments">23.15. List attachments</h3>
+      <div class="paragraph">
+        <p>
+          To list task attachments send a GET request with the following
+          parameters:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>project</strong>: project id</p>
+          </li>
+          <li>
+            <p><strong>object_id</strong>: task id</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/attachments?object_id<span class="tok-o">=</span><span class="tok-m">1</span><span class="tok-se">\&amp;</span><span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">1</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON list of <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail objects</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-create-attachment">23.16. Create attachment</h3>
-<div class="paragraph">
-<p>To create task attachments send a POST request with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>object_id</strong> (required): task id</p>
-</li>
-<li>
-<p><strong>project</strong> (required): project id</p>
-</li>
-<li>
-<p><strong>attached_file</strong> (required): attaching file</p>
-</li>
-<li>
-<p><strong>description</strong></p>
-</li>
-<li>
-<p><strong>is_deprecated</strong></p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON list of
+          <a href="https://docs.taiga.io/api.html#object-attachment-detail"
+            >attachment detail objects</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-create-attachment">23.16. Create attachment</h3>
+      <div class="paragraph">
+        <p>
+          To create task attachments send a POST request with the following
+          data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>object_id</strong> (required): task id</p>
+          </li>
+          <li>
+            <p><strong>project</strong> (required): project id</p>
+          </li>
+          <li>
+            <p><strong>attached_file</strong> (required): attaching file</p>
+          </li>
+          <li>
+            <p><strong>description</strong></p>
+          </li>
+          <li>
+            <p><strong>is_deprecated</strong></p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: multipart/form-data"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -F <span class="tok-nv">attached_file</span><span class="tok-o">=</span>@test.png <span class="tok-se">\</span>
@@ -614,67 +752,101 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 -F <span class="tok-nv">object_id</span><span class="tok-o">=</span><span class="tok-m">1</span> <span class="tok-se">\</span>
 -F <span class="tok-nv">project</span><span class="tok-o">=</span><span class="tok-m">1</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/attachments</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-get-attachment">23.17. Get attachment</h3>
-<div class="paragraph">
-<p>To get a task attachment send a GET request specifying the task attachment id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 201 Created
+          and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-attachment-detail"
+            >attachment detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-get-attachment">23.17. Get attachment</h3>
+      <div class="paragraph">
+        <p>
+          To get a task attachment send a GET request specifying the task
+          attachment id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/attachments/461</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-edit-attachment">23.18. Edit attachment</h3>
-<div class="paragraph">
-<p>To edit task attachments send a PUT or a PATCH specifying the task attachment id in the url.
-In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-attachment-detail"
+            >attachment detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-edit-attachment">23.18. Edit attachment</h3>
+      <div class="paragraph">
+        <p>
+          To edit task attachments send a PUT or a PATCH specifying the task
+          attachment id in the url. In a PATCH request you just need to send the
+          modified data, in a PUT one the whole object must be sent.
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X PATCH <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "description": "Updated description"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/attachments/461</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON <a href="https://docs.taiga.io/api.html#object-attachment-detail">attachment detail object</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="tasks-delete-attachment">23.19. Delete attachment</h3>
-<div class="paragraph">
-<p>To delete task attachments send a DELETE specifying the task attachment id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When the creation is successful, the HTTP response is a 200 OK and the
+          response body is a JSON
+          <a href="https://docs.taiga.io/api.html#object-attachment-detail"
+            >attachment detail object</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="tasks-delete-attachment">23.19. Delete attachment</h3>
+      <div class="paragraph">
+        <p>
+          To delete task attachments send a DELETE specifying the task
+          attachment id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X DELETE <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/tasks/attachments/461</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When delete succeeded, the HTTP response is a 204 NO CONTENT with an
+          empty body response
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-</div>
-</div>
-

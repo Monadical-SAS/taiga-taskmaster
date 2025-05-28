@@ -1,101 +1,150 @@
 <div class="sect1">
-<h2 id="history">36. History</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="history-get">36.1. Get user story, task, issue or wiki page history</h3>
-<div class="paragraph">
-<p>To get the history of a user story, task, issue or wiki page send a GET request specifying the id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+  <h2 id="history">36. History</h2>
+  <div class="sectionbody">
+    <div class="sect2">
+      <h3 id="history-get">
+        36.1. Get user story, task, issue or wiki page history
+      </h3>
+      <div class="paragraph">
+        <p>
+          To get the history of a user story, task, issue or wiki page send a
+          GET request specifying the id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/history/userstory/2</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON of a list of <a href="https://docs.taiga.io/api.html#object-history-entry-detail">history entry detail objects</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="history-comment-versions">36.2. Get comment versions</h3>
-<div class="paragraph">
-<p>To get the comment versions from the history entry of a user story, task, issue or wiki page send a GET request specifying the history entry id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON of a
+          list of
+          <a href="https://docs.taiga.io/api.html#object-history-entry-detail"
+            >history entry detail objects</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="history-comment-versions">36.2. Get comment versions</h3>
+      <div class="paragraph">
+        <p>
+          To get the comment versions from the history entry of a user story,
+          task, issue or wiki page send a GET request specifying the history
+          entry id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X GET <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/history/userstory/2/comment_versions?id<span class="tok-o">=</span><span class="tok-m">00000000</span>-0000-0000-0000-000000000000</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The HTTP response is a 200 OK and the response body is a JSON of a list of <a href="https://docs.taiga.io/api.html#object-history-entry-comment-detail">history entry comment detail objects</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="history-edit-comment">36.3. Edit comment</h3>
-<div class="paragraph">
-<p>To edit a history comment send a POST specifying the history entry id in the url with the following data:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>assigned_to</strong>: the new comment</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          The HTTP response is a 200 OK and the response body is a JSON of a
+          list of
+          <a
+            href="https://docs.taiga.io/api.html#object-history-entry-comment-detail"
+            >history entry comment detail objects</a
+          >
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="history-edit-comment">36.3. Edit comment</h3>
+      <div class="paragraph">
+        <p>
+          To edit a history comment send a POST specifying the history entry id
+          in the url with the following data:
+        </p>
+      </div>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><strong>assigned_to</strong>: the new comment</p>
+          </li>
+        </ul>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -d <span class="tok-s1">'{</span>
 <span class="tok-s1">        "comment": "comment edition"</span>
 <span class="tok-s1">    }'</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/history/userstory/2/edit_comment?id<span class="tok-o">=</span><span class="tok-m">00000000</span>-0000-0000-0000-000000000000</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When deleted succesfully, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="history-delete-comment">36.4. Delete comment</h3>
-<div class="paragraph">
-<p>To delete a history comment send a POST specifying the history entry id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When deleted succesfully, the HTTP response is a 204 NO CONTENT with
+          an empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="history-delete-comment">36.4. Delete comment</h3>
+      <div class="paragraph">
+        <p>
+          To delete a history comment send a POST specifying the history entry
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/history/userstory/2/delete_comment?id<span class="tok-o">=</span><span class="tok-m">00000000</span>-0000-0000-0000-000000000000</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>When deleted succesfully, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="history-undelete-comment">36.5. Undelete comment</h3>
-<div class="paragraph">
-<p>To undelete a history comment send a POST specifying the history entry id in the url</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When deleted succesfully, the HTTP response is a 204 NO CONTENT with
+          an empty body response
+        </p>
+      </div>
+    </div>
+    <div class="sect2">
+      <h3 id="history-undelete-comment">36.5. Undelete comment</h3>
+      <div class="paragraph">
+        <p>
+          To undelete a history comment send a POST specifying the history entry
+          id in the url
+        </p>
+      </div>
+      <div class="listingblock">
+        <div class="content">
+          <pre
+            class="pygments highlight"
+          ><code data-lang="bash"><span></span>curl -X POST <span class="tok-se">\</span>
 -H <span class="tok-s2">"Content-Type: application/json"</span> <span class="tok-se">\</span>
 -H <span class="tok-s2">"Authorization: Bearer </span><span class="tok-si">${</span><span class="tok-nv">AUTH_TOKEN</span><span class="tok-si">}</span><span class="tok-s2">"</span> <span class="tok-se">\</span>
 -s http://localhost:8000/api/v1/history/userstory/2/undelete_comment?id<span class="tok-o">=</span><span class="tok-m">00000000</span>-0000-0000-0000-000000000000</code></pre>
+        </div>
+      </div>
+      <div class="paragraph">
+        <p>
+          When deleted succesfully, the HTTP response is a 204 NO CONTENT with
+          an empty body response
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-<div class="paragraph">
-<p>When deleted succesfully, the HTTP response is a 204 NO CONTENT with an empty body response</p>
-</div>
-</div>
-</div>
-</div>
-

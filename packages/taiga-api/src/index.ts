@@ -36,50 +36,64 @@ import {
   type StatusId,
   type CustomAttributeId,
   type AuthToken,
-  type RefreshToken
-} from '@taiga-task-master/taiga-api-interface';
+  type RefreshToken,
+} from "@taiga-task-master/taiga-api-interface";
 
 // ============================================================================
 // HTTP Client Implementation
 // ============================================================================
 
-const buildUrl = (baseUrl: string, path: string, params?: Record<string, unknown>): string => {
+const buildUrl = (
+  baseUrl: string,
+  path: string,
+  params?: Record<string, unknown>
+): string => {
   const url = new URL(path, baseUrl);
-  const searchParams = params 
+  const searchParams = params
     ? Object.entries(params)
         .filter(([, value]) => value !== undefined && value !== null)
-        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-        .join('&')
-    : '';
+        .map(
+          ([key, value]) =>
+            `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
+        )
+        .join("&")
+    : "";
   return searchParams ? `${url.toString()}?${searchParams}` : url.toString();
 };
 
 const buildHeaders = (
-  defaultHeaders?: Record<HeaderKey, HeaderValue>, 
+  defaultHeaders?: Record<HeaderKey, HeaderValue>,
   requestHeaders?: Record<HeaderKey, HeaderValue>,
   hasData?: boolean
 ): Record<string, string> => {
-  const base = defaultHeaders ? Object.fromEntries(Object.entries(defaultHeaders)) : {};
-  const withRequest = requestHeaders ? { ...base, ...Object.fromEntries(Object.entries(requestHeaders)) } : base;
-  return hasData && !withRequest["Content-Type"] 
+  const base = defaultHeaders
+    ? Object.fromEntries(Object.entries(defaultHeaders))
+    : {};
+  const withRequest = requestHeaders
+    ? { ...base, ...Object.fromEntries(Object.entries(requestHeaders)) }
+    : base;
+  return hasData && !withRequest["Content-Type"]
     ? { ...withRequest, "Content-Type": "application/json" }
     : withRequest;
 };
 
-const buildResponseHeaders = (headers: Record<string, string | string[] | undefined>): Record<HeaderKey, HeaderValue> => 
-  Object.entries(headers).reduce((acc, [key, value]) => 
-    typeof value === "string"
-      ? (() => {
-          try {
-            const validKey = Schema.decodeSync(HeaderKey)(key);
-            const validValue = Schema.decodeSync(HeaderValue)(value);
-            return { ...acc, [validKey]: validValue };
-          } catch {
-            // Skip invalid headers
-            return acc;
-          }
-        })()
-      : acc,
+const buildResponseHeaders = (
+  headers: Record<string, string | string[] | undefined>
+): Record<HeaderKey, HeaderValue> =>
+  Object.entries(headers).reduce(
+    (acc, [key, value]) =>
+      typeof value === "string"
+        ? (() => {
+            try {
+              const validKey = Schema.decodeSync(HeaderKey)(key);
+              const validValue = Schema.decodeSync(HeaderValue)(value);
+              return { ...acc, [validKey]: validValue };
+            } catch {
+              // Skip invalid headers
+              return acc;
+            }
+          })()
+        : acc,
     {} as Record<HeaderKey, HeaderValue>
   );
 
@@ -97,14 +111,16 @@ const makeRequest = async (
     method: method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
     headers,
     signal: options?.signal,
-    ...(data ? { body: JSON.stringify(data) } : {})
+    ...(data ? { body: JSON.stringify(data) } : {}),
   };
 
   const response = await request(url, requestOptions);
   const responseHeaders = buildResponseHeaders(response.headers);
   const status = Schema.decodeSync(HttpStatus)(response.statusCode);
 
-  const responseData = response.headers["content-type"]?.includes("application/json")
+  const responseData = response.headers["content-type"]?.includes(
+    "application/json"
+  )
     ? await response.body.json()
     : await response.body.text();
 
@@ -113,25 +129,66 @@ const makeRequest = async (
     : {
         data: responseData,
         status,
-        headers: responseHeaders
+        headers: responseHeaders,
       };
 };
 
 const createHttpClient = (config: HttpClientConfig): HttpClient => ({
-  get: (path: string, options?: RequestOptions & { params?: Record<string, unknown> }) =>
-    makeRequest(config.baseUrl, config.defaultHeaders, "GET", path, undefined, options),
-  
+  get: (
+    path: string,
+    options?: RequestOptions & { params?: Record<string, unknown> }
+  ) =>
+    makeRequest(
+      config.baseUrl,
+      config.defaultHeaders,
+      "GET",
+      path,
+      undefined,
+      options
+    ),
+
   post: (path: string, data?: unknown, options?: RequestOptions) =>
-    makeRequest(config.baseUrl, config.defaultHeaders, "POST", path, data, options),
-  
+    makeRequest(
+      config.baseUrl,
+      config.defaultHeaders,
+      "POST",
+      path,
+      data,
+      options
+    ),
+
   put: (path: string, data?: unknown, options?: RequestOptions) =>
-    makeRequest(config.baseUrl, config.defaultHeaders, "PUT", path, data, options),
-  
+    makeRequest(
+      config.baseUrl,
+      config.defaultHeaders,
+      "PUT",
+      path,
+      data,
+      options
+    ),
+
   patch: (path: string, data?: unknown, options?: RequestOptions) =>
-    makeRequest(config.baseUrl, config.defaultHeaders, "PATCH", path, data, options),
-  
-  delete: (path: string, options?: RequestOptions): Promise<HttpResponse<void>> =>
-    makeRequest(config.baseUrl, config.defaultHeaders, "DELETE", path, undefined, options).then(res => ({ ...res, data: undefined }))
+    makeRequest(
+      config.baseUrl,
+      config.defaultHeaders,
+      "PATCH",
+      path,
+      data,
+      options
+    ),
+
+  delete: (
+    path: string,
+    options?: RequestOptions
+  ): Promise<HttpResponse<void>> =>
+    makeRequest(
+      config.baseUrl,
+      config.defaultHeaders,
+      "DELETE",
+      path,
+      undefined,
+      options
+    ).then((res) => ({ ...res, data: undefined })),
 });
 
 // ============================================================================
@@ -139,7 +196,7 @@ const createHttpClient = (config: HttpClientConfig): HttpClient => ({
 // ============================================================================
 
 const createAuthenticatedHttpClient = (
-  baseClient: HttpClient, 
+  baseClient: HttpClient,
   getAuthToken: () => AuthToken | null,
   refreshAuth: () => Promise<void>
 ): HttpClient => {
@@ -150,9 +207,13 @@ const createAuthenticatedHttpClient = (
       return await operation();
     } catch (error) {
       if (error instanceof Error && error.message.includes("HTTP 401")) {
-        console.log(`🔄 [${new Date().toISOString()}] Token expired (401), attempting refresh...`);
+        console.log(
+          `🔄 [${new Date().toISOString()}] Token expired (401), attempting refresh...`
+        );
         await refreshAuth();
-        console.log(`✅ [${new Date().toISOString()}] Token refresh completed, retrying original request`);
+        console.log(
+          `✅ [${new Date().toISOString()}] Token refresh completed, retrying original request`
+        );
         return await operation();
       }
       throw error;
@@ -164,32 +225,47 @@ const createAuthenticatedHttpClient = (
     if (!authToken) {
       return options || {};
     }
-    
-    const authHeader = { "Authorization": Schema.decodeSync(HeaderValue)(`Bearer ${authToken}`) };
+
+    const authHeader = {
+      Authorization: Schema.decodeSync(HeaderValue)(`Bearer ${authToken}`),
+    };
     return {
       ...options,
       headers: {
         ...options?.headers,
-        ...authHeader
-      }
+        ...authHeader,
+      },
     };
   };
 
   return {
-    get: (path: string, options?: RequestOptions & { params?: Record<string, unknown> }) =>
-      withAuthAndRetry(() => baseClient.get(path, addAuthHeader(options))),
-    
+    get: (
+      path: string,
+      options?: RequestOptions & { params?: Record<string, unknown> }
+    ) => withAuthAndRetry(() => baseClient.get(path, addAuthHeader(options))),
+
     post: (path: string, data?: unknown, options?: RequestOptions) =>
-      withAuthAndRetry(() => baseClient.post(path, data, addAuthHeader(options))),
-    
+      withAuthAndRetry(() =>
+        baseClient.post(path, data, addAuthHeader(options))
+      ),
+
     put: (path: string, data?: unknown, options?: RequestOptions) =>
-      withAuthAndRetry(() => baseClient.put(path, data, addAuthHeader(options))),
-    
+      withAuthAndRetry(() =>
+        baseClient.put(path, data, addAuthHeader(options))
+      ),
+
     patch: (path: string, data?: unknown, options?: RequestOptions) =>
-      withAuthAndRetry(() => baseClient.patch(path, data, addAuthHeader(options))),
-    
-    delete: (path: string, options?: RequestOptions): Promise<HttpResponse<void>> =>
-      withAuthAndRetry(() => baseClient.delete(path, addAuthHeader(options))) as Promise<HttpResponse<void>>
+      withAuthAndRetry(() =>
+        baseClient.patch(path, data, addAuthHeader(options))
+      ),
+
+    delete: (
+      path: string,
+      options?: RequestOptions
+    ): Promise<HttpResponse<void>> =>
+      withAuthAndRetry(() =>
+        baseClient.delete(path, addAuthHeader(options))
+      ) as Promise<HttpResponse<void>>,
   };
 };
 
@@ -197,64 +273,92 @@ const createAuthenticatedHttpClient = (
 // Auth Service Implementation
 // ============================================================================
 
-const createAuthService = (client: HttpClient, credentials?: AuthCredentials): [AuthService, () => Promise<void>, () => AuthToken | null] => {
+const createAuthService = (
+  client: HttpClient,
+  credentials?: AuthCredentials
+): [AuthService, () => Promise<void>, () => AuthToken | null] => {
   const state = {
     currentRefreshToken: null as RefreshToken | null,
     currentAuthToken: null as AuthToken | null,
-    storedCredentials: credentials || null as AuthCredentials | null
+    storedCredentials: credentials || (null as AuthCredentials | null),
   };
-  
+
   const api = {
     login: async (credentials: AuthCredentials): Promise<AuthResponse> => {
       const response = await client.post("/api/v1/auth", credentials);
-      const authResponse = Schema.decodeUnknownSync(AuthResponse)(response.data);
-      
+      const authResponse = Schema.decodeUnknownSync(AuthResponse)(
+        response.data
+      );
+
       // Store credentials for future login retry
       state.storedCredentials = credentials;
-      
+
       return {
         ...authResponse,
-        refresh: (() => { state.currentRefreshToken = authResponse.refresh; return authResponse.refresh; })(),
-        auth_token: (() => { state.currentAuthToken = authResponse.auth_token; return authResponse.auth_token; })()
+        refresh: (() => {
+          state.currentRefreshToken = authResponse.refresh;
+          return authResponse.refresh;
+        })(),
+        auth_token: (() => {
+          state.currentAuthToken = authResponse.auth_token;
+          return authResponse.auth_token;
+        })(),
       };
     },
 
     refresh: async (refreshToken: RefreshRequest): Promise<RefreshResponse> => {
       console.log(`🔄 [${new Date().toISOString()}] Refreshing auth token...`);
       const response = await client.post("/api/v1/auth/refresh", refreshToken);
-      const refreshResponse = Schema.decodeUnknownSync(RefreshResponse)(response.data);
-      console.log(`✅ [${new Date().toISOString()}] Token refresh successful, new token received`);
+      const refreshResponse = Schema.decodeUnknownSync(RefreshResponse)(
+        response.data
+      );
+      console.log(
+        `✅ [${new Date().toISOString()}] Token refresh successful, new token received`
+      );
       return {
         ...refreshResponse,
-        refresh: (() => { state.currentRefreshToken = refreshResponse.refresh; return refreshResponse.refresh; })(),
-        auth_token: (() => { state.currentAuthToken = refreshResponse.auth_token; return refreshResponse.auth_token; })()
+        refresh: (() => {
+          state.currentRefreshToken = refreshResponse.refresh;
+          return refreshResponse.refresh;
+        })(),
+        auth_token: (() => {
+          state.currentAuthToken = refreshResponse.auth_token;
+          return refreshResponse.auth_token;
+        })(),
       };
-    }
+    },
   };
-  
+
   const refreshWithStoredToken = async (): Promise<void> => {
     if (!state.currentRefreshToken) {
-      console.log(`🔄 [${new Date().toISOString()}] No refresh token available, attempting login with stored credentials...`);
+      console.log(
+        `🔄 [${new Date().toISOString()}] No refresh token available, attempting login with stored credentials...`
+      );
       if (!state.storedCredentials) {
         throw new Error("No refresh token or stored credentials available");
       }
       await api.login(state.storedCredentials);
       return;
     }
-    
+
     try {
       await api.refresh({ refresh: state.currentRefreshToken });
     } catch (error) {
-      console.log(`❌ [${new Date().toISOString()}] Token refresh failed, attempting login with stored credentials...`, error);
+      console.log(
+        `❌ [${new Date().toISOString()}] Token refresh failed, attempting login with stored credentials...`,
+        error
+      );
       if (!state.storedCredentials) {
-        throw new Error("Token refresh failed and no stored credentials available");
+        throw new Error(
+          "Token refresh failed and no stored credentials available"
+        );
       }
       await api.login(state.storedCredentials);
     }
   };
-  
+
   const getAuthToken = (): AuthToken | null => state.currentAuthToken;
-  
+
   return [api, refreshWithStoredToken, getAuthToken];
 };
 
@@ -263,7 +367,11 @@ const createAuthService = (client: HttpClient, credentials?: AuthCredentials): [
 // ============================================================================
 
 const createTasksService = (client: HttpClient): TasksService => ({
-  list: async (filters?: { project?: ProjectId; status?: StatusId; user_story?: UserStoryId }): Promise<readonly TaskDetail[]> => {
+  list: async (filters?: {
+    project?: ProjectId;
+    status?: StatusId;
+    user_story?: UserStoryId;
+  }): Promise<readonly TaskDetail[]> => {
     const response = await client.get("/api/v1/tasks", { params: filters });
     return Schema.decodeUnknownSync(Schema.Array(TaskDetail))(response.data);
   },
@@ -285,7 +393,7 @@ const createTasksService = (client: HttpClient): TasksService => ({
 
   delete: async (id: TaskId): Promise<void> => {
     await client.delete(`/api/v1/tasks/${id}`);
-  }
+  },
 });
 
 // ============================================================================
@@ -293,12 +401,22 @@ const createTasksService = (client: HttpClient): TasksService => ({
 // ============================================================================
 
 const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
-  list: async (filters?: { project?: ProjectId; status?: StatusId; milestone?: number }): Promise<readonly UserStoryDetail[]> => {
-    const response = await client.get("/api/v1/userstories", { params: filters });
-    return Schema.decodeUnknownSync(Schema.Array(UserStoryDetail))(response.data);
+  list: async (filters?: {
+    project?: ProjectId;
+    status?: StatusId;
+    milestone?: number;
+  }): Promise<readonly UserStoryDetail[]> => {
+    const response = await client.get("/api/v1/userstories", {
+      params: filters,
+    });
+    return Schema.decodeUnknownSync(Schema.Array(UserStoryDetail))(
+      response.data
+    );
   },
 
-  create: async (userStory: CreateUserStoryRequest): Promise<UserStoryDetail> => {
+  create: async (
+    userStory: CreateUserStoryRequest
+  ): Promise<UserStoryDetail> => {
     const response = await client.post("/api/v1/userstories", userStory);
     return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
   },
@@ -308,27 +426,36 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
     return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
   },
 
-  update: async (id: UserStoryId, userStory: UpdateUserStoryRequest): Promise<UserStoryDetail> => {
+  update: async (
+    id: UserStoryId,
+    userStory: UpdateUserStoryRequest
+  ): Promise<UserStoryDetail> => {
     const response = await client.patch(`/api/v1/userstories/${id}`, userStory);
     return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
   },
 
   delete: async (id: UserStoryId): Promise<void> => {
     await client.delete(`/api/v1/userstories/${id}`);
-  }
+  },
 });
 
 // ============================================================================
 // Task Statuses Service Implementation
 // ============================================================================
 
-const createTaskStatusesService = (client: HttpClient): TaskStatusesService => ({
-  list: async (filters?: { project?: ProjectId }): Promise<readonly TaskStatus[]> => {
-    const response = await client.get("/api/v1/task-statuses", { params: filters });
+const createTaskStatusesService = (
+  client: HttpClient
+): TaskStatusesService => ({
+  list: async (filters?: {
+    project?: ProjectId;
+  }): Promise<readonly TaskStatus[]> => {
+    const response = await client.get("/api/v1/task-statuses", {
+      params: filters,
+    });
     return Schema.decodeUnknownSync(Schema.Array(TaskStatus))(response.data);
   },
 
-  create: async (status: Omit<TaskStatus, 'id'>): Promise<TaskStatus> => {
+  create: async (status: Omit<TaskStatus, "id">): Promise<TaskStatus> => {
     const response = await client.post("/api/v1/task-statuses", status);
     return Schema.decodeUnknownSync(TaskStatus)(response.data);
   },
@@ -338,28 +465,44 @@ const createTaskStatusesService = (client: HttpClient): TaskStatusesService => (
     return Schema.decodeUnknownSync(TaskStatus)(response.data);
   },
 
-  update: async (id: StatusId, status: Partial<Omit<TaskStatus, 'id'>>): Promise<TaskStatus> => {
+  update: async (
+    id: StatusId,
+    status: Partial<Omit<TaskStatus, "id">>
+  ): Promise<TaskStatus> => {
     const response = await client.patch(`/api/v1/task-statuses/${id}`, status);
     return Schema.decodeUnknownSync(TaskStatus)(response.data);
   },
 
   delete: async (id: StatusId): Promise<void> => {
     await client.delete(`/api/v1/task-statuses/${id}`);
-  }
+  },
 });
 
 // ============================================================================
 // Task Custom Attributes Service Implementation
 // ============================================================================
 
-const createTaskCustomAttributesService = (client: HttpClient): TaskCustomAttributesService => ({
-  list: async (filters?: { project?: ProjectId }): Promise<readonly TaskCustomAttribute[]> => {
-    const response = await client.get("/api/v1/task-custom-attributes", { params: filters });
-    return Schema.decodeUnknownSync(Schema.Array(TaskCustomAttribute))(response.data);
+const createTaskCustomAttributesService = (
+  client: HttpClient
+): TaskCustomAttributesService => ({
+  list: async (filters?: {
+    project?: ProjectId;
+  }): Promise<readonly TaskCustomAttribute[]> => {
+    const response = await client.get("/api/v1/task-custom-attributes", {
+      params: filters,
+    });
+    return Schema.decodeUnknownSync(Schema.Array(TaskCustomAttribute))(
+      response.data
+    );
   },
 
-  create: async (attribute: CreateTaskCustomAttributeRequest): Promise<TaskCustomAttribute> => {
-    const response = await client.post("/api/v1/task-custom-attributes", attribute);
+  create: async (
+    attribute: CreateTaskCustomAttributeRequest
+  ): Promise<TaskCustomAttribute> => {
+    const response = await client.post(
+      "/api/v1/task-custom-attributes",
+      attribute
+    );
     return Schema.decodeUnknownSync(TaskCustomAttribute)(response.data);
   },
 
@@ -368,14 +511,20 @@ const createTaskCustomAttributesService = (client: HttpClient): TaskCustomAttrib
     return Schema.decodeUnknownSync(TaskCustomAttribute)(response.data);
   },
 
-  update: async (id: CustomAttributeId, attribute: UpdateTaskCustomAttributeRequest): Promise<TaskCustomAttribute> => {
-    const response = await client.patch(`/api/v1/task-custom-attributes/${id}`, attribute);
+  update: async (
+    id: CustomAttributeId,
+    attribute: UpdateTaskCustomAttributeRequest
+  ): Promise<TaskCustomAttribute> => {
+    const response = await client.patch(
+      `/api/v1/task-custom-attributes/${id}`,
+      attribute
+    );
     return Schema.decodeUnknownSync(TaskCustomAttribute)(response.data);
   },
 
   delete: async (id: CustomAttributeId): Promise<void> => {
     await client.delete(`/api/v1/task-custom-attributes/${id}`);
-  }
+  },
 });
 
 // ============================================================================
@@ -384,20 +533,28 @@ const createTaskCustomAttributesService = (client: HttpClient): TaskCustomAttrib
 
 const createTaigaApi = (config: HttpClientConfig): TaigaApi => {
   const baseClient = createHttpClient(config);
-  const [authService, refreshAuth, getAuthToken] = createAuthService(baseClient, config.credentials);
-  const authenticatedClient = createAuthenticatedHttpClient(baseClient, getAuthToken, refreshAuth);
-  
+  const [authService, refreshAuth, getAuthToken] = createAuthService(
+    baseClient,
+    config.credentials
+  );
+  const authenticatedClient = createAuthenticatedHttpClient(
+    baseClient,
+    getAuthToken,
+    refreshAuth
+  );
+
   return {
     auth: authService,
     tasks: createTasksService(authenticatedClient),
     userStories: createUserStoriesService(authenticatedClient),
     taskStatuses: createTaskStatusesService(authenticatedClient),
-    taskCustomAttributes: createTaskCustomAttributesService(authenticatedClient)
+    taskCustomAttributes:
+      createTaskCustomAttributesService(authenticatedClient),
   };
 };
 
 export const taigaApiFactory: TaigaApiFactory = {
-  create: createTaigaApi
+  create: createTaigaApi,
 };
 
 export * from "@taiga-task-master/taiga-api-interface";

@@ -5,6 +5,7 @@ Type: The decoded output type (e.g., your domain type).
 Encoded: The input/output type (often JSON-compatible).
 Requirements: External dependencies for decoding/encoding (default: never).
 Key Concepts
+
 1. Defining Schemas
    Schemas are built using constructors like Schema.Struct, Schema.Array, or primitives (Schema.String, Schema.Number).
    Example:

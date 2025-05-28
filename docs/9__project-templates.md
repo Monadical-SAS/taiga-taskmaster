@@ -1,131 +1,80 @@
 ## 9. Project templates
+
 ### 9.1. List
+
 To list project templates send a GET request with the following parameters:
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON list of [project template detail objects](https://docs.taiga.io/api.html#object-project-template-detail)
+
 ### 9.2. Create
+
 To create project templates send a POST request with the following data:
-*
-**name** (required): string
-*
-**slug**: slug
-*
-**description** (required): string
-*
-**default_owner_role** (required):
-*
-**is_backlog_activated**: boolean
-*
-**is_kanban_activated**: boolean
-*
-**is_wiki_activated**: boolean
-*
-**is_issues_activated**: boolean
-*
-**videoconferences**: ("whereby-com" | "jitsi" | "talky" | "custom")
-*
-**videoconferences_extra_data**: string
-*
-**default_options**: a json with a list of objects with:
-*
-**points**: slug
-*
-**us_status**: slug
-*
-**task_status**: slug
-*
-**issue_status**: slug
-*
-**issue_type**: slug
-*
-**priority**: slug
-*
-**severity**: slug
-*
-**us_statuses**: a json with a list of objects with:
-*
-**name**: string
-*
-**slug**: slug
-*
-**is_closed**: boolean
-*
-**color**: #rgb color
-*
-**wip_limit**: integer or none
-*
-**order**: integer
-*
-**points**: a json with a list of objects with:
-*
-**name**: string
-*
-**value**: integer or none
-*
-**order**: integer
-*
-**task_statuses**: a json with a list of objects with:
-*
-**name**: string
-*
-**slug**: slug
-*
-**is_closed**: boolean
-*
-**color**: #rgb color
-*
-**order**: integer
-*
-**issue_statuses**: a json with a list of objects with:
-*
-**name**: string
-*
-**slug**: slug
-*
-**is_closed**: boolean
-*
-**color**: #rgb color
-*
-**order**: integer
-*
-**issue_types**: a json with a list of objects with:
-*
-**name**: string
-*
-**color**: #rgb color
-*
-**order**: integer
-*
-**priorities**: a json with a list of objects with:
-*
-**name**: string
-*
-**color**: #rgb color
-*
-**order**: integer
-*
-**severities**: a json with a list of objects with:
-*
-**name**: string
-*
-**color**: #rgb color
-*
-**order**: integer
-*
-**roles**: a json with a list of objects with:
-*
-**name**: string
-*
-**slug**: slug
-*
-**permissions**: list of permissions
-*
-**order**: integer
-*
-**computable**: boolean
+
+- **name** (required): string
+- **slug**: slug
+- **description** (required): string
+- **default_owner_role** (required):
+- **is_backlog_activated**: boolean
+- **is_kanban_activated**: boolean
+- **is_wiki_activated**: boolean
+- **is_issues_activated**: boolean
+- **videoconferences**: ("whereby-com" | "jitsi" | "talky" | "custom")
+- **videoconferences_extra_data**: string
+- **default_options**: a json with a list of objects with:
+- **points**: slug
+- **us_status**: slug
+- **task_status**: slug
+- **issue_status**: slug
+- **issue_type**: slug
+- **priority**: slug
+- **severity**: slug
+- **us_statuses**: a json with a list of objects with:
+- **name**: string
+- **slug**: slug
+- **is_closed**: boolean
+- **color**: #rgb color
+- **wip_limit**: integer or none
+- **order**: integer
+- **points**: a json with a list of objects with:
+- **name**: string
+- **value**: integer or none
+- **order**: integer
+- **task_statuses**: a json with a list of objects with:
+- **name**: string
+- **slug**: slug
+- **is_closed**: boolean
+- **color**: #rgb color
+- **order**: integer
+- **issue_statuses**: a json with a list of objects with:
+- **name**: string
+- **slug**: slug
+- **is_closed**: boolean
+- **color**: #rgb color
+- **order**: integer
+- **issue_types**: a json with a list of objects with:
+- **name**: string
+- **color**: #rgb color
+- **order**: integer
+- **priorities**: a json with a list of objects with:
+- **name**: string
+- **color**: #rgb color
+- **order**: integer
+- **severities**: a json with a list of objects with:
+- **name**: string
+- **color**: #rgb color
+- **order**: integer
+- **roles**: a json with a list of objects with:
+- **name**: string
+- **slug**: slug
+- **permissions**: list of permissions
+- **order**: integer
+- **computable**: boolean
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${ADMIN_AUTH_TOKEN}" \
@@ -593,6 +542,7 @@ To create project templates send a POST request with the following data:
 "videoconferences_extra_data": ""
 }' \
 ```
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${ADMIN_AUTH_TOKEN}" \
@@ -602,17 +552,25 @@ To create project templates send a POST request with the following data:
 "name": "New simple template"
 }' \
 ```
+
 When the creation is successful, the HTTP response is a 201 Created and the response body is a JSON [project template detail object](https://docs.taiga.io/api.html#object-project-template-detail)
+
 ### 9.3. Get
+
 To get a project template send a GET request specifying the project template id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${AUTH_TOKEN}" \
 ```
+
 The HTTP response is a 200 OK and the response body is a JSON [project template detail object](https://docs.taiga.io/api.html#object-project-template-detail)
+
 ### 9.4. Edit
+
 To edit project templates send a PUT or a PATCH specifying the project template id in the url.
 In a PATCH request you just need to send the modified data, in a PUT one the whole object must be sent.
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${ADMIN_AUTH_TOKEN}" \
@@ -620,11 +578,16 @@ In a PATCH request you just need to send the modified data, in a PUT one the who
 "description": "New description"
 }' \
 ```
+
 When the creation is successful, the HTTP response is a 200 OK and the response body is a JSON [project template detail object](https://docs.taiga.io/api.html#object-project-template-detail)
+
 ### 9.5. Delete
+
 To delete project template send a DELETE specifying the project template id in the url
+
 ```bash
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer ${ADMIN_AUTH_TOKEN}" \
 ```
+
 When delete succeeded, the HTTP response is a 204 NO CONTENT with an empty body response
