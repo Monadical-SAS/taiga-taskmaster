@@ -1,5 +1,6 @@
 // @vibe-generated: conforms to taskmaster-interface
 import {
+  generateTasks,
   type GenerateTasksDeps,
   type GenerateTasksF,
 } from "@taiga-task-master/taskmaster-interface";
@@ -9,8 +10,8 @@ import {
   type PrdText,
   castNonEmptyString,
   TasksFileContent as TasksFileContentSchema,
+  type UniqTaskFileContentList,
 } from "@taiga-task-master/common";
-import type { TrackerTask } from "@taiga-task-master/tasktracker-interface";
 import { Option, Schema } from "effect";
 import { promises as fs } from "fs";
 import { exec } from "child_process";
@@ -82,7 +83,7 @@ export const createCliWrapper = () => {
   const generate = async (
     prdPath: NonEmptyString,
     tasksJsonPath: NonEmptyString
-  ): Promise<TrackerTask[]> => {
+  ): Promise<TasksFileContent> => {
     try {
       // Execute the taskmaster CLI tool (could be claude-task-master or MCP taskmaster)
       const command = `npx taskmaster parse-prd --input "${prdPath}" --output "${tasksJsonPath}" --force`;
@@ -114,15 +115,7 @@ export const createCliWrapper = () => {
 
       // Read, validate, and parse the generated tasks file
       const validation = createValidationUtils();
-      const tasksFileContent =
-        await validation.validateTasksFile(tasksJsonPath);
-
-      // Convert to TrackerTask format
-      const trackerTasks = tasksFileContent.tasks.map((task) => ({
-        masterId: task.id,
-      }));
-
-      return trackerTasks;
+      return await validation.validateTasksFile(tasksJsonPath);
     } catch (error) {
       if (error instanceof Error) {
         // Handle specific error types
@@ -143,22 +136,10 @@ export const createCliWrapper = () => {
   return { generate };
 };
 
-// Task conversion utilities
-export const createTaskUtils = () => {
-  const tasksFromJson = (tasksJson: TasksFileContent): TrackerTask[] => {
-    return tasksJson.tasks.map((task) => ({
-      masterId: task.id,
-    }));
-  };
-
-  return { tasksFromJson };
-};
-
 // Default implementation that uses real file system and CLI
 export const createDefaultDependencies = (): GenerateTasksDeps => {
   const fileOps = createFileOperations();
   const cli = createCliWrapper();
-  const taskUtils = createTaskUtils();
   const validation = createValidationUtils();
 
   return {
@@ -171,27 +152,7 @@ export const createDefaultDependencies = (): GenerateTasksDeps => {
     ): Promise<TasksFileContent> => {
       return validation.validateTasksFile(tasksJsonPath);
     },
-    tasksFromJson: taskUtils.tasksFromJson,
   };
-};
-
-// Main implementation of GenerateTasksF
-export const generateTasks: GenerateTasksF = (di) => async (prd, current) => {
-  if (Option.isSome(current)) {
-    throw new Error("panic! PRD update not implemented");
-  }
-
-  const path = castNonEmptyString("scripts/prd.txt");
-  await using _letFileGo = await di.savePrd(path, prd);
-  const outputPath = castNonEmptyString("tasks/tasks.json");
-
-  try {
-    await di.cli.generate(path, outputPath);
-    const tasksJson = await di.readTasksJson(outputPath);
-    return di.tasksFromJson(tasksJson);
-  } catch (error) {
-    throw new Error(`Task generation failed: ${error}`);
-  }
 };
 
 // Export the default configured function

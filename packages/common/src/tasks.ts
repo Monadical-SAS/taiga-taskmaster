@@ -101,26 +101,44 @@ const TaskFileContentBase = Schema.Struct({
   subtasks: Schema.Array(SubtaskFileContent),
 });
 
-const TaskFileContent = TaskFileContentBase.pipe(
-  Schema.filter(
-    (input) => {
-      const subtaskIds = new Set(
-        input.subtasks.map((subtask) => Redacted.value(subtask.id))
-      );
-      return input.subtasks.every((subtask) =>
-        subtask.dependencies.every((depId) => subtaskIds.has(depId))
-      );
-    },
-    {
-      message: () =>
-        "Subtask dependency validation failed: one or more subtasks depend on non-existent subtasks",
+export const TaskFileContent = TaskFileContentBase.pipe(
+  Schema.filter((input) => {
+    const subtaskIds = new Set(
+      input.subtasks.map((subtask) => Redacted.value(subtask.id))
+    );
+    if (subtaskIds.size !== input.subtasks.length) {
+      return new Unexpected("subtask ids aint uniq");
     }
-  )
+    const dependenciesOk = input.subtasks.every((subtask) =>
+      subtask.dependencies.every((depId) => subtaskIds.has(depId))
+    );
+    if (!dependenciesOk) {
+      return new Unexpected(
+        "Subtask dependency validation failed: one or more subtasks depend on non-existent subtasks"
+      );
+    }
+    return true;
+  })
 );
+
+export type TaskFileContent = typeof TaskFileContent.Type;
+
+export const UniqTaskFileContentList = Schema.Array(TaskFileContent).pipe(
+  Schema.filter((input) => {
+    const idsS = new Set(input.map((t) => t.id));
+    if (idsS.size !== input.length) {
+      return new Unexpected("tasks in SyncTasksInput aren't uniq by id");
+    }
+    return true;
+  }),
+  Schema.brand("UniqTaskFileContentList")
+);
+
+export type UniqTaskFileContentList = typeof UniqTaskFileContentList.Type;
 
 // mix https://github.com/eyaltoledano/claude-task-master/blob/main/docs/task-structure.md and real data that are different from each other
 export const TasksFileContent = Schema.Struct({
-  tasks: Schema.Array(TaskFileContent),
+  tasks: UniqTaskFileContentList,
 }).pipe(
   Schema.filter(
     (input) => {
@@ -141,3 +159,4 @@ export const TasksFileContent = Schema.Struct({
 );
 
 export type TasksFileContent = typeof TasksFileContent.Type;
+export type TasksFileContentEncoded = typeof TasksFileContent.Encoded;

@@ -6,7 +6,6 @@ import {
   createValidationUtils,
   createFileOperations,
   createCliWrapper,
-  createTaskUtils,
   createDefaultDependencies,
 } from "./index.js";
 import { type GenerateTasksDeps } from "@taiga-task-master/taskmaster-interface";
@@ -16,8 +15,8 @@ import {
   type TaskId,
   castNonEmptyString,
   TaskId as TaskIdSchema,
+  UniqTaskFileContentList,
 } from "@taiga-task-master/common";
-import type { TrackerTask } from "@taiga-task-master/tasktracker-interface";
 
 // Mock fs module
 vi.mock("fs", () => ({
@@ -40,19 +39,23 @@ describe("Task Generation Service", () => {
   const mockPrd = "# Test PRD\nThis is a test PRD content" as PrdText;
   const createTaskId = (n: number): TaskId =>
     Schema.decodeSync(TaskIdSchema)(n);
+  const mockUniqTaskFileContentList = Schema.decodeSync(
+    UniqTaskFileContentList
+  )([
+    {
+      id: createTaskId(1),
+      title: "Test Task",
+      description: "Test description",
+      status: "pending",
+      dependencies: [],
+      details: "Test details",
+      testStrategy: "Test strategy",
+      subtasks: [],
+    },
+  ]);
+
   const mockTasksFileContent: TasksFileContent = {
-    tasks: [
-      {
-        id: createTaskId(1),
-        title: "Test Task",
-        description: "Test description",
-        status: "pending",
-        dependencies: [],
-        details: "Test details",
-        testStrategy: "Test strategy",
-        subtasks: [],
-      },
-    ],
+    tasks: mockUniqTaskFileContentList,
   };
 
   beforeEach(() => {
@@ -161,23 +164,12 @@ describe("Task Generation Service", () => {
     });
   });
 
-  describe("createTaskUtils", () => {
-    it("should convert tasks JSON to TrackerTask array", () => {
-      const taskUtils = createTaskUtils();
-
-      const result = taskUtils.tasksFromJson(mockTasksFileContent);
-
-      expect(result).toEqual([{ masterId: createTaskId(1) }]);
-    });
-  });
-
   describe("generateTasks function", () => {
     it("should throw error when current tasks are provided", async () => {
       const mockDeps: GenerateTasksDeps = {
         savePrd: vi.fn(),
         cli: { generate: vi.fn() },
         readTasksJson: vi.fn(),
-        tasksFromJson: vi.fn(),
       };
 
       const generateTasksFunc = generateTasks(mockDeps);
@@ -188,23 +180,27 @@ describe("Task Generation Service", () => {
     });
 
     it("should generate tasks successfully", async () => {
-      const mockTrackerTasks: TrackerTask[] = [{ masterId: createTaskId(1) }];
-
       const mockDeps: GenerateTasksDeps = {
         savePrd: vi.fn().mockResolvedValue({
           [Symbol.asyncDispose]: vi.fn(),
         }),
         cli: {
-          generate: vi.fn().mockResolvedValue(mockTrackerTasks),
+          generate: vi.fn().mockResolvedValue(mockTasksFileContent),
         },
         readTasksJson: vi.fn().mockResolvedValue(mockTasksFileContent),
-        tasksFromJson: vi.fn().mockReturnValue(mockTrackerTasks),
       };
 
       const generateTasksFunc = generateTasks(mockDeps);
       const result = await generateTasksFunc(mockPrd, Option.none());
 
-      expect(result).toEqual(mockTrackerTasks);
+      expect(result).toEqual(mockTasksFileContent);
+      expect(result.tasks).toHaveLength(1);
+      expect(result.tasks[0]).toMatchObject({
+        id: createTaskId(1),
+        title: "Test Task",
+        description: "Test description",
+        status: "pending",
+      });
       expect(mockDeps.savePrd).toHaveBeenCalledWith("scripts/prd.txt", mockPrd);
       expect(mockDeps.cli.generate).toHaveBeenCalledWith(
         "scripts/prd.txt",
@@ -221,7 +217,6 @@ describe("Task Generation Service", () => {
           generate: vi.fn().mockRejectedValue(new Error("CLI failed")),
         },
         readTasksJson: vi.fn(),
-        tasksFromJson: vi.fn(),
       };
 
       const generateTasksFunc = generateTasks(mockDeps);
@@ -239,7 +234,6 @@ describe("Task Generation Service", () => {
       expect(deps).toHaveProperty("savePrd");
       expect(deps).toHaveProperty("cli");
       expect(deps).toHaveProperty("readTasksJson");
-      expect(deps).toHaveProperty("tasksFromJson");
     });
 
     it("should validate tasks when reading JSON", async () => {
@@ -252,13 +246,6 @@ describe("Task Generation Service", () => {
 
       const result = await deps.readTasksJson(path);
       expect(result).toEqual(mockTasksFileContent);
-    });
-
-    it("should validate tasks structure when converting from JSON", () => {
-      const deps = createDefaultDependencies();
-
-      const result = deps.tasksFromJson(mockTasksFileContent);
-      expect(result).toEqual([{ masterId: createTaskId(1) }]);
     });
   });
 
