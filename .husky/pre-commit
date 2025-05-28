@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged for formatting and linting on staged files
+npx lint-staged
+
+# Run circular dependency check on the entire codebase
+pnpm run check-circular
+
+# Run type check
+pnpm run type-check

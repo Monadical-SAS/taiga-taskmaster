@@ -31,5 +31,3 @@ pnpm dev       # Start development mode
 pnpm lint      # Check code style
 pnpm type-check # Verify TypeScript
 ```
-
-test change
