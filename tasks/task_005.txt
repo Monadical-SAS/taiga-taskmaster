@@ -1,27 +1,80 @@
 # Task ID: 5
 # Title: Implement PRD Webhook Receiver Module
-# Status: pending
+# Status: done
 # Dependencies: 2, 3
 # Priority: high
 # Description: Create the webhook endpoint that receives PRD updates from Taiga and initiates the task generation process, implementing the existing interfaces.
 # Details:
-1. Implement Express endpoint for receiving webhook payloads
-2. Add JWT validation middleware for security
-3. Implement payload validation using the existing schemas
-4. Create controller that connects to the core business logic
-5. Add error handling and logging
-6. Implement PRD swimlane validation
-7. Connect to the task generation service through the established interfaces
-8. Create unit tests with mocked dependencies
+1. Create package structure with `webhook-interface` (interface) and `webhook` (implementation)
+2. Define HTTP input/output schemas in the interface package using Effect Schema
+3. Implement a minimal HTTP server setup using Node.js http module or undici
+4. Create webhook endpoint function for `/api/prd-webhook` with dependency injection
+5. Implement Authorization header validation against WEBHOOK_TOKEN environment variable
+6. Ensure WEBHOOK_TOKEN is validated at application startup
+7. Implement payload validation using Effect Schema
+8. Connect to the task generation service through the established interfaces
+9. Add error handling and logging following existing patterns
+10. Create unit tests with mocked dependencies
 
-The implementation should use dependency injection and follow the interface contracts defined in the core package.
+The implementation should use dependency injection and follow the interface/vibe-generated pattern used throughout the codebase.
 
 # Test Strategy:
 1. Test webhook endpoint with valid and invalid payloads
-2. Mock Taiga client to test swimlane validation
-3. Test JWT validation middleware with valid and invalid tokens
+2. Test Authorization header validation with valid and invalid tokens
+3. Test environment variable validation at startup
 4. Verify error handling for various failure scenarios
 5. Test integration with task generator through the interfaces
 6. Verify correct HTTP status codes are returned
 7. Test handling of edge cases like malformed JSON
 8. Verify conformance to interface contracts
+9. Test the minimal HTTP server setup
+
+# Subtasks:
+## 5.1. Create webhook-interface package [done]
+### Dependencies: None
+### Description: Define the interface package with HTTP input/output schemas using Effect Schema
+### Details:
+
+
+## 5.2. Create webhook implementation package [done]
+### Dependencies: None
+### Description: Implement the webhook functionality following the defined interface
+### Details:
+
+
+## 5.3. Implement minimal HTTP server [done]
+### Dependencies: None
+### Description: Create a basic HTTP server using Node.js http module or undici to handle webhook requests
+### Details:
+
+
+## 5.4. Implement webhook endpoint function [done]
+### Dependencies: None
+### Description: Create the function-based webhook handler with dependency injection for the /api/prd-webhook endpoint
+### Details:
+
+
+## 5.5. Implement token validation [done]
+### Dependencies: None
+### Description: Add validation for the Authorization Bearer header against the WEBHOOK_TOKEN environment variable
+### Details:
+
+
+## 5.6. Add startup validation for environment variables [done]
+### Dependencies: None
+### Description: Ensure WEBHOOK_TOKEN is validated when the application starts
+### Details:
+
+
+## 5.7. Connect to task generation service [done]
+### Dependencies: None
+### Description: Integrate with the task generation service through established interfaces
+### Details:
+
+
+## 5.8. Write unit tests [done]
+### Dependencies: None
+### Description: Create comprehensive tests for the webhook functionality with mocked dependencies
+### Details:
+
+

@@ -1,0 +1,11 @@
+# Task ID: 5
+# Title: Implement Authentication Middleware
+# Status: pending
+# Dependencies: 4
+# Priority: medium
+# Description: Develop middleware to protect dashboard and other authenticated routes.
+# Details:
+Create Express middleware to verify JWT token on protected routes. Use jsonwebtoken to decode and validate token. Attach user info to request object.
+
+# Test Strategy:
+Test middleware with valid/invalid tokens. Verify access to protected routes.

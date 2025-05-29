@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Develop Dashboard Page UI
+# Status: pending
+# Dependencies: 5, 6
+# Priority: medium
+# Description: Build the dashboard page frontend with React.
+# Details:
+Create a Dashboard component. Fetch user statistics from backend (protected route). Display stats in a user-friendly format (charts, tables, etc.). Use react-chartjs-2 (v5+) for charts if needed. Style with chosen CSS framework.
+
+# Test Strategy:
+Test UI rendering, data fetching, and error handling. Verify only authenticated users can access.

@@ -1,0 +1,11 @@
+# Task ID: 6
+# Title: Develop Login Page UI
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Build the login page frontend with React.
+# Details:
+Create a Login component with email and password fields. Handle form submission. Call login API. Display errors. Use react-router-dom (v6+) for routing. Style with Tailwind CSS (v3+) or Material-UI (v5+).
+
+# Test Strategy:
+Test UI rendering, form validation, and API integration. Verify error handling.

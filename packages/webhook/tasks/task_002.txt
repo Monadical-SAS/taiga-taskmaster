@@ -1,0 +1,11 @@
+# Task ID: 2
+# Title: Design and Implement Database Schema
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Design and implement the database schema for user authentication and dashboard data.
+# Details:
+Use PostgreSQL (v15+) or MongoDB (v6+) as the database. Define User schema with fields: id, email, password (hashed), name, createdAt, updatedAt. Optionally, add a UserStats schema for dashboard data. Use TypeORM (v0.3+) or Mongoose (v8+) for ORM/ODM. Ensure password is hashed using bcrypt (v5+).
+
+# Test Strategy:
+Test schema creation and CRUD operations. Verify password hashing and validation.

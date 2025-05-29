@@ -1,0 +1,11 @@
+# Task ID: 4
+# Title: Implement User Login API
+# Status: pending
+# Dependencies: 2, 3
+# Priority: high
+# Description: Develop backend API for user login.
+# Details:
+Create an Express route POST /api/auth/login. Validate email and password. Find user in database. Compare hashed password with bcrypt. Generate JWT token using jsonwebtoken (v9+). Return token and user info.
+
+# Test Strategy:
+Test login with correct/incorrect credentials. Verify JWT token is returned and valid.

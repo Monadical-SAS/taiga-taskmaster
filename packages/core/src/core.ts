@@ -14,7 +14,8 @@ export type GenerateTasksDeps = {
   };
 };
 
-// main happy flow after we got PRD from somewhere // TODO making this work is the first milestone
+// main happy flow after we got PRD from somewhere
+// don't get it mixed with generateTasks of taskmaster
 export const generateTasks =
   (di: GenerateTasksDeps) => async (prd: PrdText) => {
     const tasks = await di.taskmaster.generateTasks(

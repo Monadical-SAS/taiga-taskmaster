@@ -1,0 +1,30 @@
+{
+  "name": "@taiga-task-master/webhook",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b --watch",
+    "start": "node dist/main.js",
+    "start:dev": "tsc -b && node dist/main.js",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "@taiga-task-master/common": "workspace:*",
+    "@taiga-task-master/webhook-interface": "workspace:*",
+    "@taiga-task-master/taskmaster-interface": "workspace:*",
+    "@taiga-task-master/core": "workspace:*",
+    "@taiga-task-master/taskmaster": "workspace:*",
+    "@taiga-task-master/tasktracker-interface": "workspace:*",
+    "@taiga-task-master/tasktracker": "workspace:*",
+    "@taiga-task-master/taiga-api": "workspace:*",
+    "effect": "^3.15.4"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
