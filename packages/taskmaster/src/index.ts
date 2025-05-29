@@ -116,6 +116,7 @@ export const createCliWrapper = (pathPrefix?: string) => {
       }
 
       // Always use dotenv for environment loading
+      // TODO --research does't work but promised soon https://github.com/eyaltoledano/claude-task-master/issues/608#issuecomment-2910654041
       const command = `npx dotenv -e .env -- npx task-master parse-prd --research --input "${actualPrdPath}" --output "${actualTasksPath}" --force`;
 
       // When using pathPrefix, assume we're in a test package and need to go up to project root

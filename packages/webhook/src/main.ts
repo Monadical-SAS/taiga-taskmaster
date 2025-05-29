@@ -3,18 +3,27 @@
 import { generateTasks } from "@taiga-task-master/core";
 import { generateTasks as taskmasterGenerateTasks } from "@taiga-task-master/taskmaster-interface";
 import { syncTasks } from "@taiga-task-master/tasktracker-interface";
-import { createDefaultDependencies } from "@taiga-task-master/taskmaster";
+import { createDependencies } from "@taiga-task-master/taskmaster";
 import { createTaskTrackerDeps } from "@taiga-task-master/tasktracker";
 import { startWebhookServer } from "./index.js";
 import type { WebhookDeps } from "@taiga-task-master/webhook-interface";
+import type { GenerateTasksDeps } from "@taiga-task-master/core";
 import { taigaApiFactory } from "@taiga-task-master/taiga-api";
 import { Schema } from "effect";
-import { Url } from "@taiga-task-master/common";
+import { Url, type PrdText } from "@taiga-task-master/common";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { promises as fs } from "fs";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Creates webhook dependencies using production services for core orchestration
  */
-const createWebhookDependencies = (): Omit<WebhookDeps, "config"> => {
+const createWebhookDependencies = async (): Promise<
+  Omit<WebhookDeps, "config">
+> => {
   // Validate required environment for Taiga API
   const username = process.env.TAIGA_USERNAME;
   const password = process.env.TAIGA_PASSWORD;
@@ -34,8 +43,12 @@ const createWebhookDependencies = (): Omit<WebhookDeps, "config"> => {
     throw new Error("TAIGA_PROJECT_ID must be a valid number");
   }
 
-  // Create taskmaster dependencies
-  const taskmasterDeps = createDefaultDependencies();
+  // Create temp directory for webhook operations
+  const tempDir = join(__dirname, "..", "temp");
+  await fs.mkdir(tempDir, { recursive: true });
+
+  // Create taskmaster dependencies with temp directory prefix
+  const taskmasterDeps = createDependencies(tempDir);
 
   // Create Taiga API client
   const api = taigaApiFactory.create({
@@ -60,8 +73,38 @@ const createWebhookDependencies = (): Omit<WebhookDeps, "config"> => {
     },
   };
 
+  // Create wrapper that includes cleanup
+  const generateTasksWithCleanup =
+    (di: GenerateTasksDeps) => async (prd: PrdText) => {
+      try {
+        // Run the core workflow
+        const result = await generateTasks(di)(prd);
+
+        // Cleanup temp directory after processing
+        try {
+          await fs.rm(tempDir, { recursive: true, force: true });
+          console.log(`🧹 Cleaned up temp directory: ${tempDir}`);
+        } catch (cleanupError) {
+          console.warn(`⚠️ Failed to cleanup temp directory: ${cleanupError}`);
+        }
+
+        return result;
+      } catch (error) {
+        // Cleanup on error too
+        try {
+          await fs.rm(tempDir, { recursive: true, force: true });
+          console.log(`🧹 Cleaned up temp directory after error: ${tempDir}`);
+        } catch (cleanupError) {
+          console.warn(
+            `⚠️ Failed to cleanup temp directory after error: ${cleanupError}`
+          );
+        }
+        throw error;
+      }
+    };
+
   return {
-    generateTasks: generateTasks,
+    generateTasks: generateTasksWithCleanup,
     taskGeneratorDeps: coreGenerateTasksDeps,
   };
 };
@@ -75,7 +118,7 @@ export const main = async (): Promise<void> => {
     console.log("🚀 Starting Taiga Task Master Webhook Server...");
 
     // Create production dependencies
-    const deps = createWebhookDependencies();
+    const deps = await createWebhookDependencies();
 
     // Start server (config validation happens inside startWebhookServer)
     const server = await startWebhookServer(deps);

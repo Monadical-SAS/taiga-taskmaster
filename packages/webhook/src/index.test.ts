@@ -30,7 +30,14 @@ describe("webhook implementation", () => {
       mockDeps = {
         config: mockConfig,
         generateTasks: vi.fn(() => mockGenerateTasks),
-        taskGeneratorDeps: {} as any,
+        taskGeneratorDeps: {
+          taskmaster: {
+            generateTasks: vi.fn(),
+          },
+          tasktracker: {
+            syncTasks: vi.fn(),
+          },
+        } as any,
       };
     });
 
