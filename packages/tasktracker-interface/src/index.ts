@@ -130,7 +130,6 @@ export const ValidTaskTransformation = Schema.transformOrFail(
   }
 );
 
-// TODO add tests
 export const filterTasks = (
   expected: Set<TaskId>,
   allTasks: readonly TaskDetail[],
