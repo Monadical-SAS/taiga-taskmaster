@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@taiga-task-master/common": "workspace:*",
+    "@taiga-task-master/taiga-api-interface": "workspace:*",
     "effect": "^3.15.4"
   },
   "devDependencies": {

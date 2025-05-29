@@ -13,8 +13,9 @@ import {
   syncTasks,
   type SyncTasksDeps,
   TaskText as TaskTextSchema,
-  TaskTrackerTasksResult,
 } from "./index.js";
+
+type TaskTrackerTasksResult = Set<TaskId>
 
 describe("syncTasks", () => {
   const createTaskId = (n: number) => Schema.decodeSync(TaskId)(n);

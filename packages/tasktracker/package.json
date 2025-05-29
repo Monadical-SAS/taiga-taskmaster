@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@taiga-task-master/common": "workspace:*",
-    "@taiga-task-master/tasktracker-interface": "workspace:*"
+    "@taiga-task-master/tasktracker-interface": "workspace:*",
+    "@taiga-task-master/taiga-api-interface": "workspace:*",
+    "effect": "^3.11.5"
   },
   "devDependencies": {
     "vitest": "^2.0.0",

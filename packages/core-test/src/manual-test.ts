@@ -21,25 +21,8 @@ import {
   type SyncTasksDeps,
   type TaskText,
   type TaskTrackerTasksResult,
+  createTaskTrackerDeps,
 } from "@taiga-task-master/tasktracker";
-import {
-  TaskText as TaskTextSchema,
-  TaskTrackerTasksResult as TaskTrackerTasksResultSchema,
-  encodeTaskIdToTag,
-  decodeTaskIdFromTag,
-  encodeProjectIdToTag,
-  decodeProjectIdFromTag,
-  TASK_ID_TAG_PREFIX,
-  PROJECT_ID_TAG_PREFIX,
-} from "@taiga-task-master/tasktracker-interface";
-import {
-  type TaigaApi,
-  type TaskDetail,
-  type CreateTaskRequest,
-  type UpdateTaskRequest,
-  ProjectId as TaigaProjectId,
-  TaskId as TaigaTaskId,
-} from "@taiga-task-master/taiga-api-interface";
 import { Option } from "effect";
 import { promises as fs } from "fs";
 import { dirname, join } from "path";
@@ -146,178 +129,7 @@ function createTaskmasterDependencies(): GenerateTasksDeps {
   return createDependencies(TEST_PREFIX);
 }
 
-/**
- * Create tasktracker dependencies for Taiga synchronization
- */
-const createTasktrackerDependencies = (
-  api: TaigaApi,
-  taigaProjectId: TaigaProjectId
-): SyncTasksDeps => {
-  const getTasks = async (
-    ids: Set<TaskId>,
-    projectId: ProjectId
-  ): Promise<TaskTrackerTasksResult> => {
-    console.log(
-      `🔍 Getting tasks for project ${projectId}, checking ${ids.size} IDs...`
-    );
-
-    // Get all tasks from the Taiga project
-    const allTasks = await api.tasks.list({ project: taigaProjectId });
-    console.log(`📋 Found ${allTasks.length} total tasks in Taiga project`);
-
-    // Filter tasks that have our tags and match the requested IDs
-    const projectTag = encodeProjectIdToTag(projectId);
-    const relevantTasks = allTasks.filter((task) => {
-      // Check if task has the project tag
-      const hasProjectTag = task.tags.some(([tag]) => tag === projectTag);
-      if (!hasProjectTag) return false;
-
-      // Extract task ID from task tags
-      const taskIdTag = task.tags.find(([tag]) =>
-        tag.startsWith(TASK_ID_TAG_PREFIX)
-      );
-
-      if (!taskIdTag) return false;
-
-      try {
-        const taskId = decodeTaskIdFromTag(taskIdTag[0] as any);
-        return ids.has(taskId);
-      } catch {
-        return false;
-      }
-    });
-
-    // Extract TaskMaster IDs from the relevant tasks
-    const foundIds: TaskId[] = [];
-    for (const task of relevantTasks) {
-      const taskIdTag = task.tags.find(([tag]) =>
-        tag.startsWith(TASK_ID_TAG_PREFIX)
-      );
-      if (taskIdTag) {
-        try {
-          const taskId = decodeTaskIdFromTag(taskIdTag[0] as any);
-          foundIds.push(taskId);
-        } catch (error) {
-          console.warn(
-            `⚠️  Failed to decode task ID from tag: ${taskIdTag[0]}`
-          );
-        }
-      }
-    }
-
-    console.log(`✅ Found ${foundIds.length} existing tasks in Taiga`);
-    return Schema.decodeSync(TaskTrackerTasksResultSchema)(foundIds);
-  };
-
-  const addTasks = async (
-    tasks: Map<TaskId, TaskText>,
-    projectId: ProjectId
-  ): Promise<void> => {
-    console.log(`➕ Adding ${tasks.size} new tasks to Taiga...`);
-
-    const projectTag = encodeProjectIdToTag(projectId);
-
-    for (const [taskId, taskText] of tasks) {
-      const taskIdTag = encodeTaskIdToTag(taskId);
-
-      const createRequest: CreateTaskRequest = {
-        project: taigaProjectId,
-        subject: `TaskMaster Task ${taskId}`,
-        description: taskText,
-        tags: [projectTag, taskIdTag],
-      };
-
-      try {
-        const createdTask = await api.tasks.create(createRequest);
-        console.log(
-          `  ✅ Created task ${taskId} (Taiga ID: ${createdTask.id})`
-        );
-      } catch (error) {
-        console.error(`  ❌ Failed to create task ${taskId}:`, error);
-        throw error;
-      }
-    }
-  };
-
-  const updateTasks = async (
-    tasks: Map<TaskId, TaskText>,
-    projectId: ProjectId
-  ): Promise<void> => {
-    console.log(`🔄 Updating ${tasks.size} existing tasks in Taiga...`);
-
-    // First, find the Taiga tasks that correspond to our TaskMaster IDs
-    const allTasks = await api.tasks.list({ project: taigaProjectId });
-    const projectTag = encodeProjectIdToTag(projectId);
-
-    for (const [taskId, taskText] of tasks) {
-      const taskIdTag = encodeTaskIdToTag(taskId);
-
-      // Find the Taiga task with this TaskMaster ID
-      const taigaTask = allTasks.find((task) => {
-        const hasProjectTag = task.tags.some(([tag]) => tag === projectTag);
-        const hasTaskIdTag = task.tags.some(([tag]) => tag === taskIdTag);
-        return hasProjectTag && hasTaskIdTag;
-      });
-
-      if (!taigaTask) {
-        console.warn(
-          `⚠️  Could not find Taiga task for TaskMaster ID ${taskId}`
-        );
-        continue;
-      }
-
-      const updateRequest: UpdateTaskRequest = {
-        description: taskText,
-        version: taigaTask.version,
-      };
-
-      try {
-        await api.tasks.update(taigaTask.id, updateRequest);
-        console.log(`  ✅ Updated task ${taskId} (Taiga ID: ${taigaTask.id})`);
-      } catch (error) {
-        console.error(`  ❌ Failed to update task ${taskId}:`, error);
-        throw error;
-      }
-    }
-  };
-
-  const renderTask = (task: TaskFileContent): TaskText => {
-    // Render task into a comprehensive text format
-    let text = `# ${task.title}\n\n`;
-    text += `**Status:** ${task.status}\n`;
-    text += `**Description:** ${task.description}\n\n`;
-
-    if (task.priority) {
-      text += `**Priority:** ${task.priority}\n`;
-    }
-
-    if (task.dependencies.length > 0) {
-      text += `**Dependencies:** ${task.dependencies.join(", ")}\n`;
-    }
-
-    text += `## Details\n${task.details}\n\n`;
-    text += `## Test Strategy\n${task.testStrategy}\n`;
-
-    if (task.subtasks.length > 0) {
-      text += `\n## Subtasks\n`;
-      for (const subtask of task.subtasks) {
-        text += `- **${subtask.title}** (${subtask.status})\n`;
-        if (subtask.description) {
-          text += `  ${subtask.description}\n`;
-        }
-      }
-    }
-
-    return Schema.decodeSync(TaskTextSchema)(text);
-  };
-
-  return {
-    getTasks,
-    addTasks,
-    updateTasks,
-    renderTask,
-  };
-};
+// Use shared TaskTracker implementation from main package
 
 const main = async (): Promise<void> => {
   console.log("🧪 Core Test - Complete PRD to Taiga Pipeline");
@@ -389,7 +201,7 @@ const main = async (): Promise<void> => {
     );
 
     // Create tasktracker dependencies
-    const tasktrackerDeps = createTasktrackerDependencies(api, env.projectId);
+    const tasktrackerDeps = createTaskTrackerDeps(api, env.projectId);
 
     // Test syncTasks functionality
     console.log("🔄 Testing syncTasks with generated tasks...");

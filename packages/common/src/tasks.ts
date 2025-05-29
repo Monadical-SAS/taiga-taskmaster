@@ -1,8 +1,13 @@
 import { ParseResult, Redacted, Schema } from "effect";
 import { Unexpected } from "effect/ParseResult";
 import { bang, NonEmptyString, PositiveInteger } from "./common.js";
+import { NumberFromString } from 'effect/Schema';
 
 export const TaskId = PositiveInteger.pipe(Schema.brand("TaskId"));
+export const TaskIdFromString = Schema.compose(
+  NumberFromString,
+  TaskId
+)
 
 export type TaskId = typeof TaskId.Type;
 

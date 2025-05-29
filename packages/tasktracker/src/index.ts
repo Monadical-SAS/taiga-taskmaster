@@ -1,14 +1,164 @@
 // @vibe-generated: conforms to tasktracker-interface
+import { Schema } from "effect";
+import {
+  TaskId,
+  ProjectId,
+  TaskFileContent,
+} from "@taiga-task-master/common";
 import {
   syncTasks as syncTasksInterface,
   type SyncTasksDeps,
   type TaskText,
-  type TaskTrackerTasksResult,
+  type TaskIdTag,
+  TaskText as TaskTextSchema,
+  encodeTaskIdToTag,
+  decodeTaskIdFromTag,
+  encodeProjectIdToTag,
+  TASK_ID_TAG_PREFIX,
 } from "@taiga-task-master/tasktracker-interface";
-// Re-export common types for convenience
+import {
+  type TaigaApi,
+  type CreateTaskRequest,
+  type UpdateTaskRequest,
+  type TaskDetail,
+  ProjectId as TaigaProjectId,
+} from "@taiga-task-master/taiga-api-interface";
+
+type TaskTrackerTasksResult = Set<TaskId>
 
 // Re-export the interface function with proper dependency injection
 export const syncTasks = syncTasksInterface;
+
+// TaskTracker implementation using Taiga API
+export const createTaskTrackerDeps = (api: TaigaApi, taigaProjectId: TaigaProjectId): SyncTasksDeps => {
+
+  const addTasks = async (
+    tasks: Map<TaskId, TaskText>,
+    projectId: ProjectId
+  ): Promise<void> => {
+    console.log(`➕ Adding ${tasks.size} new tasks to Taiga...`);
+    
+    const projectTag = encodeProjectIdToTag(projectId);
+    
+    const createTasks = Array.from(tasks.entries()).map(async ([taskId, taskText]) => {
+      const taskIdTag = encodeTaskIdToTag(taskId);
+      
+      const createRequest: CreateTaskRequest = {
+        project: taigaProjectId,
+        subject: `TaskMaster Task ${taskId}`,
+        description: taskText,
+        tags: [projectTag, taskIdTag],
+      };
+      
+      try {
+        const createdTask = await api.tasks.create(createRequest);
+        console.log(`  ✅ Created task ${taskId} (Taiga ID: ${createdTask.id})`);
+        return createdTask;
+      } catch (error) {
+        console.error(`  ❌ Failed to create task ${taskId}:`, error);
+        throw error;
+      }
+    });
+    
+    await Promise.all(createTasks);
+  };
+
+  const updateTasks = async (
+    tasks: Map<TaskId, TaskText>,
+    projectId: ProjectId
+  ): Promise<void> => {
+    console.log(`🔄 Updating ${tasks.size} existing tasks in Taiga...`);
+    
+    // First, find the Taiga tasks that correspond to our TaskMaster IDs
+    const allTasks = await api.tasks.list({ project: taigaProjectId });
+    const projectTag = encodeProjectIdToTag(projectId);
+    
+    const updatePromises = Array.from(tasks.entries()).map(async ([taskId, taskText]) => {
+      const taskIdTag = encodeTaskIdToTag(taskId);
+      
+      // Find the Taiga task with this TaskMaster ID
+      const taigaTask = allTasks.find((task: TaskDetail) => {
+        const hasProjectTag = task.tags.some(([tag]) => tag === projectTag);
+        const hasTaskIdTag = task.tags.some(([tag]) => tag === taskIdTag);
+        return hasProjectTag && hasTaskIdTag;
+      });
+      
+      if (!taigaTask) {
+        console.warn(`⚠️  Could not find Taiga task for TaskMaster ID ${taskId}`);
+        return;
+      }
+      
+      const updateRequest: UpdateTaskRequest = {
+        description: taskText,
+        version: taigaTask.version,
+      };
+      
+      try {
+        await api.tasks.update(taigaTask.id, updateRequest);
+        console.log(`  ✅ Updated task ${taskId} (Taiga ID: ${taigaTask.id})`);
+      } catch (error) {
+        console.error(`  ❌ Failed to update task ${taskId}:`, error);
+        throw error;
+      }
+    });
+    
+    await Promise.all(updatePromises);
+  };
+
+  const renderTask = (task: TaskFileContent): TaskText => {
+    // Render task into a comprehensive text format
+    const baseLines = [
+      `# ${task.title}\n`,
+      `**Status:** ${task.status}\n`,
+      `**Description:** ${task.description}\n\n`
+    ];
+    
+    const priorityLines = task.priority ? [`**Priority:** ${task.priority}\n`] : [];
+    
+    const dependencyLines = task.dependencies.length > 0 
+      ? [`**Dependencies:** ${task.dependencies.join(', ')}\n`] 
+      : [];
+    
+    const detailLines = [
+      `## Details\n${task.details}\n\n`,
+      `## Test Strategy\n${task.testStrategy}\n`
+    ];
+    
+    const subtaskLines = task.subtasks.length > 0 
+      ? [
+          `\n## Subtasks\n`,
+          ...task.subtasks.map(subtask => {
+            const subtaskLine = `- **${subtask.title}** (${subtask.status})\n`;
+            const descLine = subtask.description ? `  ${subtask.description}\n` : '';
+            return subtaskLine + descLine;
+          })
+        ]
+      : [];
+    
+    const allLines = [
+      ...baseLines,
+      ...priorityLines,
+      ...dependencyLines,
+      ...detailLines,
+      ...subtaskLines
+    ];
+    
+    const text = allLines.join('');
+    return Schema.decodeSync(TaskTextSchema)(text);
+  };
+
+  return {
+    getTasks: {
+      // limits are not specified https://docs.taiga.io/api.html#tasks-list
+      apiList: () => api.tasks.list({
+        project: taigaProjectId
+      })
+    },
+    addTasks,
+    updateTasks,
+    renderTask,
+  };
+};
 
 // Export types for consumers
 export type {
