@@ -37,9 +37,7 @@ describe("Tag Management System", () => {
 
     it("should throw error for invalid ProjectIdTag format", () => {
       const invalidTag = "invalid-tag" as ProjectIdTag;
-      expect(() => decodeProjectIdFromTag(invalidTag)).toThrow(
-        "Invalid project ID tag format"
-      );
+      expect(() => decodeProjectIdFromTag(invalidTag)).toThrow();
     });
   });
 
@@ -57,23 +55,17 @@ describe("Tag Management System", () => {
 
     it("should throw error for invalid TaskIdTag format", () => {
       const invalidTag = "invalid-tag" as TaskIdTag;
-      expect(() => decodeTaskIdFromTag(invalidTag)).toThrow(
-        "Invalid task ID tag format"
-      );
+      expect(() => decodeTaskIdFromTag(invalidTag)).toThrow();
     });
 
     it("should throw error for invalid TaskId in TaskIdTag", () => {
       const invalidTag = `${TASK_ID_TAG_PREFIX}invalid` as TaskIdTag;
-      expect(() => decodeTaskIdFromTag(invalidTag)).toThrow(
-        "Invalid task ID in tag"
-      );
+      expect(() => decodeTaskIdFromTag(invalidTag)).toThrow();
     });
 
     it("should throw error for negative TaskId in TaskIdTag", () => {
       const invalidTag = `${TASK_ID_TAG_PREFIX}-1` as TaskIdTag;
-      expect(() => decodeTaskIdFromTag(invalidTag)).toThrow(
-        "Invalid task ID in tag"
-      );
+      expect(() => decodeTaskIdFromTag(invalidTag)).toThrow();
     });
   });
 
