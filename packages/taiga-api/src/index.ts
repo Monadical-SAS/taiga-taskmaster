@@ -284,6 +284,7 @@ const createAuthService = (
     currentRefreshToken: null as RefreshToken | null,
     currentAuthToken: null as AuthToken | null,
     storedCredentials: credentials || (null as AuthCredentials | null),
+    ongoingRefresh: null as Promise<void> | null,
   };
 
   const api = {
@@ -340,36 +341,57 @@ const createAuthService = (
   };
 
   const refreshWithStoredToken = async (): Promise<void> => {
-    if (!state.currentRefreshToken) {
+    // If a refresh is already in progress, wait for it to complete
+    if (state.ongoingRefresh) {
       // eslint-disable-next-line functional/no-expression-statements
       console.log(
-        `🔄 [${new Date().toISOString()}] No refresh token available, attempting login with stored credentials...`
+        `⏳ [${new Date().toISOString()}] Auth refresh already in progress, waiting...`
       );
-      if (!state.storedCredentials) {
-        throw new Error("No refresh token or stored credentials available");
-      }
-      // eslint-disable-next-line functional/no-expression-statements
-      await api.login(state.storedCredentials);
-      return;
+      return await state.ongoingRefresh;
     }
 
-    try {
-      // eslint-disable-next-line functional/no-expression-statements
-      await api.refresh({ refresh: state.currentRefreshToken });
-    } catch (error) {
-      // eslint-disable-next-line functional/no-expression-statements
-      console.log(
-        `❌ [${new Date().toISOString()}] Token refresh failed, attempting login with stored credentials...`,
-        error
-      );
-      if (!state.storedCredentials) {
-        throw new Error(
-          "Token refresh failed and no stored credentials available"
-        );
+    // Start a new refresh operation and cache the promise
+    // eslint-disable-next-line functional/immutable-data
+    state.ongoingRefresh = (async (): Promise<void> => {
+      try {
+        if (!state.currentRefreshToken) {
+          // eslint-disable-next-line functional/no-expression-statements
+          console.log(
+            `🔄 [${new Date().toISOString()}] No refresh token available, attempting login with stored credentials...`
+          );
+          if (!state.storedCredentials) {
+            throw new Error("No refresh token or stored credentials available");
+          }
+          // eslint-disable-next-line functional/no-expression-statements
+          await api.login(state.storedCredentials);
+          return;
+        }
+
+        try {
+          // eslint-disable-next-line functional/no-expression-statements
+          await api.refresh({ refresh: state.currentRefreshToken });
+        } catch (error) {
+          // eslint-disable-next-line functional/no-expression-statements
+          console.log(
+            `❌ [${new Date().toISOString()}] Token refresh failed, attempting login with stored credentials...`,
+            error
+          );
+          if (!state.storedCredentials) {
+            throw new Error(
+              "Token refresh failed and no stored credentials available"
+            );
+          }
+          // eslint-disable-next-line functional/no-expression-statements
+          await api.login(state.storedCredentials);
+        }
+      } finally {
+        // Clear the ongoing refresh promise when operation completes
+        // eslint-disable-next-line functional/immutable-data
+        state.ongoingRefresh = null;
       }
-      // eslint-disable-next-line functional/no-expression-statements
-      await api.login(state.storedCredentials);
-    }
+    })();
+
+    return await state.ongoingRefresh;
   };
 
   const getAuthToken = (): AuthToken | null => state.currentAuthToken;
