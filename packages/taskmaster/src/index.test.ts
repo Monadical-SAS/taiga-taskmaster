@@ -1,6 +1,12 @@
 // @vibe-generated: conforms to taskmaster-interface
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Option, Schema } from "effect";
+
+// Mock path module
+vi.mock("path", () => ({
+  dirname: vi.fn((path: string) => path.split("/").slice(0, -1).join("/")),
+  join: vi.fn((...paths: string[]) => paths.join("/")),
+}));
 import {
   generateTasks,
   createValidationUtils,
@@ -25,6 +31,7 @@ vi.mock("fs", () => ({
     readFile: vi.fn(),
     unlink: vi.fn(),
     access: vi.fn(),
+    mkdir: vi.fn(),
   },
 }));
 

@@ -14,6 +14,7 @@ import {
 import {
   generateTasks,
   type GenerateTasksDeps,
+  createDependencies,
 } from "@taiga-task-master/taskmaster";
 import {
   syncTasks,
@@ -41,12 +42,8 @@ import {
 } from "@taiga-task-master/taiga-api-interface";
 import { Option } from "effect";
 import { promises as fs } from "fs";
-import { exec } from "child_process";
-import { promisify } from "util";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-
-const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -143,115 +140,10 @@ async function cleanupTestEnvironment(): Promise<void> {
 }
 
 /**
- * Create taskmaster dependencies for task generation
+ * Create taskmaster dependencies using the shared factory with TEST_PREFIX
  */
 function createTaskmasterDependencies(): GenerateTasksDeps {
-  const savePrd = async (
-    path: NonEmptyString,
-    prd: PrdText
-  ): Promise<AsyncDisposable> => {
-    const tempPath = join(TEST_PREFIX, path);
-    await fs.mkdir(dirname(tempPath), { recursive: true });
-    await fs.writeFile(tempPath, prd, "utf8");
-
-    console.log(`📝 Saved PRD to temp path: ${tempPath}`);
-
-    return {
-      async [Symbol.asyncDispose]() {
-        try {
-          await fs.unlink(tempPath);
-          console.log(`🧹 Cleaned up PRD file: ${tempPath}`);
-        } catch {
-          // File already deleted or doesn't exist
-        }
-      },
-    };
-  };
-
-  const readTasksJson = async (
-    tasksJsonPath: NonEmptyString
-  ): Promise<TasksFileContent> => {
-    const tempPath = join(TEST_PREFIX, tasksJsonPath);
-    const content = await fs.readFile(tempPath, "utf8");
-    console.log(`📖 Read tasks from temp path: ${tempPath}`);
-    return JSON.parse(content);
-  };
-
-  const generate = async (
-    prdPath: NonEmptyString,
-    tasksJsonPath: NonEmptyString
-  ): Promise<TasksFileContent> => {
-    try {
-      const tempPrdPath = join(TEST_PREFIX, prdPath);
-      const tempTasksPath = join(TEST_PREFIX, tasksJsonPath);
-
-      // Ensure target directory exists
-      await fs.mkdir(dirname(tempTasksPath), { recursive: true });
-
-      // Execute the task-master CLI tool with temp paths
-      const command = `npx dotenv -e .env -- npx task-master parse-prd --research --input "${tempPrdPath}" --output "${tempTasksPath}" --force`;
-
-      const projectRoot = join(__dirname, "..", "..", "..");
-
-      console.log(`🚀 Executing: ${command}`);
-      console.log(`📁 Temp PRD path: ${tempPrdPath}`);
-      console.log(`📁 Temp tasks path: ${tempTasksPath}`);
-
-      const { stdout, stderr } = await execAsync(command, {
-        cwd: projectRoot,
-        timeout: 300000, // 5 minutes timeout
-        maxBuffer: 1024 * 1024 * 10, // 10MB buffer
-        env: {
-          ...process.env,
-          NODE_ENV: process.env.NODE_ENV || "production",
-        },
-      });
-
-      if (stdout) {
-        console.log("📝 CLI stdout:", stdout);
-      }
-      if (stderr) {
-        console.warn("⚠️ CLI stderr:", stderr);
-      }
-
-      // Verify the output file was created
-      try {
-        await fs.access(tempTasksPath);
-        console.log(
-          `✅ tasks.json file created successfully at: ${tempTasksPath}`
-        );
-      } catch {
-        throw new Error(`Output file not created: ${tempTasksPath}`);
-      }
-
-      // Read and return the generated tasks
-      const content = await fs.readFile(tempTasksPath, "utf8");
-      const tasks = JSON.parse(content);
-
-      console.log(`📊 Generated ${tasks.tasks?.length || 0} tasks`);
-
-      return tasks;
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes("ENOENT")) {
-          throw new Error(
-            "CLI tool not found. Please ensure taskmaster is installed and available in PATH."
-          );
-        }
-        if (error.message.includes("timeout")) {
-          throw new Error("CLI execution timed out after 5 minutes.");
-        }
-        throw new Error(`CLI execution failed: ${error.message}`);
-      }
-      throw new Error(`CLI execution failed: ${String(error)}`);
-    }
-  };
-
-  return {
-    savePrd,
-    cli: { generate },
-    readTasksJson,
-  };
+  return createDependencies(TEST_PREFIX);
 }
 
 /**

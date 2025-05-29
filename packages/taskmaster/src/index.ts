@@ -13,6 +13,7 @@ import { Schema } from "effect";
 import { promises as fs } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { dirname, join } from "path";
 
 const execAsync = promisify(exec);
 
@@ -48,16 +49,31 @@ export const createValidationUtils = () => {
 };
 
 // File System Operations for temporary files
-export const createFileOperations = () => {
+export const createFileOperations = (pathPrefix?: string) => {
+  const prefixPath = (path: NonEmptyString): NonEmptyString => {
+    if (!pathPrefix) return path;
+    return join(pathPrefix, path) as NonEmptyString;
+  };
+
   const savePrd = async (
     path: NonEmptyString,
     prd: PrdText
   ): Promise<AsyncDisposable> => {
-    await fs.writeFile(path, prd, "utf8");
+    const actualPath = prefixPath(path);
+    await fs.mkdir(dirname(actualPath), { recursive: true });
+    await fs.writeFile(actualPath, prd, "utf8");
+
+    if (pathPrefix) {
+      console.log(`📝 Saved PRD to prefixed path: ${actualPath}`);
+    }
+
     return {
       async [Symbol.asyncDispose]() {
         try {
-          await fs.unlink(path);
+          await fs.unlink(actualPath);
+          if (pathPrefix) {
+            console.log(`🧹 Cleaned up PRD file: ${actualPath}`);
+          }
         } catch {
           // File already deleted or doesn't exist
         }
@@ -68,7 +84,11 @@ export const createFileOperations = () => {
   const readTasksJson = async (
     tasksJsonPath: NonEmptyString
   ): Promise<TasksFileContent> => {
-    const content = await fs.readFile(tasksJsonPath, "utf8");
+    const actualPath = prefixPath(tasksJsonPath);
+    if (pathPrefix) {
+      console.log(`📖 Read tasks from prefixed path: ${actualPath}`);
+    }
+    const content = await fs.readFile(actualPath, "utf8");
     return JSON.parse(content);
   };
 
@@ -76,17 +96,40 @@ export const createFileOperations = () => {
 };
 
 // CLI Tool Wrapper with robust execution handling
-export const createCliWrapper = () => {
+export const createCliWrapper = (pathPrefix?: string) => {
+  const prefixPath = (path: NonEmptyString): NonEmptyString => {
+    if (!pathPrefix) return path;
+    return join(pathPrefix, path) as NonEmptyString;
+  };
+
   const generate = async (
     prdPath: NonEmptyString,
     tasksJsonPath: NonEmptyString
   ): Promise<TasksFileContent> => {
     try {
-      // Execute the taskmaster CLI tool (could be claude-task-master or MCP taskmaster)
-      const command = `npx task-master parse-prd --research --input "${prdPath}" --output "${tasksJsonPath}" --force`;
+      const actualPrdPath = prefixPath(prdPath);
+      const actualTasksPath = prefixPath(tasksJsonPath);
+
+      // Ensure target directory exists when using prefix
+      if (pathPrefix) {
+        await fs.mkdir(dirname(actualTasksPath), { recursive: true });
+      }
+
+      // Always use dotenv for environment loading
+      const command = `npx dotenv -e .env -- npx task-master parse-prd --research --input "${actualPrdPath}" --output "${actualTasksPath}" --force`;
+
+      // When using pathPrefix, assume we're in a test package and need to go up to project root
+      const cwd = pathPrefix ? join(process.cwd(), "..", "..") : process.cwd();
+
+      if (pathPrefix) {
+        console.log(`🚀 Executing: ${command}`);
+        console.log(`📁 Prefixed PRD path: ${actualPrdPath}`);
+        console.log(`📁 Prefixed tasks path: ${actualTasksPath}`);
+        console.log(`📁 Working directory: ${cwd}`);
+      }
 
       const { stdout, stderr } = await execAsync(command, {
-        cwd: process.cwd(),
+        cwd,
         timeout: 300000, // 5 minutes timeout
         maxBuffer: 1024 * 1024 * 10, // 10MB buffer
         env: {
@@ -97,28 +140,39 @@ export const createCliWrapper = () => {
 
       // Log outputs for debugging
       if (stdout) {
-        console.log("CLI stdout:", stdout);
+        console.log(pathPrefix ? "📝 CLI stdout:" : "CLI stdout:", stdout);
       }
       if (stderr) {
-        console.warn("CLI stderr:", stderr);
+        console.warn(pathPrefix ? "⚠️ CLI stderr:" : "CLI stderr:", stderr);
       }
 
       // Verify the output file was created
       try {
-        await fs.access(tasksJsonPath);
+        await fs.access(actualTasksPath);
+        if (pathPrefix) {
+          console.log(
+            `✅ tasks.json file created successfully at: ${actualTasksPath}`
+          );
+        }
       } catch {
-        throw new Error(`Output file not created: ${tasksJsonPath}`);
+        throw new Error(`Output file not created: ${actualTasksPath}`);
       }
 
       // Read, validate, and parse the generated tasks file
       const validation = createValidationUtils();
-      return await validation.validateTasksFile(tasksJsonPath);
+      const result = await validation.validateTasksFile(actualTasksPath);
+
+      if (pathPrefix) {
+        console.log(`📊 Generated ${result.tasks?.length || 0} tasks`);
+      }
+
+      return result;
     } catch (error) {
       if (error instanceof Error) {
         // Handle specific error types
         if (error.message.includes("ENOENT")) {
           throw new Error(
-            "CLI tool not found. Please ensure taskmaster is installed."
+            "CLI tool not found. Please ensure taskmaster is installed and available in PATH."
           );
         }
         if (error.message.includes("timeout")) {
@@ -133,10 +187,10 @@ export const createCliWrapper = () => {
   return { generate };
 };
 
-// Default implementation that uses real file system and CLI
-export const createDefaultDependencies = (): GenerateTasksDeps => {
-  const fileOps = createFileOperations();
-  const cli = createCliWrapper();
+// Configurable dependency factory that accepts optional path prefix
+export const createDependencies = (pathPrefix?: string): GenerateTasksDeps => {
+  const fileOps = createFileOperations(pathPrefix);
+  const cli = createCliWrapper(pathPrefix);
   const validation = createValidationUtils();
 
   return {
@@ -147,9 +201,17 @@ export const createDefaultDependencies = (): GenerateTasksDeps => {
     readTasksJson: async (
       tasksJsonPath: NonEmptyString
     ): Promise<TasksFileContent> => {
-      return validation.validateTasksFile(tasksJsonPath);
+      const actualPath = pathPrefix
+        ? (join(pathPrefix, tasksJsonPath) as NonEmptyString)
+        : tasksJsonPath;
+      return validation.validateTasksFile(actualPath);
     },
   };
+};
+
+// Default implementation that uses real file system and CLI
+export const createDefaultDependencies = (): GenerateTasksDeps => {
+  return createDependencies();
 };
 
 // Export the default configured function
