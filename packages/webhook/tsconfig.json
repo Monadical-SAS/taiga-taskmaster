@@ -11,6 +11,10 @@
     { "path": "../common" },
     { "path": "../webhook-interface" },
     { "path": "../taskmaster-interface" },
-    { "path": "../taskmaster" }
+    { "path": "../taskmaster" },
+    { "path": "../tasktracker-interface" },
+    { "path": "../tasktracker" },
+    { "path": "../core" },
+    { "path": "../taiga-api" }
   ]
 }

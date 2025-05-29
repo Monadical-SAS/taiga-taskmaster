@@ -13,8 +13,12 @@ const runLongTest = async (): Promise<void> => {
     process.exit(1);
   }
 
+  // Get Taiga base URL from environment or use default
+  const taigaBaseUrl = process.env.TAIGA_BASE_URL || "https://api.taiga.io";
+
   console.log("🚀 Starting long-running Taiga API test...");
   console.log(`👤 Username: ${username}`);
+  console.log(`🌐 Using Taiga base URL: ${taigaBaseUrl}`);
   console.log(`⏰ Interval: ${INTERVAL_MS / 1000} seconds`);
   console.log("Press Ctrl+C to stop the test\n");
 
@@ -22,7 +26,7 @@ const runLongTest = async (): Promise<void> => {
   const { taigaApiFactory } = await import("../../taiga-api/dist/index.js");
 
   const api = taigaApiFactory.create({
-    baseUrl: Schema.decodeSync(Url)("https://api.taiga.io"),
+    baseUrl: Schema.decodeSync(Url)(taigaBaseUrl),
   });
 
   // Initial login

@@ -50,9 +50,13 @@ const createWebhookDependencies = async (): Promise<
   // Create taskmaster dependencies with temp directory prefix
   const taskmasterDeps = createDependencies(tempDir);
 
+  // Get Taiga base URL from environment or use default
+  const taigaBaseUrl = process.env.TAIGA_BASE_URL || "https://api.taiga.io";
+  console.log(`🌐 Using Taiga base URL: ${taigaBaseUrl}`);
+
   // Create Taiga API client
   const api = taigaApiFactory.create({
-    baseUrl: Schema.decodeSync(Url)("https://api.taiga.io"),
+    baseUrl: Schema.decodeSync(Url)(taigaBaseUrl),
     credentials: {
       username,
       password,
@@ -75,7 +79,7 @@ const createWebhookDependencies = async (): Promise<
 
   // Create wrapper that includes cleanup
   const generateTasksWithCleanup =
-    (di: GenerateTasksDeps) => async (prd: PrdText) => {
+    (di: GenerateTasksDeps) => async (prd: typeof PrdText.Type) => {
       try {
         // Run the core workflow
         const result = await generateTasks(di)(prd);

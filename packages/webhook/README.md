@@ -21,12 +21,20 @@ Requires the following in the root `.env` file:
 
 - `WEBHOOK_TOKEN` - Bearer token for webhook authentication (required)
 - `PORT` - Server port (optional, defaults to 3000)
+- `TAIGA_BASE_URL` - Taiga API base URL (optional, defaults to https://api.taiga.io)
+- `TAIGA_USERNAME` - Taiga username for API authentication (required)
+- `TAIGA_PASSWORD` - Taiga password for API authentication (required)
+- `TAIGA_PROJECT_ID` - Taiga project ID for task synchronization (required)
 
 Add these to your root `.env` file:
 
 ```bash
 WEBHOOK_TOKEN=your-secret-token-here
 PORT=3000
+TAIGA_BASE_URL=https://api.taiga.io
+TAIGA_USERNAME=your-taiga-username
+TAIGA_PASSWORD=your-taiga-password
+TAIGA_PROJECT_ID=123
 ```
 
 ### Running the Server
@@ -56,13 +64,74 @@ pnpm run start:dev
 
 #### Docker/Production Setup
 
+##### Local Development with Docker
+
 ```bash
-# Build all packages (from project root)
-pnpm run build
+# Build all packages first (from project root)
+pnpm --filter="!*-test" --filter="!@taiga-task-master/webhook" run build
 
 # Start webhook server with environment loading
 npx dotenv -e ./.env -- pnpm --filter @taiga-task-master/webhook run start
 ```
+
+##### Docker Compose (Recommended)
+
+The webhook can be run in a Docker container using docker-compose, which automatically picks up your `.env` file:
+
+```bash
+# 1. Create your .env file (copy from example)
+cp .env.example .env
+
+# 2. Edit .env with your actual values
+vim .env  # or your preferred editor
+
+# 3. Run with docker-compose
+docker-compose up -d
+```
+
+**Required .env variables for Docker:**
+
+```bash
+# Taiga API Configuration
+TAIGA_BASE_URL=https://api.taiga.io
+TAIGA_USERNAME=your_username
+TAIGA_PASSWORD=your_password
+TAIGA_PROJECT_ID=your_project_id
+
+# AI API Keys
+ANTHROPIC_API_KEY=sk-ant-
+PERPLEXITY_API_KEY=pplx-
+
+# Webhook Server Configuration
+WEBHOOK_TOKEN=your-secret-webhook-token
+PORT=3000
+```
+
+**Docker Compose Commands:**
+
+```bash
+# Start in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
+
+# Rebuild and start (after code changes)
+docker-compose up -d --build
+
+# Check status
+docker-compose ps
+```
+
+**Access Points:**
+
+- Webhook endpoint: `http://localhost:3000/api/prd-webhook`
+- Health check: `http://localhost:3000/health`
+
+The Docker setup uses `pnpm deploy` for efficient containerization and automatically handles environment variable injection from your `.env` file.
 
 ### API Endpoint
 

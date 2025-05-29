@@ -180,8 +180,12 @@ const main = async (): Promise<void> => {
     console.log("🔌 Initializing Taiga API...");
     const { taigaApiFactory } = await import("../../taiga-api/dist/index.js");
 
+    // Get Taiga base URL from environment or use default
+    const taigaBaseUrl = process.env.TAIGA_BASE_URL || "https://api.taiga.io";
+    console.log(`🌐 Using Taiga base URL: ${taigaBaseUrl}`);
+
     const api = taigaApiFactory.create({
-      baseUrl: Schema.decodeSync(Url)("https://api.taiga.io"),
+      baseUrl: Schema.decodeSync(Url)(taigaBaseUrl),
       credentials: {
         username: env.username,
         password: env.password,

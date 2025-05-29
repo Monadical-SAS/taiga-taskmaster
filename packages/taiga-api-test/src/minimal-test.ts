@@ -16,10 +16,14 @@ const main = async (): Promise<void> => {
   console.log(`👤 Username: ${username}`);
 
   try {
+    // Get Taiga base URL from environment or use default
+    const taigaBaseUrl = process.env.TAIGA_BASE_URL || "https://api.taiga.io";
+    console.log(`🌐 Using Taiga base URL: ${taigaBaseUrl}`);
+
     // Direct fetch test to bypass any internal dependencies
     console.log("🔐 Attempting login with direct fetch...");
 
-    const loginResponse = await fetch("https://api.taiga.io/api/v1/auth", {
+    const loginResponse = await fetch(`${taigaBaseUrl}/api/v1/auth`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +55,7 @@ const main = async (): Promise<void> => {
     const { taigaApiFactory } = await import("../../taiga-api/dist/index.js");
 
     const api = taigaApiFactory.create({
-      baseUrl: Schema.decodeSync(Url)("https://api.taiga.io"),
+      baseUrl: Schema.decodeSync(Url)(taigaBaseUrl),
       credentials: {
         username,
         password,

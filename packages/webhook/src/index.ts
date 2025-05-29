@@ -134,6 +134,19 @@ export const createWebhookServer = (deps: WebhookDeps) => {
 
   const server = createServer(async (req, res) => {
     try {
+      // Handle health check endpoint
+      if (req.method === "GET" && req.url === "/health") {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            status: "healthy",
+            timestamp: new Date().toISOString(),
+          })
+        );
+        return;
+      }
+
       // Only handle POST requests to /api/prd-webhook
       if (req.method !== "POST" || req.url !== "/api/prd-webhook") {
         res.statusCode = 404;

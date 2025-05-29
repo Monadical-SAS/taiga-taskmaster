@@ -1,0 +1,74 @@
+# Dependencies
+node_modules
+**/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs (allow dist for Docker-built files)
+build
+**/build
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+docs
+README.md
+**/README.md
+*.md
+
+# IDE files
+.vscode
+.idea
+*.iml
+taiga-task-master.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+temp
+tmp
+**/temp
+**/tmp
+
+# Test files and coverage
+coverage
+**/coverage
+*.test.ts
+*.spec.ts
+**/*.test.ts
+**/*.spec.ts
+
+# Test packages (not needed for production webhook) - but keep empty dirs for Docker build
+packages/*-test/src/
+packages/*-test/dist/
+
+# Development tools
+.prettierrc
+.prettierignore
+eslint.config.js
+
+# Docker files (avoid recursion)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Scripts (except for package.json scripts - but keep docker scripts)
+scripts/*.txt
+scripts/task-complexity-report.json
+
+# Task files (runtime generated, not needed in production webhook)
+tasks/*.txt
+tasks/*.bak
