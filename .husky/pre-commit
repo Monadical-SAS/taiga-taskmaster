@@ -1,5 +1,2 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Run lint-staged for formatting, linting, circular deps, and type check on staged files
 npx lint-staged
