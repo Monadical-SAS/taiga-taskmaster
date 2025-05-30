@@ -16,8 +16,11 @@ COPY tsconfig.json ./
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
+# Build all packages
+RUN pnpm run build
+
 # Deploy webhook package with all its dependencies using pnpm deploy
-# This will include the already-built dist files from the local build context
+# This will include the built dist files
 RUN pnpm --filter @taiga-task-master/webhook --prod deploy /app/deployed --legacy
 
 # Stage 2: Production stage
