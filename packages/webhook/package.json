@@ -10,7 +10,8 @@
     "start": "node dist/main.js",
     "start:dev": "tsc -b && node dist/main.js",
     "test": "vitest run",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "test:webhook": "node scripts/send-test-webhook.js"
   },
   "dependencies": {
     "@taiga-task-master/common": "workspace:*",

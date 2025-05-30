@@ -6,10 +6,10 @@ Webhook receiver implementation that conforms to webhook-interface.
 
 ## Features
 
-- HTTP server for receiving PRD update webhooks from Taiga
-- Authorization validation using Bearer tokens
-- Payload validation and processing
-- Integration with task generation services
+- HTTP server for receiving Taiga user story webhooks
+- HMAC-SHA1 signature validation using webhook tokens
+- Payload validation and processing for user stories with "prd" tag
+- Integration with task generation and sync services
 - Error handling and logging
 - Graceful shutdown handling
 
@@ -19,8 +19,8 @@ Webhook receiver implementation that conforms to webhook-interface.
 
 Requires the following in the root `.env` file:
 
-- `WEBHOOK_TOKEN` - Bearer token for webhook authentication (required)
-- `PORT` - Server port (optional, defaults to 3000)
+- `WEBHOOK_TOKEN` - Secret token for HMAC-SHA1 signature validation (required)
+- `PORT` - Server port (optional, defaults to 3004)
 - `TAIGA_BASE_URL` - Taiga API base URL (optional, defaults to https://api.taiga.io)
 - `TAIGA_USERNAME` - Taiga username for API authentication (required)
 - `TAIGA_PASSWORD` - Taiga password for API authentication (required)
@@ -29,8 +29,8 @@ Requires the following in the root `.env` file:
 Add these to your root `.env` file:
 
 ```bash
-WEBHOOK_TOKEN=your-secret-token-here
-PORT=3000
+WEBHOOK_TOKEN=token-C5E64@RvPj7b7fp
+PORT=3004
 TAIGA_BASE_URL=https://api.taiga.io
 TAIGA_USERNAME=your-taiga-username
 TAIGA_PASSWORD=your-taiga-password
@@ -58,7 +58,7 @@ npx dotenv -e ./.env -- pnpm --filter @taiga-task-master/webhook run start:dev
 # Or manually set environment variables
 cd packages/webhook
 export WEBHOOK_TOKEN=your-secret-token-here
-export PORT=3000
+export PORT=3004
 pnpm run start:dev
 ```
 
@@ -104,7 +104,7 @@ PERPLEXITY_API_KEY=pplx-
 
 # Webhook Server Configuration
 WEBHOOK_TOKEN=your-secret-webhook-token
-PORT=3000
+PORT=3004
 ```
 
 **Docker Compose Commands:**
@@ -128,29 +128,36 @@ docker-compose ps
 
 **Access Points:**
 
-- Webhook endpoint: `http://localhost:3000/api/prd-webhook`
-- Health check: `http://localhost:3000/health`
+- Webhook endpoint: `http://localhost:3004/api/taiga-webhook`
+- Health check: `http://localhost:3004/health`
 
 The Docker setup uses `pnpm deploy` for efficient containerization and automatically handles environment variable injection from your `.env` file.
 
 ### API Endpoint
 
-**POST** `/api/prd-webhook`
+**POST** `/api/taiga-webhook`
 
 Headers:
 
 ```
-Authorization: Bearer your-secret-token
+x-taiga-webhook-signature: <HMAC-SHA1 hex signature of request body>
 Content-Type: application/json
 ```
 
-Payload:
+Payload (minimal required fields):
 
 ```json
 {
-  "type": "prd_update",
-  "prd": "Your PRD content here...",
-  "project_id": "taiga-project-id"
+  "action": "create",
+  "data": {
+    "description": "Your PRD content here...",
+    "project": {
+      "id": 123456,
+      "permalink": "https://tree.taiga.io/project/your-project",
+      "name": "Your Project Name",
+      "logo_big_url": null
+    }
+  }
 }
 ```
 
@@ -158,7 +165,7 @@ Success Response (200):
 
 ```json
 {
-  "message": "Successfully processed PRD update for project taiga-project-id",
+  "message": "Successfully processed Taiga webhook for user story",
   "tasks_generated": 5
 }
 ```
@@ -171,45 +178,60 @@ Error Responses:
 
 ### Testing the Webhook
 
-Once the server is running, you can test it with curl:
+#### Easy Testing with Built-in Script
+
+The package includes a test script that automatically generates the correct HMAC-SHA1 signature:
 
 ```bash
-# Test with valid payload
-curl -X POST http://localhost:3000/api/prd-webhook \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your-secret-token-here" \
-  -d '{
-    "type": "prd_update",
-    "prd": "Create a simple web application with user authentication and dashboard functionality. The app should have a login page, registration, and a main dashboard showing user statistics.",
-    "project_id": "test-project-123"
-  }'
+# Set environment variables
+export WEBHOOK_TOKEN=token-C5E64@RvPj7b7fp
+export WEBHOOK_URL=http://localhost:3004/api/taiga-webhook  # optional, defaults to this
 
-# Expected success response:
-# {
-#   "message": "Successfully processed PRD update for project test-project-123",
-#   "tasks_generated": 5
-# }
+# Run the test script
+cd packages/webhook
+pnpm run test:webhook
+```
+
+This script:
+
+1. Reads the webhook example from `docs/webhook_example.json`
+2. Generates the correct HMAC-SHA1 signature using the `WEBHOOK_TOKEN`
+3. Sends the request with the `x-taiga-webhook-signature` header
+4. Shows the response
+
+#### Manual Testing with curl
+
+If you want to test manually, you need to generate the HMAC-SHA1 signature:
+
+```bash
+# 1. Calculate the signature (example using openssl)
+WEBHOOK_TOKEN="token-C5E64@RvPj7b7fp"
+BODY='{"action":"create","data":{"description":"make me fun todo app with fun effects","project":{"id":1693793,"permalink":"https://tree.taiga.io/project/dearlordylord-tasks","name":"Tasks","logo_big_url":null}}}'
+SIGNATURE=$(echo -n "$BODY" | openssl dgst -sha1 -hmac "$WEBHOOK_TOKEN" | cut -d' ' -f2)
+
+# 2. Send the request
+curl -X POST http://localhost:3004/api/taiga-webhook \
+  -H "Content-Type: application/json" \
+  -H "x-taiga-webhook-signature: $SIGNATURE" \
+  -d "$BODY"
 ```
 
 **Test Scenarios:**
 
 ```bash
-# Test unauthorized access
-curl -X POST http://localhost:3000/api/prd-webhook \
+# Test unauthorized access (wrong signature)
+curl -X POST http://localhost:3004/api/taiga-webhook \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer wrong-token" \
-  -d '{"type": "prd_update", "prd": "test", "project_id": "123"}'
+  -H "x-taiga-webhook-signature: invalid-signature" \
+  -d '{"action":"create","data":{"description":"test","project":{"id":123,"permalink":"","name":"Test","logo_big_url":null}}}'
 # Returns: 401 {"error": "Unauthorized"}
 
-# Test invalid payload
-curl -X POST http://localhost:3000/api/prd-webhook \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your-secret-token-here" \
-  -d '{"type": "invalid", "prd": "test"}'
-# Returns: 400 {"error": "...validation error..."}
+# Test health check
+curl -X GET http://localhost:3004/health
+# Returns: 200 {"status":"healthy","timestamp":"..."}
 
 # Test wrong endpoint
-curl -X GET http://localhost:3000/api/wrong-endpoint
+curl -X GET http://localhost:3004/api/wrong-endpoint
 # Returns: 404 {"error": "Not Found"}
 ```
 
