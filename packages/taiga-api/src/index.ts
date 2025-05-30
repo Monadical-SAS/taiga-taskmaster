@@ -16,6 +16,10 @@ import {
   type UserStoriesService,
   type TaskStatusesService,
   type TaskCustomAttributesService,
+  type UserStoryCustomAttributesService,
+  type UserStoryCustomAttributesValuesService,
+  type UserStoryStatusesService,
+  type PointsService,
   type AuthCredentials,
   AuthResponse,
   type RefreshRequest,
@@ -30,11 +34,28 @@ import {
   TaskCustomAttribute,
   type CreateTaskCustomAttributeRequest,
   type UpdateTaskCustomAttributeRequest,
+  UserStoryCustomAttribute,
+  type CreateUserStoryCustomAttributeRequest,
+  type UpdateUserStoryCustomAttributeRequest,
+  type BulkUpdateUserStoryCustomAttributesRequest,
+  UserStoryCustomAttributesValues,
+  UserStoryStatus,
+  type BulkCreateUserStoriesRequest,
+  type BulkUpdateUserStoryOrderRequest,
+  type BulkUpdateUserStoryMilestoneRequest,
+  type BulkUpdateUserStoryStatusesRequest,
+  Point,
+  type CreatePointRequest,
+  type UpdatePointRequest,
+  type BulkUpdatePointsRequest,
+  User,
   type ProjectId,
   type TaskId,
   type UserStoryId,
   type StatusId,
+  type UserId,
   type CustomAttributeId,
+  type PointId,
   type AuthToken,
   type RefreshToken,
 } from "@taiga-task-master/taiga-api-interface";
@@ -442,6 +463,19 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
     project?: ProjectId;
     status?: StatusId;
     milestone?: number;
+    milestone__isnull?: boolean;
+    status__is_archived?: boolean;
+    tags?: string;
+    watchers?: UserId;
+    assigned_to?: UserId;
+    epic?: number;
+    role?: number;
+    status__is_closed?: boolean;
+    exclude_status?: StatusId;
+    exclude_tags?: string;
+    exclude_assigned_to?: UserId;
+    exclude_role?: number;
+    exclude_epic?: number;
   }): Promise<readonly UserStoryDetail[]> => {
     const response = await client.get("/api/v1/userstories", {
       params: filters,
@@ -463,6 +497,19 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
     return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
   },
 
+  getByRef: async (
+    ref: number,
+    filters: {
+      project?: ProjectId;
+      project__slug?: string;
+    }
+  ): Promise<UserStoryDetail> => {
+    const response = await client.get(`/api/v1/userstories/by_ref`, {
+      params: { ref, ...filters },
+    });
+    return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
+  },
+
   update: async (
     id: UserStoryId,
     userStory: UpdateUserStoryRequest
@@ -473,6 +520,86 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
 
   delete: async (id: UserStoryId): Promise<void> => {
     await client.delete(`/api/v1/userstories/${id}`);
+  },
+
+  bulkCreate: async (
+    request: BulkCreateUserStoriesRequest
+  ): Promise<readonly UserStoryDetail[]> => {
+    const response = await client.post(
+      "/api/v1/userstories/bulk_create",
+      request
+    );
+    return Schema.decodeUnknownSync(Schema.Array(UserStoryDetail))(
+      response.data
+    );
+  },
+
+  bulkUpdateBacklogOrder: async (
+    request: BulkUpdateUserStoryOrderRequest
+  ): Promise<readonly UserStoryDetail[]> => {
+    const response = await client.post(
+      "/api/v1/userstories/bulk_update_backlog_order",
+      request
+    );
+    return Schema.decodeUnknownSync(Schema.Array(UserStoryDetail))(
+      response.data
+    );
+  },
+
+  bulkUpdateKanbanOrder: async (
+    request: BulkUpdateUserStoryOrderRequest
+  ): Promise<readonly UserStoryDetail[]> => {
+    const response = await client.post(
+      "/api/v1/userstories/bulk_update_kanban_order",
+      request
+    );
+    return Schema.decodeUnknownSync(Schema.Array(UserStoryDetail))(
+      response.data
+    );
+  },
+
+  bulkUpdateSprintOrder: async (
+    request: BulkUpdateUserStoryOrderRequest
+  ): Promise<readonly UserStoryDetail[]> => {
+    const response = await client.post(
+      "/api/v1/userstories/bulk_update_sprint_order",
+      request
+    );
+    return Schema.decodeUnknownSync(Schema.Array(UserStoryDetail))(
+      response.data
+    );
+  },
+
+  bulkUpdateMilestone: async (
+    request: BulkUpdateUserStoryMilestoneRequest
+  ): Promise<void> => {
+    await client.post("/api/v1/userstories/bulk_update_milestone", request);
+  },
+
+  vote: async (id: UserStoryId): Promise<void> => {
+    await client.post(`/api/v1/userstories/${id}/upvote`);
+  },
+
+  removeVote: async (id: UserStoryId): Promise<void> => {
+    await client.post(`/api/v1/userstories/${id}/downvote`);
+  },
+
+  getVoters: async (id: UserStoryId): Promise<readonly User[]> => {
+    const response = await client.get(`/api/v1/userstories/${id}/voters`);
+    return Schema.decodeUnknownSync(Schema.Array(User))(response.data);
+  },
+
+  watch: async (id: UserStoryId): Promise<void> => {
+    await client.post(`/api/v1/userstories/${id}/watch`);
+  },
+
+  stopWatching: async (id: UserStoryId): Promise<void> => {
+    await client.post(`/api/v1/userstories/${id}/unwatch`);
+  },
+
+  getWatchers: async (id: UserStoryId): Promise<readonly User[]> => {
+    const response = await client.get(`/api/v1/userstories/${id}/watchers`);
+    return Schema.decodeUnknownSync(Schema.Array(User))(response.data);
   },
 });
 
@@ -565,6 +692,184 @@ const createTaskCustomAttributesService = (
 });
 
 // ============================================================================
+// User Story Statuses Service Implementation
+// ============================================================================
+
+const createUserStoryStatusesService = (
+  client: HttpClient
+): UserStoryStatusesService => ({
+  list: async (filters?: {
+    project?: ProjectId;
+  }): Promise<readonly UserStoryStatus[]> => {
+    const response = await client.get("/api/v1/userstory-statuses", {
+      params: filters,
+    });
+    return Schema.decodeUnknownSync(Schema.Array(UserStoryStatus))(
+      response.data
+    );
+  },
+
+  create: async (
+    status: Omit<UserStoryStatus, "id">
+  ): Promise<UserStoryStatus> => {
+    const response = await client.post("/api/v1/userstory-statuses", status);
+    return Schema.decodeUnknownSync(UserStoryStatus)(response.data);
+  },
+
+  get: async (id: StatusId): Promise<UserStoryStatus> => {
+    const response = await client.get(`/api/v1/userstory-statuses/${id}`);
+    return Schema.decodeUnknownSync(UserStoryStatus)(response.data);
+  },
+
+  update: async (
+    id: StatusId,
+    status: Partial<Omit<UserStoryStatus, "id">>
+  ): Promise<UserStoryStatus> => {
+    const response = await client.patch(
+      `/api/v1/userstory-statuses/${id}`,
+      status
+    );
+    return Schema.decodeUnknownSync(UserStoryStatus)(response.data);
+  },
+
+  delete: async (id: StatusId): Promise<void> => {
+    await client.delete(`/api/v1/userstory-statuses/${id}`);
+  },
+
+  bulkUpdateOrder: async (
+    request: BulkUpdateUserStoryStatusesRequest
+  ): Promise<void> => {
+    await client.post("/api/v1/userstory-statuses/bulk_update_order", request);
+  },
+});
+
+// ============================================================================
+// Points Service Implementation
+// ============================================================================
+
+const createPointsService = (client: HttpClient): PointsService => ({
+  list: async (filters?: {
+    project?: ProjectId;
+  }): Promise<readonly Point[]> => {
+    const response = await client.get("/api/v1/points", {
+      params: filters,
+    });
+    return Schema.decodeUnknownSync(Schema.Array(Point))(response.data);
+  },
+
+  create: async (point: CreatePointRequest): Promise<Point> => {
+    const response = await client.post("/api/v1/points", point);
+    return Schema.decodeUnknownSync(Point)(response.data);
+  },
+
+  get: async (id: PointId): Promise<Point> => {
+    const response = await client.get(`/api/v1/points/${id}`);
+    return Schema.decodeUnknownSync(Point)(response.data);
+  },
+
+  update: async (id: PointId, point: UpdatePointRequest): Promise<Point> => {
+    const response = await client.patch(`/api/v1/points/${id}`, point);
+    return Schema.decodeUnknownSync(Point)(response.data);
+  },
+
+  delete: async (id: PointId): Promise<void> => {
+    await client.delete(`/api/v1/points/${id}`);
+  },
+
+  bulkUpdateOrder: async (request: BulkUpdatePointsRequest): Promise<void> => {
+    await client.post("/api/v1/points/bulk_update_order", request);
+  },
+});
+
+// ============================================================================
+// User Story Custom Attributes Service Implementation
+// ============================================================================
+
+const createUserStoryCustomAttributesService = (
+  client: HttpClient
+): UserStoryCustomAttributesService => ({
+  list: async (filters?: {
+    project?: ProjectId;
+  }): Promise<readonly UserStoryCustomAttribute[]> => {
+    const response = await client.get("/api/v1/userstory-custom-attributes", {
+      params: filters,
+    });
+    return Schema.decodeUnknownSync(Schema.Array(UserStoryCustomAttribute))(
+      response.data
+    );
+  },
+
+  create: async (
+    attribute: CreateUserStoryCustomAttributeRequest
+  ): Promise<UserStoryCustomAttribute> => {
+    const response = await client.post(
+      "/api/v1/userstory-custom-attributes",
+      attribute
+    );
+    return Schema.decodeUnknownSync(UserStoryCustomAttribute)(response.data);
+  },
+
+  get: async (id: CustomAttributeId): Promise<UserStoryCustomAttribute> => {
+    const response = await client.get(
+      `/api/v1/userstory-custom-attributes/${id}`
+    );
+    return Schema.decodeUnknownSync(UserStoryCustomAttribute)(response.data);
+  },
+
+  update: async (
+    id: CustomAttributeId,
+    attribute: UpdateUserStoryCustomAttributeRequest
+  ): Promise<UserStoryCustomAttribute> => {
+    const response = await client.patch(
+      `/api/v1/userstory-custom-attributes/${id}`,
+      attribute
+    );
+    return Schema.decodeUnknownSync(UserStoryCustomAttribute)(response.data);
+  },
+
+  delete: async (id: CustomAttributeId): Promise<void> => {
+    await client.delete(`/api/v1/userstory-custom-attributes/${id}`);
+  },
+
+  bulkUpdateOrder: async (
+    request: BulkUpdateUserStoryCustomAttributesRequest
+  ): Promise<void> => {
+    await client.post(
+      "/api/v1/userstory-custom-attributes/bulk_update_order",
+      request
+    );
+  },
+});
+
+// ============================================================================
+// User Story Custom Attributes Values Service Implementation
+// ============================================================================
+
+const createUserStoryCustomAttributesValuesService = (
+  client: HttpClient
+): UserStoryCustomAttributesValuesService => ({
+  get: async (id: CustomAttributeId): Promise<UserStoryCustomAttribute> => {
+    const response = await client.get(
+      `/api/v1/userstory-custom-attributes-values/${id}`
+    );
+    return Schema.decodeUnknownSync(UserStoryCustomAttribute)(response.data);
+  },
+
+  update: async (
+    id: UserStoryId,
+    values: UserStoryCustomAttributesValues
+  ): Promise<UserStoryCustomAttributesValues> => {
+    const response = await client.patch(
+      `/api/v1/userstory-custom-attributes-values/${id}`,
+      values
+    );
+    return Schema.decodeUnknownSync(UserStoryCustomAttributesValues)(
+      response.data
+    );
+  },
+});
+
+// ============================================================================
 // Main Taiga API Factory
 // ============================================================================
 
@@ -585,8 +890,14 @@ const createTaigaApi = (config: HttpClientConfig): TaigaApi => {
     tasks: createTasksService(authenticatedClient),
     userStories: createUserStoriesService(authenticatedClient),
     taskStatuses: createTaskStatusesService(authenticatedClient),
+    userStoryStatuses: createUserStoryStatusesService(authenticatedClient),
+    points: createPointsService(authenticatedClient),
     taskCustomAttributes:
       createTaskCustomAttributesService(authenticatedClient),
+    userStoryCustomAttributes:
+      createUserStoryCustomAttributesService(authenticatedClient),
+    userStoryCustomAttributesValues:
+      createUserStoryCustomAttributesValuesService(authenticatedClient),
   };
 };
 

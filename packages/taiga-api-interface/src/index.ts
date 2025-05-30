@@ -52,6 +52,7 @@ export const UserStoryId = Schema.Number;
 export const StatusId = Schema.Number;
 export const UserId = Schema.Number;
 export const CustomAttributeId = Schema.Number;
+export const PointId = Schema.Number;
 
 export type ProjectId = Schema.Schema.Type<typeof ProjectId>;
 export type TaskId = Schema.Schema.Type<typeof TaskId>;
@@ -59,6 +60,35 @@ export type UserStoryId = Schema.Schema.Type<typeof UserStoryId>;
 export type StatusId = Schema.Schema.Type<typeof StatusId>;
 export type UserId = Schema.Schema.Type<typeof UserId>;
 export type CustomAttributeId = Schema.Schema.Type<typeof CustomAttributeId>;
+export type PointId = Schema.Schema.Type<typeof PointId>;
+
+// ============================================================================
+// User Types
+// ============================================================================
+
+export const User = Schema.Struct({
+  id: UserId,
+  permalink: Schema.String,
+  username: Schema.String,
+  full_name: Schema.String,
+  photo: Schema.NullOr(Schema.String),
+  gravatar_id: Schema.NullOr(Schema.String),
+});
+
+export type User = Schema.Schema.Type<typeof User>;
+
+// ============================================================================
+// Project Types
+// ============================================================================
+
+export const ProjectReference = Schema.Struct({
+  id: ProjectId,
+  permalink: Schema.String,
+  name: Schema.String,
+  logo_big_url: Schema.NullOr(Schema.String),
+});
+
+export type ProjectReference = Schema.Schema.Type<typeof ProjectReference>;
 
 // ============================================================================
 // HTTP Types
@@ -248,6 +278,38 @@ export const UpdateUserStoryRequest = Schema.Struct({
   version: Schema.Number,
 });
 
+export const BulkCreateUserStoriesRequest = Schema.Struct({
+  project_id: ProjectId,
+  status_id: Schema.optional(StatusId),
+  bulk_stories: Schema.String,
+});
+
+export const BulkUpdateUserStoryOrderRequest = Schema.Struct({
+  project_id: ProjectId,
+  bulk_stories: Schema.Array(
+    Schema.Struct({
+      us_id: UserStoryId,
+      order: Schema.Number,
+    })
+  ),
+});
+
+export const BulkUpdateUserStoryMilestoneRequest = Schema.Struct({
+  project_id: ProjectId,
+  milestone_id: Schema.Number,
+  bulk_stories: Schema.Array(
+    Schema.Struct({
+      us_id: UserStoryId,
+      order: Schema.Number,
+    })
+  ),
+});
+
+export const BulkUpdateUserStoryStatusesRequest = Schema.Struct({
+  project: ProjectId,
+  bulk_userstory_statuses: Schema.Array(Schema.Tuple(StatusId, Schema.Number)),
+});
+
 export type UserStoryStatus = Schema.Schema.Type<typeof UserStoryStatus>;
 export type UserStoryDetail = Schema.Schema.Type<typeof UserStoryDetail>;
 export type CreateUserStoryRequest = Schema.Schema.Type<
@@ -255,6 +317,18 @@ export type CreateUserStoryRequest = Schema.Schema.Type<
 >;
 export type UpdateUserStoryRequest = Schema.Schema.Type<
   typeof UpdateUserStoryRequest
+>;
+export type BulkCreateUserStoriesRequest = Schema.Schema.Type<
+  typeof BulkCreateUserStoriesRequest
+>;
+export type BulkUpdateUserStoryOrderRequest = Schema.Schema.Type<
+  typeof BulkUpdateUserStoryOrderRequest
+>;
+export type BulkUpdateUserStoryMilestoneRequest = Schema.Schema.Type<
+  typeof BulkUpdateUserStoryMilestoneRequest
+>;
+export type BulkUpdateUserStoryStatusesRequest = Schema.Schema.Type<
+  typeof BulkUpdateUserStoryStatusesRequest
 >;
 
 // ============================================================================
@@ -295,6 +369,106 @@ export type UpdateTaskCustomAttributeRequest = Schema.Schema.Type<
 >;
 
 // ============================================================================
+// User Story Custom Attributes Types
+// ============================================================================
+
+export const UserStoryCustomAttribute = Schema.Struct({
+  id: CustomAttributeId,
+  name: Schema.String,
+  description: Schema.String,
+  order: Schema.Number,
+  project: ProjectId,
+  created_date: Schema.String,
+  modified_date: Schema.String,
+});
+
+export const CreateUserStoryCustomAttributeRequest = Schema.Struct({
+  name: Schema.String,
+  description: Schema.optional(Schema.String),
+  order: Schema.optional(Schema.Number),
+  project: ProjectId,
+});
+
+export const UpdateUserStoryCustomAttributeRequest = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  order: Schema.optional(Schema.Number),
+});
+
+export const BulkUpdateUserStoryCustomAttributesRequest = Schema.Struct({
+  project: ProjectId,
+  bulk_userstory_custom_attributes: Schema.Array(
+    Schema.Tuple(CustomAttributeId, Schema.Number)
+  ),
+});
+
+export const UserStoryCustomAttributesValues = Schema.Struct({
+  attributes_values: Schema.Record({
+    key: Schema.String,
+    value: Schema.String,
+  }),
+  version: Schema.Number,
+});
+
+export type UserStoryCustomAttribute = Schema.Schema.Type<
+  typeof UserStoryCustomAttribute
+>;
+export type CreateUserStoryCustomAttributeRequest = Schema.Schema.Type<
+  typeof CreateUserStoryCustomAttributeRequest
+>;
+export type UpdateUserStoryCustomAttributeRequest = Schema.Schema.Type<
+  typeof UpdateUserStoryCustomAttributeRequest
+>;
+export type BulkUpdateUserStoryCustomAttributesRequest = Schema.Schema.Type<
+  typeof BulkUpdateUserStoryCustomAttributesRequest
+>;
+export type UserStoryCustomAttributesValues = Schema.Schema.Type<
+  typeof UserStoryCustomAttributesValues
+>;
+
+// ============================================================================
+// Points Types
+// ============================================================================
+
+export const Point = Schema.Struct({
+  id: PointId,
+  name: Schema.String,
+  order: Schema.Number,
+  value: Schema.Number,
+  project: ProjectId,
+  color: Schema.String,
+  created_date: Schema.String,
+  modified_date: Schema.String,
+});
+
+export const CreatePointRequest = Schema.Struct({
+  name: Schema.String,
+  value: Schema.Number,
+  project: ProjectId,
+  color: Schema.optional(Schema.String),
+  order: Schema.optional(Schema.Number),
+});
+
+export const UpdatePointRequest = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  value: Schema.optional(Schema.Number),
+  color: Schema.optional(Schema.String),
+  order: Schema.optional(Schema.Number),
+});
+
+export const BulkUpdatePointsRequest = Schema.Struct({
+  project: ProjectId,
+  bulk_points: Schema.Array(Schema.Tuple(PointId, Schema.Number)),
+});
+
+export type Point = Schema.Schema.Type<typeof Point>;
+export type CreatePointRequest = Schema.Schema.Type<typeof CreatePointRequest>;
+export type UpdatePointRequest = Schema.Schema.Type<typeof UpdatePointRequest>;
+export type BulkUpdatePointsRequest = Schema.Schema.Type<
+  typeof BulkUpdatePointsRequest
+>;
+
+// ============================================================================
 // API Service Interfaces
 // ============================================================================
 
@@ -320,14 +494,55 @@ export interface UserStoriesService {
     project?: ProjectId;
     status?: StatusId;
     milestone?: number;
+    milestone__isnull?: boolean;
+    status__is_archived?: boolean;
+    tags?: string;
+    watchers?: UserId;
+    assigned_to?: UserId;
+    epic?: number;
+    role?: number;
+    status__is_closed?: boolean;
+    exclude_status?: StatusId;
+    exclude_tags?: string;
+    exclude_assigned_to?: UserId;
+    exclude_role?: number;
+    exclude_epic?: number;
   }) => Promise<readonly UserStoryDetail[]>;
   create: (userStory: CreateUserStoryRequest) => Promise<UserStoryDetail>;
   get: (id: UserStoryId) => Promise<UserStoryDetail>;
+  getByRef: (
+    ref: number,
+    filters: {
+      project?: ProjectId;
+      project__slug?: string;
+    }
+  ) => Promise<UserStoryDetail>;
   update: (
     id: UserStoryId,
     userStory: UpdateUserStoryRequest
   ) => Promise<UserStoryDetail>;
   delete: (id: UserStoryId) => Promise<void>;
+  bulkCreate: (
+    request: BulkCreateUserStoriesRequest
+  ) => Promise<readonly UserStoryDetail[]>;
+  bulkUpdateBacklogOrder: (
+    request: BulkUpdateUserStoryOrderRequest
+  ) => Promise<readonly UserStoryDetail[]>;
+  bulkUpdateKanbanOrder: (
+    request: BulkUpdateUserStoryOrderRequest
+  ) => Promise<readonly UserStoryDetail[]>;
+  bulkUpdateSprintOrder: (
+    request: BulkUpdateUserStoryOrderRequest
+  ) => Promise<readonly UserStoryDetail[]>;
+  bulkUpdateMilestone: (
+    request: BulkUpdateUserStoryMilestoneRequest
+  ) => Promise<void>;
+  vote: (id: UserStoryId) => Promise<void>;
+  removeVote: (id: UserStoryId) => Promise<void>;
+  getVoters: (id: UserStoryId) => Promise<readonly User[]>;
+  watch: (id: UserStoryId) => Promise<void>;
+  stopWatching: (id: UserStoryId) => Promise<void>;
+  getWatchers: (id: UserStoryId) => Promise<readonly User[]>;
 }
 
 export interface TaskStatusesService {
@@ -339,6 +554,31 @@ export interface TaskStatusesService {
     status: Partial<Omit<TaskStatus, "id">>
   ) => Promise<TaskStatus>;
   delete: (id: StatusId) => Promise<void>;
+}
+
+export interface UserStoryStatusesService {
+  list: (filters?: {
+    project?: ProjectId;
+  }) => Promise<readonly UserStoryStatus[]>;
+  create: (status: Omit<UserStoryStatus, "id">) => Promise<UserStoryStatus>;
+  get: (id: StatusId) => Promise<UserStoryStatus>;
+  update: (
+    id: StatusId,
+    status: Partial<Omit<UserStoryStatus, "id">>
+  ) => Promise<UserStoryStatus>;
+  delete: (id: StatusId) => Promise<void>;
+  bulkUpdateOrder: (
+    request: BulkUpdateUserStoryStatusesRequest
+  ) => Promise<void>;
+}
+
+export interface PointsService {
+  list: (filters?: { project?: ProjectId }) => Promise<readonly Point[]>;
+  create: (point: CreatePointRequest) => Promise<Point>;
+  get: (id: PointId) => Promise<Point>;
+  update: (id: PointId, point: UpdatePointRequest) => Promise<Point>;
+  delete: (id: PointId) => Promise<void>;
+  bulkUpdateOrder: (request: BulkUpdatePointsRequest) => Promise<void>;
 }
 
 export interface TaskCustomAttributesService {
@@ -354,6 +594,32 @@ export interface TaskCustomAttributesService {
     attribute: UpdateTaskCustomAttributeRequest
   ) => Promise<TaskCustomAttribute>;
   delete: (id: CustomAttributeId) => Promise<void>;
+}
+
+export interface UserStoryCustomAttributesService {
+  list: (filters?: {
+    project?: ProjectId;
+  }) => Promise<readonly UserStoryCustomAttribute[]>;
+  create: (
+    attribute: CreateUserStoryCustomAttributeRequest
+  ) => Promise<UserStoryCustomAttribute>;
+  get: (id: CustomAttributeId) => Promise<UserStoryCustomAttribute>;
+  update: (
+    id: CustomAttributeId,
+    attribute: UpdateUserStoryCustomAttributeRequest
+  ) => Promise<UserStoryCustomAttribute>;
+  delete: (id: CustomAttributeId) => Promise<void>;
+  bulkUpdateOrder: (
+    request: BulkUpdateUserStoryCustomAttributesRequest
+  ) => Promise<void>;
+}
+
+export interface UserStoryCustomAttributesValuesService {
+  get: (id: CustomAttributeId) => Promise<UserStoryCustomAttribute>;
+  update: (
+    id: UserStoryId,
+    values: UserStoryCustomAttributesValues
+  ) => Promise<UserStoryCustomAttributesValues>;
 }
 
 // ============================================================================
@@ -414,7 +680,11 @@ export interface TaigaApi {
   tasks: TasksService;
   userStories: UserStoriesService;
   taskStatuses: TaskStatusesService;
+  userStoryStatuses: UserStoryStatusesService;
+  points: PointsService;
   taskCustomAttributes: TaskCustomAttributesService;
+  userStoryCustomAttributes: UserStoryCustomAttributesService;
+  userStoryCustomAttributesValues: UserStoryCustomAttributesValuesService;
 }
 
 export interface TaigaApiFactory {
