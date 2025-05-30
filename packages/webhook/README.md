@@ -20,7 +20,7 @@ Webhook receiver implementation that conforms to webhook-interface.
 Requires the following in the root `.env` file:
 
 - `WEBHOOK_TOKEN` - Secret token for HMAC-SHA1 signature validation (required)
-- `PORT` - Server port (optional, defaults to 3004)
+- `PORT` - Server port (optional, defaults to 3000)
 - `TAIGA_BASE_URL` - Taiga API base URL (optional, defaults to https://api.taiga.io)
 - `TAIGA_USERNAME` - Taiga username for API authentication (required)
 - `TAIGA_PASSWORD` - Taiga password for API authentication (required)
@@ -29,7 +29,7 @@ Requires the following in the root `.env` file:
 Add these to your root `.env` file:
 
 ```bash
-WEBHOOK_TOKEN=token-C5E64@RvPj7b7fp
+WEBHOOK_TOKEN=token
 PORT=3004
 TAIGA_BASE_URL=https://api.taiga.io
 TAIGA_USERNAME=your-taiga-username
@@ -58,7 +58,7 @@ npx dotenv -e ./.env -- pnpm --filter @taiga-task-master/webhook run start:dev
 # Or manually set environment variables
 cd packages/webhook
 export WEBHOOK_TOKEN=your-secret-token-here
-export PORT=3004
+export PORT=3000
 pnpm run start:dev
 ```
 
@@ -104,7 +104,7 @@ PERPLEXITY_API_KEY=pplx-
 
 # Webhook Server Configuration
 WEBHOOK_TOKEN=your-secret-webhook-token
-PORT=3004
+PORT=3000
 ```
 
 **Docker Compose Commands:**
@@ -184,7 +184,7 @@ The package includes a test script that automatically generates the correct HMAC
 
 ```bash
 # Set environment variables
-export WEBHOOK_TOKEN=token-C5E64@RvPj7b7fp
+export WEBHOOK_TOKEN=token
 export WEBHOOK_URL=http://localhost:3004/api/taiga-webhook  # optional, defaults to this
 
 # Run the test script
@@ -205,12 +205,12 @@ If you want to test manually, you need to generate the HMAC-SHA1 signature:
 
 ```bash
 # 1. Calculate the signature (example using openssl)
-WEBHOOK_TOKEN="token-C5E64@RvPj7b7fp"
+WEBHOOK_TOKEN="token"
 BODY='{"action":"create","data":{"description":"make me fun todo app with fun effects","project":{"id":1693793,"permalink":"https://tree.taiga.io/project/dearlordylord-tasks","name":"Tasks","logo_big_url":null}}}'
 SIGNATURE=$(echo -n "$BODY" | openssl dgst -sha1 -hmac "$WEBHOOK_TOKEN" | cut -d' ' -f2)
 
 # 2. Send the request
-curl -X POST http://localhost:3004/api/taiga-webhook \
+curl -X POST http://localhost:3000/api/taiga-webhook \
   -H "Content-Type: application/json" \
   -H "x-taiga-webhook-signature: $SIGNATURE" \
   -d "$BODY"
@@ -220,18 +220,18 @@ curl -X POST http://localhost:3004/api/taiga-webhook \
 
 ```bash
 # Test unauthorized access (wrong signature)
-curl -X POST http://localhost:3004/api/taiga-webhook \
+curl -X POST http://localhost:3000/api/taiga-webhook \
   -H "Content-Type: application/json" \
   -H "x-taiga-webhook-signature: invalid-signature" \
-  -d '{"action":"create","data":{"description":"test","project":{"id":123,"permalink":"","name":"Test","logo_big_url":null}}}'
+  -d '{"action":"create","data":{"description":"test","project":{"id":123}}}'
 # Returns: 401 {"error": "Unauthorized"}
 
 # Test health check
-curl -X GET http://localhost:3004/health
+curl -X GET http://localhost:3000/health
 # Returns: 200 {"status":"healthy","timestamp":"..."}
 
 # Test wrong endpoint
-curl -X GET http://localhost:3004/api/wrong-endpoint
+curl -X GET http://localhost:3000/api/wrong-endpoint
 # Returns: 404 {"error": "Not Found"}
 ```
 

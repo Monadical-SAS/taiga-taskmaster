@@ -3,6 +3,7 @@ import * as crypto from "node:crypto";
 import { NonEmptyString, PrdText } from "@taiga-task-master/common";
 import { type GenerateTasksDeps } from "@taiga-task-master/core";
 import {
+  ProjectReference,
   UserStoryWebhookMessage,
   WebhookUserStoryData,
 } from "@taiga-task-master/taiga-api-interface";
@@ -15,7 +16,12 @@ export type WebhookAuthToken = typeof WebhookAuthToken.Type;
 export const WebhookPayload = Schema.extend(
   UserStoryWebhookMessage.pipe(Schema.pick("action")),
   Schema.Struct({
-    data: WebhookUserStoryData.pick("description", "project"),
+    data: Schema.extend(
+      WebhookUserStoryData.pick("description"),
+      Schema.Struct({
+        project: ProjectReference.pick("id"),
+      })
+    ),
   })
 );
 export type WebhookPayload = typeof WebhookPayload.Type;
