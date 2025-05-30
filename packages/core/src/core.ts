@@ -3,8 +3,6 @@ import type { SyncTasksF } from "@taiga-task-master/tasktracker-interface";
 import { PrdText, SINGLETON_PROJECT_ID } from "@taiga-task-master/common";
 import { Option } from "effect";
 
-export const greet = (name: string): string => `Hello, ${name}!`;
-
 export type GenerateTasksDeps = {
   taskmaster: {
     generateTasks: ReturnType<GenerateTasksF>;
