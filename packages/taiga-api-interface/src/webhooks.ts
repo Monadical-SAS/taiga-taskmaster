@@ -1,7 +1,6 @@
 import { Schema } from "effect";
 import {
   UserStoryId,
-  ProjectId,
   StatusId,
   UserId,
   User,
@@ -12,7 +11,7 @@ import {
 // Webhook Common Types
 // ============================================================================
 
-export const WebhookAction = Schema.Literal("create", "change", "delete");
+export const WebhookAction = Schema.Literal("create", "change");
 export const WebhookObjectType = Schema.Literal("userstory", "task", "issue");
 
 export type WebhookAction = Schema.Schema.Type<typeof WebhookAction>;
@@ -130,18 +129,9 @@ export const UserStoryChangeWebhookMessage = Schema.Struct({
   change: WebhookChangeInfo,
 });
 
-export const UserStoryDeleteWebhookMessage = Schema.Struct({
-  action: Schema.Literal("delete"),
-  type: Schema.Literal("userstory"),
-  by: User,
-  date: Schema.String,
-  data: WebhookUserStoryData,
-});
-
 export const UserStoryWebhookMessage = Schema.Union(
   UserStoryCreateWebhookMessage,
-  UserStoryChangeWebhookMessage,
-  UserStoryDeleteWebhookMessage
+  UserStoryChangeWebhookMessage
 );
 
 export type UserStoryCreateWebhookMessage = Schema.Schema.Type<
@@ -149,9 +139,6 @@ export type UserStoryCreateWebhookMessage = Schema.Schema.Type<
 >;
 export type UserStoryChangeWebhookMessage = Schema.Schema.Type<
   typeof UserStoryChangeWebhookMessage
->;
-export type UserStoryDeleteWebhookMessage = Schema.Schema.Type<
-  typeof UserStoryDeleteWebhookMessage
 >;
 export type UserStoryWebhookMessage = Schema.Schema.Type<
   typeof UserStoryWebhookMessage

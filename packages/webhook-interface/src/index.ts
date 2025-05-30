@@ -1,24 +1,31 @@
 import { Schema } from "effect";
+import * as crypto from "node:crypto";
 import { NonEmptyString, PrdText } from "@taiga-task-master/common";
 import { type GenerateTasksDeps } from "@taiga-task-master/core";
+import {
+  UserStoryWebhookMessage,
+  WebhookUserStoryData,
+} from "@taiga-task-master/taiga-api-interface";
 
 export const WebhookAuthToken = NonEmptyString.pipe(
   Schema.brand("WebhookAuthToken")
 );
 export type WebhookAuthToken = typeof WebhookAuthToken.Type;
 
-export const WebhookPayload = Schema.Struct({
-  type: Schema.Literal("prd_update"),
-  prd: PrdText,
-  project_id: Schema.optional(NonEmptyString),
-});
+export const WebhookPayload = Schema.extend(
+  UserStoryWebhookMessage.pipe(Schema.pick("action")),
+  Schema.Struct({
+    data: WebhookUserStoryData.pick("description", "project"),
+  })
+);
 export type WebhookPayload = typeof WebhookPayload.Type;
 
 export const WebhookRequest = Schema.Struct({
   headers: Schema.Struct({
-    authorization: Schema.String,
+    "x-taiga-webhook-signature": Schema.String,
   }),
   body: WebhookPayload,
+  rawBody: Schema.String, // Original body string for signature validation
 });
 export type WebhookRequest = typeof WebhookRequest.Type;
 
@@ -69,16 +76,16 @@ export type WebhookHandler = (
   deps: WebhookDeps
 ) => (request: WebhookRequest) => Promise<WebhookResponse>;
 
-export const validateAuthHeader = (
-  authHeader: string,
+export const validateWebhookSignature = (
+  signature: string,
+  body: string,
   expectedToken: WebhookAuthToken
 ): boolean => {
-  const bearerPrefix = "Bearer ";
-  if (!authHeader.startsWith(bearerPrefix)) {
-    return false;
-  }
-  const token = authHeader.slice(bearerPrefix.length);
-  return token === expectedToken;
+  // Use the same HMAC-SHA1 implementation as taiga-api package
+  const mac = crypto.createHmac("sha1", expectedToken);
+  mac.update(body, "utf8");
+  const computedSignature = mac.digest("hex");
+  return computedSignature === signature;
 };
 
 export const assertEnvironment = (

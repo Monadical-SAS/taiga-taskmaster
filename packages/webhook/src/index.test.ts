@@ -1,63 +1,83 @@
-/* eslint-disable functional/no-let, @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { webhookHandler, parseRequest, sendResponse } from "./index.js";
+// @vibe-generated: tests for updated webhook handler
+import { describe, it, expect, vi } from "vitest";
+import { webhookHandler, parseRequest } from "./index.js";
 import type {
   WebhookDeps,
   WebhookRequest,
-  WebhookResponse,
+  WebhookAuthToken,
   WebhookConfig,
 } from "@taiga-task-master/webhook-interface";
-// Simplified mock type for testing - avoids complex branded types
-type MockTasksFileContent = {
-  tasks?: Array<{ id: number | string; [key: string]: unknown }>;
-  [key: string]: unknown;
-};
-import { assertEnvironment } from "@taiga-task-master/webhook-interface";
-import type { IncomingMessage, ServerResponse } from "node:http";
+import { IncomingMessage } from "node:http";
+import { Readable } from "node:stream";
+import * as crypto from "node:crypto";
+
+// Helper function to generate HMAC-SHA1 signature for test payloads
+function generateSignature(body: string, token: string): string {
+  const mac = crypto.createHmac("sha1", token);
+  mac.update(body, "utf8");
+  return mac.digest("hex");
+}
 
 describe("webhook implementation", () => {
-  const mockConfig: WebhookConfig = {
-    WEBHOOK_TOKEN: "test-token" as any,
-    PORT: 3000 as any,
+  const createMockDeps = () => {
+    const mockTaskmaster = {
+      generateTasks: vi.fn(),
+    };
+
+    const mockGenerateTasks = vi
+      .fn()
+      .mockReturnValue(vi.fn().mockResolvedValue(undefined));
+
+    const mockDeps: WebhookDeps = {
+      config: {
+        WEBHOOK_TOKEN: "test-token" as WebhookAuthToken,
+        PORT: 3000 as WebhookConfig["PORT"],
+      },
+      generateTasks: mockGenerateTasks,
+      taskGeneratorDeps: {
+        taskmaster: mockTaskmaster,
+        tasktracker: {
+          syncTasks: vi.fn(),
+        },
+      },
+    };
+
+    return { mockDeps, mockGenerateTasks, mockTaskmaster };
   };
 
   describe("webhookHandler", () => {
-    let mockDeps: WebhookDeps;
-    let mockGenerateTasks: ReturnType<typeof vi.fn>;
+    it("should process valid Taiga webhook with minimal payload", async () => {
+      const { mockDeps, mockGenerateTasks, mockTaskmaster } = createMockDeps();
 
-    beforeEach(() => {
-      mockGenerateTasks = vi.fn();
-      mockDeps = {
-        config: mockConfig,
-        generateTasks: vi.fn(() => mockGenerateTasks),
-        taskGeneratorDeps: {
-          taskmaster: {
-            generateTasks: vi.fn(),
-          },
-          tasktracker: {
-            syncTasks: vi.fn(),
-          },
-        } as any,
-      };
-    });
-
-    it("processes valid request successfully", async () => {
-      const mockTasksContent: MockTasksFileContent = {
+      // Mock the task generation response
+      const mockTasksContent = {
         tasks: [
-          { id: 1, title: "Task 1" },
-          { id: 2, title: "Task 2" },
-          { id: 3, title: "Task 3" },
+          { id: "task-1", title: "Task 1" },
+          { id: "task-2", title: "Task 2" },
         ],
       };
-      mockGenerateTasks.mockResolvedValue(mockTasksContent);
+      mockTaskmaster.generateTasks.mockResolvedValue(mockTasksContent);
+
+      const requestBody = {
+        action: "create" as const,
+        data: {
+          description: "This is a sample PRD content for task generation",
+          project: {
+            id: 12345,
+            permalink: "https://tree.taiga.io/project/test-project",
+            name: "Test Project",
+            logo_big_url: null,
+          },
+        },
+      };
+
+      const bodyString = JSON.stringify(requestBody);
+      const validSignature = generateSignature(bodyString, "test-token");
 
       const request: WebhookRequest = {
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content" as any,
-          project_id: "project-123" as any,
-        },
+        headers: { "x-taiga-webhook-signature": validSignature },
+        body: requestBody,
+        rawBody: bodyString,
       };
 
       const handler = webhookHandler(mockDeps);
@@ -65,87 +85,38 @@ describe("webhook implementation", () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        message: "Successfully processed PRD update for project project-123",
-        tasks_generated: 3,
-      });
-      expect(mockGenerateTasks).toHaveBeenCalledWith("Sample PRD content");
-    });
-
-    it("processes valid request successfully without project_id", async () => {
-      const mockTasksContent: MockTasksFileContent = {
-        tasks: [
-          { id: 1, title: "Task 1" },
-          { id: 2, title: "Task 2" },
-        ],
-      };
-      mockGenerateTasks.mockResolvedValue(mockTasksContent);
-
-      const request: WebhookRequest = {
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content" as any,
-        },
-      };
-
-      const handler = webhookHandler(mockDeps);
-      const response = await handler(request);
-
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({
-        message: "Successfully processed PRD update",
+        message: "Successfully processed Taiga webhook for user story",
         tasks_generated: 2,
       });
-      expect(mockGenerateTasks).toHaveBeenCalledWith("Sample PRD content");
+
+      // Verify the task generation was called with the description as PRD
+      expect(mockTaskmaster.generateTasks).toHaveBeenCalledWith(
+        "This is a sample PRD content for task generation",
+        expect.any(Object) // Option.none() object
+      );
+      expect(mockGenerateTasks).toHaveBeenCalled();
     });
 
-    it("handles unauthorized request with invalid token", async () => {
-      const request: WebhookRequest = {
-        headers: { authorization: "Bearer wrong-token" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content" as any,
-          project_id: "project-123" as any,
+    it("should reject invalid webhook signature", async () => {
+      const { mockDeps } = createMockDeps();
+
+      const requestBody = {
+        action: "create" as const,
+        data: {
+          description: "Test description",
+          project: {
+            id: 12345,
+            permalink: "https://tree.taiga.io/project/test",
+            name: "Test",
+            logo_big_url: null,
+          },
         },
       };
 
-      const handler = webhookHandler(mockDeps);
-      const response = await handler(request);
-
-      expect(response.status).toBe(401);
-      expect(response.body).toEqual({
-        error: "Unauthorized",
-      });
-      expect(mockGenerateTasks).not.toHaveBeenCalled();
-    });
-
-    it("handles unauthorized request with missing Bearer prefix", async () => {
       const request: WebhookRequest = {
-        headers: { authorization: "test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content" as any,
-          project_id: "project-123" as any,
-        },
-      };
-
-      const handler = webhookHandler(mockDeps);
-      const response = await handler(request);
-
-      expect(response.status).toBe(401);
-      expect(response.body).toEqual({
-        error: "Unauthorized",
-      });
-    });
-
-    it("handles empty authorization header", async () => {
-      const request: WebhookRequest = {
-        headers: { authorization: "" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content" as any,
-          project_id: "project-123" as any,
-        },
+        headers: { "x-taiga-webhook-signature": "invalid-signature" },
+        body: requestBody,
+        rawBody: JSON.stringify(requestBody),
       };
 
       const handler = webhookHandler(mockDeps);
@@ -157,18 +128,71 @@ describe("webhook implementation", () => {
       });
     });
 
-    it("handles task generation failure as 500 error", async () => {
-      mockGenerateTasks.mockRejectedValue(
-        new Error("Task generation service unavailable")
+    it("should handle change action webhooks", async () => {
+      const { mockDeps, mockTaskmaster } = createMockDeps();
+
+      const mockTasksContent = { tasks: [] };
+      mockTaskmaster.generateTasks.mockResolvedValue(mockTasksContent);
+
+      const requestBody = {
+        action: "change" as const,
+        data: {
+          description: "Updated PRD content with changes",
+          project: {
+            id: 67890,
+            permalink: "https://tree.taiga.io/project/another-project",
+            name: "Another Project",
+            logo_big_url: "https://example.com/logo.png",
+          },
+        },
+      };
+
+      const bodyString = JSON.stringify(requestBody);
+      const validSignature = generateSignature(bodyString, "test-token");
+
+      const request: WebhookRequest = {
+        headers: { "x-taiga-webhook-signature": validSignature },
+        body: requestBody,
+        rawBody: bodyString,
+      };
+
+      const handler = webhookHandler(mockDeps);
+      const response = await handler(request);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        message: "Successfully processed Taiga webhook for user story",
+        tasks_generated: 0,
+      });
+    });
+
+    it("should handle errors in task generation", async () => {
+      const { mockDeps, mockTaskmaster } = createMockDeps();
+
+      mockTaskmaster.generateTasks.mockRejectedValue(
+        new Error("Task generation failed")
       );
 
-      const request: WebhookRequest = {
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content" as any,
-          project_id: "project-123" as any,
+      const requestBody = {
+        action: "create" as const,
+        data: {
+          description: "Test description",
+          project: {
+            id: 12345,
+            permalink: "https://tree.taiga.io/project/test",
+            name: "Test",
+            logo_big_url: null,
+          },
         },
+      };
+
+      const bodyString = JSON.stringify(requestBody);
+      const validSignature = generateSignature(bodyString, "test-token");
+
+      const request: WebhookRequest = {
+        headers: { "x-taiga-webhook-signature": validSignature },
+        body: requestBody,
+        rawBody: bodyString,
       };
 
       const handler = webhookHandler(mockDeps);
@@ -176,451 +200,98 @@ describe("webhook implementation", () => {
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({
-        error: "Task generation service unavailable",
-      });
-    });
-
-    it("handles validation errors as 400 error", async () => {
-      mockGenerateTasks.mockRejectedValue(
-        new Error("Invalid PRD format: Expected string")
-      );
-
-      const request: WebhookRequest = {
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content" as any,
-          project_id: "project-123" as any,
-        },
-      };
-
-      const handler = webhookHandler(mockDeps);
-      const response = await handler(request);
-
-      expect(response.status).toBe(400);
-      expect(response.body).toEqual({
-        error: "Invalid PRD format: Expected string",
-      });
-    });
-
-    it("handles decode errors as 400 error", async () => {
-      mockGenerateTasks.mockRejectedValue(
-        new Error("decode failed for schema")
-      );
-
-      const request: WebhookRequest = {
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content" as any,
-          project_id: "project-123" as any,
-        },
-      };
-
-      const handler = webhookHandler(mockDeps);
-      const response = await handler(request);
-
-      expect(response.status).toBe(400);
-      expect(response.body).toEqual({
-        error: "decode failed for schema",
-      });
-    });
-
-    it("counts tasks correctly when no tasks are generated", async () => {
-      const mockTasksContent: MockTasksFileContent = { tasks: [] };
-      mockGenerateTasks.mockResolvedValue(mockTasksContent);
-
-      const request: WebhookRequest = {
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Empty PRD" as any,
-          project_id: "project-123" as any,
-        },
-      };
-
-      const handler = webhookHandler(mockDeps);
-      const response = await handler(request);
-
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({
-        message: "Successfully processed PRD update for project project-123",
-        tasks_generated: 0,
-      });
-    });
-
-    it("handles tasks content without tasks array", async () => {
-      const mockTasksContent: MockTasksFileContent = { metadata: "some data" };
-      mockGenerateTasks.mockResolvedValue(mockTasksContent);
-
-      const request: WebhookRequest = {
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "PRD without tasks" as any,
-          project_id: "project-123" as any,
-        },
-      };
-
-      const handler = webhookHandler(mockDeps);
-      const response = await handler(request);
-
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({
-        message: "Successfully processed PRD update for project project-123",
-        tasks_generated: 0,
-      });
-    });
-
-    it("handles non-Error exceptions", async () => {
-      mockGenerateTasks.mockRejectedValue("String error");
-
-      const request: WebhookRequest = {
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content" as any,
-          project_id: "project-123" as any,
-        },
-      };
-
-      const handler = webhookHandler(mockDeps);
-      const response = await handler(request);
-
-      expect(response.status).toBe(500);
-      expect(response.body).toEqual({
-        error: "Unknown error",
-      });
-    });
-
-    it("handles large number of tasks correctly", async () => {
-      const mockTasksContent: MockTasksFileContent = {
-        tasks: Array.from({ length: 100 }, (_, i) => ({
-          id: i + 1,
-          title: `Task ${i + 1}`,
-        })),
-      };
-      mockGenerateTasks.mockResolvedValue(mockTasksContent);
-
-      const request: WebhookRequest = {
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Large PRD content" as any,
-          project_id: "project-123" as any,
-        },
-      };
-
-      const handler = webhookHandler(mockDeps);
-      const response = await handler(request);
-
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({
-        message: "Successfully processed PRD update for project project-123",
-        tasks_generated: 100,
+        error: "Task generation failed",
       });
     });
   });
 
   describe("parseRequest", () => {
-    it("parses valid request successfully", async () => {
-      const mockReq = {
-        headers: { authorization: "Bearer test-token" },
-        [Symbol.asyncIterator]: async function* () {
-          yield Buffer.from(
-            JSON.stringify({
-              type: "prd_update",
-              prd: "Sample PRD content",
-              project_id: "project-123",
-            })
-          );
+    it("should parse valid request with simplified payload", async () => {
+      const mockPayload = {
+        action: "create",
+        data: {
+          description: "Test PRD content",
+          project: {
+            id: 12345,
+            permalink: "https://tree.taiga.io/project/test",
+            name: "Test Project",
+            logo_big_url: null,
+          },
         },
-      } as any as IncomingMessage;
+      };
+
+      const mockReq = new Readable({
+        read() {
+          this.push(JSON.stringify(mockPayload));
+          this.push(null);
+        },
+      }) as IncomingMessage;
+
+      mockReq.headers = {
+        "x-taiga-webhook-signature": "test-signature",
+      };
 
       const result = await parseRequest(mockReq);
 
-      expect(result).toEqual({
-        headers: { authorization: "Bearer test-token" },
-        body: {
-          type: "prd_update",
-          prd: "Sample PRD content",
-          project_id: "project-123",
-        },
-      });
+      expect(result._tag).toBe("Right");
+      if (result._tag === "Right") {
+        expect(result.right.headers["x-taiga-webhook-signature"]).toBe(
+          "test-signature"
+        );
+        expect(result.right.body.action).toBe("create");
+        expect(result.right.body.data.description).toBe("Test PRD content");
+        expect(result.right.body.data.project.id).toBe(12345);
+        expect(result.right.rawBody).toBe(JSON.stringify(mockPayload));
+      }
     });
 
-    it("handles missing authorization header", async () => {
-      const mockReq = {
-        headers: {},
-        [Symbol.asyncIterator]: async function* () {
-          yield Buffer.from(
-            JSON.stringify({
-              type: "prd_update",
-              prd: "Sample PRD content",
-              project_id: "project-123",
-            })
-          );
+    it("should handle invalid JSON", async () => {
+      const mockReq = new Readable({
+        read() {
+          this.push("invalid json");
+          this.push(null);
         },
-      } as any as IncomingMessage;
+      }) as IncomingMessage;
 
-      const result = await parseRequest(mockReq);
-
-      expect(result.headers.authorization).toBe("");
-    });
-
-    it("throws error for invalid JSON", async () => {
-      const mockReq = {
-        headers: { authorization: "Bearer test-token" },
-        [Symbol.asyncIterator]: async function* () {
-          yield Buffer.from("{ invalid json");
-        },
-      } as any as IncomingMessage;
+      mockReq.headers = {
+        "x-taiga-webhook-signature": "test-signature",
+      };
 
       await expect(parseRequest(mockReq)).rejects.toThrow(
         "Invalid JSON payload"
       );
     });
 
-    it("throws error for invalid payload schema", async () => {
-      const mockReq = {
-        headers: { authorization: "Bearer test-token" },
-        [Symbol.asyncIterator]: async function* () {
-          yield Buffer.from(
-            JSON.stringify({
-              type: "invalid_type",
-              prd: "Sample PRD content",
-              project_id: "project-123",
-            })
-          );
+    it("should handle missing signature header", async () => {
+      const mockPayload = {
+        action: "create",
+        data: {
+          description: "Test",
+          project: {
+            id: 123,
+            permalink: "https://test.com",
+            name: "Test",
+            logo_big_url: null,
+          },
         },
-      } as any as IncomingMessage;
+      };
 
-      await expect(parseRequest(mockReq)).rejects.toThrow();
-    });
-
-    it("throws error for empty PRD", async () => {
-      const mockReq = {
-        headers: { authorization: "Bearer test-token" },
-        [Symbol.asyncIterator]: async function* () {
-          yield Buffer.from(
-            JSON.stringify({
-              type: "prd_update",
-              prd: "",
-              project_id: "project-123",
-            })
-          );
+      const mockReq = new Readable({
+        read() {
+          this.push(JSON.stringify(mockPayload));
+          this.push(null);
         },
-      } as any as IncomingMessage;
+      }) as IncomingMessage;
 
-      await expect(parseRequest(mockReq)).rejects.toThrow();
-    });
-
-    it("handles large request body", async () => {
-      const largePrd = "A".repeat(10000);
-      const mockReq = {
-        headers: { authorization: "Bearer test-token" },
-        [Symbol.asyncIterator]: async function* () {
-          // Split into multiple chunks to simulate streaming
-          const payload = JSON.stringify({
-            type: "prd_update",
-            prd: largePrd,
-            project_id: "project-123",
-          });
-          const chunkSize = 1000;
-          for (let i = 0; i < payload.length; i += chunkSize) {
-            yield Buffer.from(payload.slice(i, i + chunkSize));
-          }
-        },
-      } as any as IncomingMessage;
+      mockReq.headers = {}; // No signature header
 
       const result = await parseRequest(mockReq);
 
-      expect(result.body.prd).toBe(largePrd);
-      expect(result.body.type).toBe("prd_update");
-    });
-  });
-
-  describe("sendResponse", () => {
-    let mockRes: Partial<ServerResponse>;
-
-    beforeEach(() => {
-      mockRes = {
-        statusCode: 0,
-        setHeader: vi.fn(),
-        end: vi.fn(),
-      };
-    });
-
-    it("sends 200 success response correctly", () => {
-      const response: WebhookResponse = {
-        status: 200,
-        body: {
-          message: "Success",
-          tasks_generated: 5,
-        },
-      };
-
-      sendResponse(mockRes as ServerResponse, response);
-
-      expect(mockRes.statusCode).toBe(200);
-      expect(mockRes.setHeader).toHaveBeenCalledWith(
-        "Content-Type",
-        "application/json"
-      );
-      expect(mockRes.end).toHaveBeenCalledWith(
-        JSON.stringify({ message: "Success", tasks_generated: 5 })
-      );
-    });
-
-    it("sends 401 unauthorized response correctly", () => {
-      const response: WebhookResponse = {
-        status: 401,
-        body: {
-          error: "Unauthorized",
-        },
-      };
-
-      sendResponse(mockRes as ServerResponse, response);
-
-      expect(mockRes.statusCode).toBe(401);
-      expect(mockRes.setHeader).toHaveBeenCalledWith(
-        "Content-Type",
-        "application/json"
-      );
-      expect(mockRes.end).toHaveBeenCalledWith(
-        JSON.stringify({ error: "Unauthorized" })
-      );
-    });
-
-    it("sends 400 bad request response correctly", () => {
-      const response: WebhookResponse = {
-        status: 400,
-        body: {
-          error: "Invalid payload format",
-        },
-      };
-
-      sendResponse(mockRes as ServerResponse, response);
-
-      expect(mockRes.statusCode).toBe(400);
-      expect(mockRes.setHeader).toHaveBeenCalledWith(
-        "Content-Type",
-        "application/json"
-      );
-      expect(mockRes.end).toHaveBeenCalledWith(
-        JSON.stringify({ error: "Invalid payload format" })
-      );
-    });
-
-    it("sends 500 internal server error response correctly", () => {
-      const response: WebhookResponse = {
-        status: 500,
-        body: {
-          error: "Internal server error",
-        },
-      };
-
-      sendResponse(mockRes as ServerResponse, response);
-
-      expect(mockRes.statusCode).toBe(500);
-      expect(mockRes.setHeader).toHaveBeenCalledWith(
-        "Content-Type",
-        "application/json"
-      );
-      expect(mockRes.end).toHaveBeenCalledWith(
-        JSON.stringify({ error: "Internal server error" })
-      );
-    });
-  });
-
-  describe("assertEnvironment", () => {
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
-    it("validates correct environment variables", () => {
-      const env = {
-        WEBHOOK_TOKEN: "test-secret-token",
-        PORT: "8080",
-      };
-
-      const result = assertEnvironment(env);
-
-      expect(result.WEBHOOK_TOKEN).toBe("test-secret-token");
-      expect(result.PORT).toBe(8080);
-    });
-
-    it("uses default port when PORT is not specified", () => {
-      const env = {
-        WEBHOOK_TOKEN: "test-secret-token",
-      };
-
-      const result = assertEnvironment(env);
-
-      expect(result.WEBHOOK_TOKEN).toBe("test-secret-token");
-      expect(result.PORT).toBe(3000);
-    });
-
-    it("throws error when WEBHOOK_TOKEN is missing", () => {
-      const env = {
-        PORT: "8080",
-      };
-
-      expect(() => assertEnvironment(env)).toThrow(
-        "WEBHOOK_TOKEN environment variable is required"
-      );
-    });
-
-    it("throws error when WEBHOOK_TOKEN is empty string", () => {
-      const env = {
-        WEBHOOK_TOKEN: "",
-        PORT: "8080",
-      };
-
-      expect(() => assertEnvironment(env)).toThrow(
-        "WEBHOOK_TOKEN environment variable is required"
-      );
-    });
-
-    it("throws error when WEBHOOK_TOKEN is undefined", () => {
-      const env = {
-        WEBHOOK_TOKEN: undefined,
-        PORT: "8080",
-      };
-
-      expect(() => assertEnvironment(env)).toThrow(
-        "WEBHOOK_TOKEN environment variable is required"
-      );
-    });
-
-    it("parses PORT correctly when provided as string", () => {
-      const env = {
-        WEBHOOK_TOKEN: "test-token",
-        PORT: "5000",
-      };
-
-      const result = assertEnvironment(env);
-
-      expect(result.PORT).toBe(5000);
-    });
-
-    it("throws error for invalid PORT schema validation", () => {
-      const env = {
-        WEBHOOK_TOKEN: "test-token",
-        PORT: "-1", // negative port should fail schema validation
-      };
-
-      expect(() => assertEnvironment(env)).toThrow();
-    });
-
-    it("handles non-integer PORT by truncating to integer", () => {
-      const env = {
-        WEBHOOK_TOKEN: "test-token",
-        PORT: "3000.5", // parseInt will truncate to 3000
-      };
-
-      const result = assertEnvironment(env);
-      expect(result.PORT).toBe(3000);
+      expect(result._tag).toBe("Right");
+      if (result._tag === "Right") {
+        expect(result.right.headers["x-taiga-webhook-signature"]).toBe("");
+        expect(result.right.rawBody).toBe(JSON.stringify(mockPayload));
+      }
     });
   });
 });

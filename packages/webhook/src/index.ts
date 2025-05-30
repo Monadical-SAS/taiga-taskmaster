@@ -5,10 +5,13 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
-import { Schema, Option } from "effect";
+import { Schema, Option, pipe, Either } from "effect";
 
 // Import all types and functions from webhook-interface
 export * from "@taiga-task-master/webhook-interface";
+
+// Export Taiga webhook functionality
+export * from "./taiga-webhook.js";
 import type {
   WebhookDeps,
   WebhookHandler,
@@ -17,16 +20,19 @@ import type {
 } from "@taiga-task-master/webhook-interface";
 import {
   WebhookPayload,
-  validateAuthHeader,
+  validateWebhookSignature,
   assertEnvironment,
 } from "@taiga-task-master/webhook-interface";
+import { PrdText } from "@taiga-task-master/common";
+import { type ParseError, TreeFormatter } from "effect/ParseResult";
+import { isLeft } from "effect/Either";
 
 /**
  * Parses incoming HTTP request into WebhookRequest format
  */
 export const parseRequest = async (
   req: IncomingMessage
-): Promise<WebhookRequest> => {
+): Promise<Either.Either<WebhookRequest, ParseError>> => {
   // Collect request body
   const chunks: Uint8Array[] = [];
   for await (const chunk of req) {
@@ -43,14 +49,23 @@ export const parseRequest = async (
   }
 
   // Validate payload schema
-  const payload = Schema.decodeUnknownSync(WebhookPayload)(bodyJson);
-
-  return {
-    headers: {
-      authorization: req.headers.authorization || "",
-    },
-    body: payload,
-  };
+  return pipe(
+    Schema.decodeUnknownEither(WebhookPayload)(bodyJson),
+    Either.map((payload) => ({
+      headers: {
+        "x-taiga-webhook-signature": ((h) => {
+          const f = (h_: typeof h): string => {
+            if (h_ === undefined) return "";
+            if (typeof h_ === "string") return h_;
+            return f(h_[0]);
+          };
+          return f(h);
+        })(req.headers["x-taiga-webhook-signature"]),
+      },
+      body: payload,
+      rawBody: bodyText, // Include original body string for signature validation
+    }))
+  );
 };
 
 /**
@@ -62,18 +77,21 @@ export const sendResponse = (
 ): void => {
   res.statusCode = response.status;
   res.setHeader("Content-Type", "application/json");
-  res.end(JSON.stringify(response.body));
+  res.end(JSON.stringify(response.body || {}));
 };
 
 /**
- * Main webhook handler implementation
+ * Main webhook handler implementation for Taiga webhooks
  */
 export const webhookHandler: WebhookHandler = (deps) => async (request) => {
   try {
-    // Validate authorization
+    // Validate webhook signature using original raw body
+    const signature = request.headers["x-taiga-webhook-signature"];
+
     if (
-      !validateAuthHeader(
-        request.headers.authorization,
+      !validateWebhookSignature(
+        signature,
+        request.rawBody,
         deps.config.WEBHOOK_TOKEN
       )
     ) {
@@ -85,15 +103,19 @@ export const webhookHandler: WebhookHandler = (deps) => async (request) => {
       };
     }
 
-    // Process PRD update
+    // Extract PRD from user story description and validate it
+    const prdDescription = request.body.data.description;
+    const prd = Schema.decodeSync(PrdText)(prdDescription);
+
+    // Process PRD to generate tasks
     // First generate tasks to get count, then sync happens automatically
     const tasksContent = await deps.taskGeneratorDeps.taskmaster.generateTasks(
-      request.body.prd,
+      prd,
       Option.none()
     );
 
     // Sync to Taiga (this is the full orchestration)
-    await deps.generateTasks(deps.taskGeneratorDeps)(request.body.prd);
+    await deps.generateTasks(deps.taskGeneratorDeps)(prd);
 
     // Count tasks in the generated content
     const tasksCount = Array.isArray(tasksContent.tasks)
@@ -103,7 +125,7 @@ export const webhookHandler: WebhookHandler = (deps) => async (request) => {
     return {
       status: 200,
       body: {
-        message: `Successfully processed PRD update${request.body.project_id ? ` for project ${request.body.project_id}` : ""}`,
+        message: `Successfully processed Taiga webhook for user story`,
         tasks_generated: tasksCount,
       },
     };
@@ -147,8 +169,8 @@ export const createWebhookServer = (deps: WebhookDeps) => {
         return;
       }
 
-      // Only handle POST requests to /api/prd-webhook
-      if (req.method !== "POST" || req.url !== "/api/prd-webhook") {
+      // Only handle POST requests to /api/taiga-webhook
+      if (req.method !== "POST" || req.url !== "/api/taiga-webhook") {
         res.statusCode = 404;
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify({ error: "Not Found" }));
@@ -156,7 +178,16 @@ export const createWebhookServer = (deps: WebhookDeps) => {
       }
 
       const request = await parseRequest(req);
-      const response = await handler(request);
+      if (isLeft(request)) {
+        const response: WebhookResponse = {
+          status: 400,
+          body: {
+            error: `parse error: ${TreeFormatter.formatErrorSync(request.left)}`,
+          },
+        };
+        return sendResponse(res, response);
+      }
+      const response = await handler(request.right);
       sendResponse(res, response);
     } catch (error) {
       const errorMessage =
@@ -167,7 +198,7 @@ export const createWebhookServer = (deps: WebhookDeps) => {
           error: errorMessage,
         },
       };
-      sendResponse(res, response);
+      return sendResponse(res, response);
     }
   });
 

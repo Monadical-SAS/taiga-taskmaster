@@ -906,3 +906,4 @@ export const taigaApiFactory: TaigaApiFactory = {
 };
 
 export * from "@taiga-task-master/taiga-api-interface";
+export * from "./webhook-handler.js";

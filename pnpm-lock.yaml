@@ -320,6 +320,9 @@ importers:
       "@taiga-task-master/taiga-api":
         specifier: workspace:*
         version: link:../taiga-api
+      "@taiga-task-master/taiga-api-interface":
+        specifier: workspace:*
+        version: link:../taiga-api-interface
       "@taiga-task-master/taskmaster":
         specifier: workspace:*
         version: link:../taskmaster
@@ -354,6 +357,9 @@ importers:
       "@taiga-task-master/core":
         specifier: workspace:*
         version: link:../core
+      "@taiga-task-master/taiga-api-interface":
+        specifier: workspace:*
+        version: link:../taiga-api-interface
       effect:
         specifier: ^3.15.4
         version: 3.15.4

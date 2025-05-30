@@ -32,6 +32,16 @@ export default tseslint.config(
       "functional/no-throw-statements": "off",
       "functional/no-return-void": "off",
       "functional/no-conditional-statements": "off",
+      // Prohibit vi.doMock to prevent global mocking issues
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.object.name='vi'][callee.property.name='doMock']",
+          message:
+            "vi.doMock is prohibited. Use proper dependency injection or function mocking instead.",
+        },
+      ],
     },
   },
   {

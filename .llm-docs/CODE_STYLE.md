@@ -142,3 +142,7 @@ If you want to transform a type of variable, you parse it / or go through typegu
 # Interface naming
 
 if you have to write an interface, don't prefix it with "I" like you saw in some code online. It's ts antipattern.
+
+# Testing
+
+Use dependency injection for unit test. If you feel like you want to global mock something, it means that the code under the test isn't written in a testable way and need more dependency injection. Don't never do global mocks unless told explicitly.
