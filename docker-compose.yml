@@ -10,11 +10,11 @@ services:
     container_name: taiga-task-master-webhook
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PORT:-3000}:${PORT:-3000}"
     environment:
       # Webhook Configuration
       - WEBHOOK_TOKEN=${WEBHOOK_TOKEN}
-      - PORT=3000
+      - PORT=${PORT}
 
       # Taiga API Configuration
       - TAIGA_BASE_URL=${TAIGA_BASE_URL:-https://api.taiga.io}
