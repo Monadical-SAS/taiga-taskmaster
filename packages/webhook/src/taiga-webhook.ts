@@ -1,6 +1,8 @@
 // @vibe-generated: taiga webhook processing logic
 import { Schema } from "effect";
 import { UserStoryCreateWebhookMessage } from "@taiga-task-master/taiga-api-interface";
+import { TreeFormatter } from "effect/ParseResult";
+import { isLeft } from "effect/Either";
 
 export interface TaigaWebhookConfig {
   webhookToken: string;
@@ -43,29 +45,22 @@ export function processTaigaWebhook<T>(config: TaigaWebhookConfig) {
         return { success: false, error: "Missing webhook signature" };
       }
 
-      // Convert body to JSON string for signature verification
       const dataString = JSON.stringify(request.body);
 
-      // Verify signature (imported from taiga-api package)
       const { verifySignature } = await import("@taiga-task-master/taiga-api");
       if (!verifySignature(config.webhookToken, dataString, signature)) {
         return { success: false, error: "Invalid webhook signature" };
-      }
-
-      // First check if it's a webhook message with an action field
-      const bodyWithAction = request.body as { action?: string };
-
-      // Filter for create actions only
-      if (bodyWithAction.action !== "create") {
-        return { success: false, error: "Only 'create' actions are supported" };
       }
 
       // Parse as complete create message
       const parseResult = Schema.decodeUnknownEither(
         UserStoryCreateWebhookMessage
       )(request.body);
-      if (parseResult._tag === "Left") {
-        return { success: false, error: "Invalid webhook message format" };
+      if (isLeft(parseResult)) {
+        return {
+          success: false,
+          error: `Invalid webhook message format: ${TreeFormatter.formatError(parseResult.left)}`,
+        };
       }
 
       const webhookMessage = parseResult.right;
