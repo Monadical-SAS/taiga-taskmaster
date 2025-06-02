@@ -1,6 +1,9 @@
 // @vibe-generated: taiga webhook processing logic
 import { Schema } from "effect";
-import { UserStoryCreateWebhookMessage } from "@taiga-task-master/taiga-api-interface";
+import {
+  UserStoryWebhookMessage,
+  UserStoryCreateWebhookMessage,
+} from "@taiga-task-master/taiga-api-interface";
 import { TreeFormatter } from "effect/ParseResult";
 import { isLeft } from "effect/Either";
 
@@ -52,10 +55,10 @@ export function processTaigaWebhook<T>(config: TaigaWebhookConfig) {
         return { success: false, error: "Invalid webhook signature" };
       }
 
-      // Parse as complete create message
-      const parseResult = Schema.decodeUnknownEither(
-        UserStoryCreateWebhookMessage
-      )(request.body);
+      // Parse as general webhook message first
+      const parseResult = Schema.decodeUnknownEither(UserStoryWebhookMessage)(
+        request.body
+      );
       if (isLeft(parseResult)) {
         return {
           success: false,
@@ -64,6 +67,11 @@ export function processTaigaWebhook<T>(config: TaigaWebhookConfig) {
       }
 
       const webhookMessage = parseResult.right;
+
+      // Check for create action at business logic level
+      if (webhookMessage.action !== "create") {
+        return { success: false, error: "Only 'create' actions are supported" };
+      }
 
       // Filter for user stories with "prd" tag
       const hasPrdTag = webhookMessage.data.tags.includes("prd");

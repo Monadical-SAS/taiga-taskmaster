@@ -137,7 +137,20 @@ describe("taiga-webhook", () => {
     });
 
     it("should reject non-create actions", async () => {
-      const updateBody = { ...validWebhookBody, action: "update" };
+      const updateBody = {
+        ...validWebhookBody,
+        action: "change",
+        change: {
+          comment: "Test change",
+          comment_html: "<p>Test change</p>",
+          delete_comment_date: null,
+          comment_versions: null,
+          edit_comment_date: null,
+          diff: {
+            description_diff: "Test diff",
+          },
+        },
+      };
       const dataString = JSON.stringify(updateBody);
 
       // Generate valid signature

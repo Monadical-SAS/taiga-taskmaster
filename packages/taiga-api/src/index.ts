@@ -57,10 +57,11 @@ import {
   type CustomAttributeId,
   type PointId,
   type AuthToken,
-  type RefreshToken, UserStoryListDetail
-} from '@taiga-task-master/taiga-api-interface';
-import { isLeft } from 'effect/Either';
-import { NonEmptyString } from '@taiga-task-master/common';
+  type RefreshToken,
+  UserStoryListDetail,
+} from "@taiga-task-master/taiga-api-interface";
+import { isLeft } from "effect/Either";
+import { NonEmptyString } from "@taiga-task-master/common";
 
 // ============================================================================
 // HTTP Client Implementation
@@ -460,9 +461,11 @@ const createTasksService = (client: HttpClient): TasksService => ({
 // User Stories Service Implementation
 // ============================================================================
 
-const deleteUserStory = (client: HttpClient) =>async (id: UserStoryId): Promise<void> => {
-  await client.delete(`/api/v1/userstories/${id}`);
-};
+const deleteUserStory =
+  (client: HttpClient) =>
+  async (id: UserStoryId): Promise<void> => {
+    await client.delete(`/api/v1/userstories/${id}`);
+  };
 
 const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
   list: async (filters?: {
@@ -497,16 +500,21 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
     const response = await client.post("/api/v1/userstories", userStory);
     const r = Schema.decodeUnknownEither(UserStoryDetail)(response.data);
     if (isLeft(r)) {
-        let userStoryId: number | null= null;
-        console.warn(`cleaning up faulty user story`);
+      // eslint-disable-next-line functional/no-let
+      let userStoryId: number | null = null;
+      console.warn(`cleaning up faulty user story`);
       try {
-        userStoryId = Schema.decodeUnknownSync(Schema.Struct({
-          id: Schema.Number
-        }))(response.data).id
+        userStoryId = Schema.decodeUnknownSync(
+          Schema.Struct({
+            id: Schema.Number,
+          })
+        )(response.data).id;
         console.warn(`cleaning up faulty user story ${userStoryId}}`);
         await deleteUserStory(client)(userStoryId);
       } catch (e) {
-        console.error(`cannot clean up faulty user story ${r.left}${userStoryId ? `with user story id ${userStoryId}` : ''}`)
+        console.error(
+          `cannot clean up faulty user story ${r.left}${userStoryId ? `with user story id ${userStoryId}` : ""}`
+        );
       }
       throw r.left;
     }

@@ -6,7 +6,7 @@ import {
   ProjectId,
   SINGLETON_PROJECT_ID,
 } from "@taiga-task-master/common";
-import { TaskDetail } from "@taiga-task-master/taiga-api-interface";
+import { UserStoryDetailCommon } from "@taiga-task-master/taiga-api-interface";
 import { filterTasks } from "./index.js";
 
 describe("filterTasks", () => {
@@ -18,27 +18,35 @@ describe("filterTasks", () => {
   const createTaskDetail = (
     id: number,
     tags: Array<[string, string | null]> = []
-  ): TaskDetail => {
-    return Schema.decodeSync(TaskDetail)({
+  ): UserStoryDetailCommon => {
+    return Schema.decodeSync(UserStoryDetailCommon)({
       id,
       ref: id,
       subject: `Task ${id}`,
-      description: `Description for task ${id}`,
       status: 1,
+      status_extra_info: {
+        name: "Open",
+        color: "#8CCAF7",
+        is_closed: false,
+      },
       project: 1,
       assigned_to: null,
-      user_story: null,
       milestone: null,
       is_blocked: false,
       is_closed: false,
       blocked_note: "",
       created_date: "2024-01-01T00:00:00.000Z",
       modified_date: "2024-01-01T00:00:00.000Z",
-      finished_date: null,
+      client_requirement: false,
+      team_requirement: false,
       tags,
       watchers: [],
       is_watcher: false,
       version: 1,
+      points: {},
+      backlog_order: 1,
+      kanban_order: 1,
+      sprint_order: 1,
     });
   };
 
@@ -70,7 +78,7 @@ describe("filterTasks", () => {
 
     it("should handle empty inputs", () => {
       const expected = new Set<TaskId>();
-      const allTasks: TaskDetail[] = [];
+      const allTasks: UserStoryDetailCommon[] = [];
 
       const result = filterTasks(expected, allTasks, testProjectId);
 

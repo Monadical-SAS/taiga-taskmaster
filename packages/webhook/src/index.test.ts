@@ -20,13 +20,7 @@ function generateSignature(body: string, token: string): string {
 
 describe("webhook implementation", () => {
   const createMockDeps = () => {
-    const mockTaskmaster = {
-      generateTasks: vi.fn(),
-    };
-
-    const mockGenerateTasks = vi
-      .fn()
-      .mockReturnValue(vi.fn().mockResolvedValue(undefined));
+    const mockGenerateTasks = vi.fn().mockResolvedValue(2); // Return number directly
 
     const mockDeps: WebhookDeps = {
       config: {
@@ -36,21 +30,12 @@ describe("webhook implementation", () => {
       generateTasks: mockGenerateTasks,
     };
 
-    return { mockDeps, mockGenerateTasks, mockTaskmaster };
+    return { mockDeps, mockGenerateTasks };
   };
 
   describe("webhookHandler", () => {
     it("should process valid Taiga webhook with minimal payload", async () => {
-      const { mockDeps, mockGenerateTasks, mockTaskmaster } = createMockDeps();
-
-      // Mock the task generation response
-      const mockTasksContent = {
-        tasks: [
-          { id: "task-1", title: "Task 1" },
-          { id: "task-2", title: "Task 2" },
-        ],
-      };
-      mockTaskmaster.generateTasks.mockResolvedValue(mockTasksContent);
+      const { mockDeps, mockGenerateTasks } = createMockDeps();
 
       const requestBody = {
         action: "create" as const,
@@ -58,9 +43,6 @@ describe("webhook implementation", () => {
           description: "This is a sample PRD content for task generation",
           project: {
             id: 12345,
-            permalink: "https://tree.taiga.io/project/test-project",
-            name: "Test Project",
-            logo_big_url: null,
           },
         },
       };
@@ -83,12 +65,9 @@ describe("webhook implementation", () => {
         tasks_generated: 2,
       });
 
-      // Verify the task generation was called with the description as PRD
-      expect(mockTaskmaster.generateTasks).toHaveBeenCalledWith(
-        "This is a sample PRD content for task generation",
-        expect.any(Object) // Option.none() object
+      expect(mockGenerateTasks).toHaveBeenCalledWith(
+        "This is a sample PRD content for task generation"
       );
-      expect(mockGenerateTasks).toHaveBeenCalled();
     });
 
     it("should reject invalid webhook signature", async () => {
@@ -100,9 +79,6 @@ describe("webhook implementation", () => {
           description: "Test description",
           project: {
             id: 12345,
-            permalink: "https://tree.taiga.io/project/test",
-            name: "Test",
-            logo_big_url: null,
           },
         },
       };
@@ -123,10 +99,10 @@ describe("webhook implementation", () => {
     });
 
     it("should handle change action webhooks", async () => {
-      const { mockDeps, mockTaskmaster } = createMockDeps();
+      const { mockDeps, mockGenerateTasks } = createMockDeps();
 
-      const mockTasksContent = { tasks: [] };
-      mockTaskmaster.generateTasks.mockResolvedValue(mockTasksContent);
+      // Override the mock to return 0 for this test
+      mockGenerateTasks.mockResolvedValueOnce(0);
 
       const requestBody = {
         action: "change" as const,
@@ -134,9 +110,6 @@ describe("webhook implementation", () => {
           description: "Updated PRD content with changes",
           project: {
             id: 67890,
-            permalink: "https://tree.taiga.io/project/another-project",
-            name: "Another Project",
-            logo_big_url: "https://example.com/logo.png",
           },
         },
       };
@@ -161,9 +134,9 @@ describe("webhook implementation", () => {
     });
 
     it("should handle errors in task generation", async () => {
-      const { mockDeps, mockTaskmaster } = createMockDeps();
+      const { mockDeps, mockGenerateTasks } = createMockDeps();
 
-      mockTaskmaster.generateTasks.mockRejectedValue(
+      mockGenerateTasks.mockRejectedValueOnce(
         new Error("Task generation failed")
       );
 
@@ -173,9 +146,6 @@ describe("webhook implementation", () => {
           description: "Test description",
           project: {
             id: 12345,
-            permalink: "https://tree.taiga.io/project/test",
-            name: "Test",
-            logo_big_url: null,
           },
         },
       };
@@ -207,9 +177,6 @@ describe("webhook implementation", () => {
           description: "Test PRD content",
           project: {
             id: 12345,
-            permalink: "https://tree.taiga.io/project/test",
-            name: "Test Project",
-            logo_big_url: null,
           },
         },
       };
@@ -263,9 +230,6 @@ describe("webhook implementation", () => {
           description: "Test",
           project: {
             id: 123,
-            permalink: "https://test.com",
-            name: "Test",
-            logo_big_url: null,
           },
         },
       };
