@@ -11,7 +11,6 @@ import {
 } from "@taiga-task-master/common";
 import {
   syncTasks,
-  type SyncTasksDeps,
   TaskText as TaskTextSchema,
 } from "./index.js";
 import { TaskDetail } from "@taiga-task-master/taiga-api-interface";

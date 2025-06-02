@@ -10,7 +10,7 @@ import type { WebhookDeps } from "@taiga-task-master/webhook-interface";
 import type { GenerateTasksDeps } from "@taiga-task-master/core";
 import { taigaApiFactory } from "@taiga-task-master/taiga-api";
 import { Schema } from "effect";
-import { Url, type PrdText } from "@taiga-task-master/common";
+import { Url, type PrdText, type NonNegativeInteger } from '@taiga-task-master/common';
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { promises as fs } from "fs";
@@ -79,7 +79,7 @@ const createWebhookDependencies = async (): Promise<
 
   // Create wrapper that includes cleanup
   const generateTasksWithCleanup =
-    (di: GenerateTasksDeps) => async (prd: typeof PrdText.Type) => {
+    (di: GenerateTasksDeps) => async (prd: typeof PrdText.Type): Promise<NonNegativeInteger> => {
       try {
         // Run the core workflow
         const result = await generateTasks(di)(prd);
@@ -108,8 +108,7 @@ const createWebhookDependencies = async (): Promise<
     };
 
   return {
-    generateTasks: generateTasksWithCleanup,
-    taskGeneratorDeps: coreGenerateTasksDeps,
+    generateTasks: generateTasksWithCleanup(coreGenerateTasksDeps)
   };
 };
 

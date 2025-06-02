@@ -57,8 +57,10 @@ import {
   type CustomAttributeId,
   type PointId,
   type AuthToken,
-  type RefreshToken,
-} from "@taiga-task-master/taiga-api-interface";
+  type RefreshToken, UserStoryListDetail
+} from '@taiga-task-master/taiga-api-interface';
+import { isLeft } from 'effect/Either';
+import { NonEmptyString } from '@taiga-task-master/common';
 
 // ============================================================================
 // HTTP Client Implementation
@@ -134,7 +136,6 @@ const makeRequest = async (
     signal: options?.signal,
     ...(data ? { body: JSON.stringify(data) } : {}),
   };
-
   const response = await request(url, requestOptions);
   const responseHeaders = buildResponseHeaders(response.headers);
   const status = Schema.decodeSync(HttpStatus)(response.statusCode);
@@ -283,6 +284,7 @@ const createAuthenticatedHttpClient = (
         baseClient.patch(path, data, addAuthHeader(options))
       ),
 
+    // if you see Taiga returns "forbidden" on deletion requests, you may be trying to delete other companies' tasks. Taiga returns other people tasks from its list api.
     delete: (
       path: string,
       options?: RequestOptions
@@ -458,6 +460,10 @@ const createTasksService = (client: HttpClient): TasksService => ({
 // User Stories Service Implementation
 // ============================================================================
 
+const deleteUserStory = (client: HttpClient) =>async (id: UserStoryId): Promise<void> => {
+  await client.delete(`/api/v1/userstories/${id}`);
+};
+
 const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
   list: async (filters?: {
     project?: ProjectId;
@@ -465,7 +471,7 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
     milestone?: number;
     milestone__isnull?: boolean;
     status__is_archived?: boolean;
-    tags?: string;
+    tags?: string[];
     watchers?: UserId;
     assigned_to?: UserId;
     epic?: number;
@@ -476,11 +482,11 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
     exclude_assigned_to?: UserId;
     exclude_role?: number;
     exclude_epic?: number;
-  }): Promise<readonly UserStoryDetail[]> => {
+  }): Promise<readonly UserStoryListDetail[]> => {
     const response = await client.get("/api/v1/userstories", {
       params: filters,
     });
-    return Schema.decodeUnknownSync(Schema.Array(UserStoryDetail))(
+    return Schema.decodeUnknownSync(Schema.Array(UserStoryListDetail))(
       response.data
     );
   },
@@ -489,7 +495,22 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
     userStory: CreateUserStoryRequest
   ): Promise<UserStoryDetail> => {
     const response = await client.post("/api/v1/userstories", userStory);
-    return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
+    const r = Schema.decodeUnknownEither(UserStoryDetail)(response.data);
+    if (isLeft(r)) {
+        let userStoryId: number | null= null;
+        console.warn(`cleaning up faulty user story`);
+      try {
+        userStoryId = Schema.decodeUnknownSync(Schema.Struct({
+          id: Schema.Number
+        }))(response.data).id
+        console.warn(`cleaning up faulty user story ${userStoryId}}`);
+        await deleteUserStory(client)(userStoryId);
+      } catch (e) {
+        console.error(`cannot clean up faulty user story ${r.left}${userStoryId ? `with user story id ${userStoryId}` : ''}`)
+      }
+      throw r.left;
+    }
+    return r.right;
   },
 
   get: async (id: UserStoryId): Promise<UserStoryDetail> => {
@@ -518,9 +539,7 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
     return Schema.decodeUnknownSync(UserStoryDetail)(response.data);
   },
 
-  delete: async (id: UserStoryId): Promise<void> => {
-    await client.delete(`/api/v1/userstories/${id}`);
-  },
+  delete: deleteUserStory(client),
 
   bulkCreate: async (
     request: BulkCreateUserStoriesRequest

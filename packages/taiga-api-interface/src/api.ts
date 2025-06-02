@@ -127,14 +127,11 @@ export const TaskDetail = Schema.Struct({
   subject: Schema.String,
   description: Schema.optionalWith(Schema.String, { default: () => "" }),
   status: StatusId,
-  status_extra_info: Schema.optional(
-    Schema.Struct({
-      id: Schema.optional(StatusId),
-      name: Schema.String,
-      color: Schema.String,
-      is_closed: Schema.Boolean,
-    })
-  ),
+  status_extra_info:     Schema.Struct({
+    name: Schema.String,
+    color: Schema.String,
+    is_closed: Schema.Boolean,
+  }),
   project: ProjectId,
   assigned_to: Schema.NullOr(UserId),
   user_story: Schema.NullOr(UserStoryId),
@@ -198,21 +195,16 @@ export const UserStoryStatus = Schema.Struct({
   project: ProjectId,
 });
 
-export const UserStoryDetail = Schema.Struct({
+export const UserStoryDetailCommon = Schema.Struct({
   id: UserStoryId,
   ref: Schema.Number,
   subject: Schema.String,
-  description: Schema.String,
   status: StatusId,
-  status_extra_info: Schema.optional(
-    Schema.Struct({
-      id: StatusId,
-      name: Schema.String,
-      color: Schema.String,
-      is_closed: Schema.Boolean,
-      is_archived: Schema.Boolean,
-    })
-  ),
+  status_extra_info: Schema.Struct({
+    name: Schema.String,
+    color: Schema.String,
+    is_closed: Schema.Boolean,
+  }),
   project: ProjectId,
   assigned_to: Schema.NullOr(UserId),
   milestone: Schema.NullOr(Schema.Number),
@@ -221,20 +213,82 @@ export const UserStoryDetail = Schema.Struct({
   blocked_note: Schema.String,
   created_date: Schema.String,
   modified_date: Schema.String,
-  finished_date: Schema.NullOr(Schema.String),
   client_requirement: Schema.Boolean,
   team_requirement: Schema.Boolean,
   tags: Schema.Array(Schema.Tuple(TaigaTag, Schema.NullOr(Schema.String))),
   watchers: Schema.Array(UserId),
   is_watcher: Schema.Boolean,
   version: Schema.Number,
-  points: Schema.optional(
-    Schema.Record({ key: Schema.String, value: Schema.Number })
-  ),
+  points: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Number })),
   backlog_order: Schema.Number,
   kanban_order: Schema.Number,
   sprint_order: Schema.Number,
 });
+
+export const UserStoryListDetail = Schema.extend(
+  UserStoryDetailCommon,
+  Schema.Struct({
+    assigned_to_extra_info: Schema.NullOr(
+      Schema.Struct({
+        big_photo: Schema.NullOr(Schema.String),
+        full_name_display: Schema.String,
+        gravatar_id: Schema.String,
+        id: UserId,
+        is_active: Schema.Boolean,
+        photo: Schema.NullOr(Schema.String),
+        username: Schema.String,
+      })
+    ),
+    assigned_users: Schema.Array(UserId),
+    attachments: Schema.Array(Schema.Unknown),
+    comment: Schema.String,
+    due_date: Schema.NullOr(Schema.String),
+    due_date_reason: Schema.String,
+    due_date_status: Schema.String,
+    epic_order: Schema.NullOr(Schema.Number),
+    epics: Schema.NullOr(Schema.Unknown),
+    external_reference: Schema.NullOr(Schema.String),
+    finish_date: Schema.NullOr(Schema.String),
+    generated_from_issue: Schema.NullOr(Schema.Number),
+    generated_from_task: Schema.NullOr(Schema.Number),
+    is_voter: Schema.Boolean,
+    milestone_name: Schema.NullOr(Schema.String),
+    milestone_slug: Schema.NullOr(Schema.String),
+    origin_issue: Schema.NullOr(Schema.Number),
+    origin_task: Schema.NullOr(Schema.Number),
+    owner: UserId,
+    owner_extra_info: Schema.Struct({
+      big_photo: Schema.NullOr(Schema.String),
+      full_name_display: Schema.String,
+      gravatar_id: Schema.String,
+      id: UserId,
+      is_active: Schema.Boolean,
+      photo: Schema.NullOr(Schema.String),
+      username: Schema.String,
+    }),
+    project_extra_info: Schema.Struct({
+      id: ProjectId,
+      logo_small_url: Schema.NullOr(Schema.String),
+      name: Schema.String,
+      slug: Schema.String,
+    }),
+    tasks: Schema.Array(Schema.Unknown),
+    total_attachments: Schema.Number,
+    total_comments: Schema.Number,
+    total_points: Schema.NullOr(Schema.Number),
+    total_voters: Schema.Number,
+    total_watchers: Schema.Number,
+    tribe_gig: Schema.NullOr(Schema.Unknown),
+  })
+)
+
+export const UserStoryDetail = Schema.extend(
+  UserStoryDetailCommon,
+  Schema.Struct({
+    description: Schema.String,
+    finished_date: Schema.optional(Schema.String),
+  })
+);
 
 export const CreateUserStoryRequest = Schema.Struct({
   project: ProjectId,
@@ -311,7 +365,9 @@ export const BulkUpdateUserStoryStatusesRequest = Schema.Struct({
 });
 
 export type UserStoryStatus = Schema.Schema.Type<typeof UserStoryStatus>;
+export type UserStoryDetailCommon = Schema.Schema.Type<typeof UserStoryDetailCommon>;
 export type UserStoryDetail = Schema.Schema.Type<typeof UserStoryDetail>;
+export type UserStoryListDetail = Schema.Schema.Type<typeof UserStoryListDetail>;
 export type CreateUserStoryRequest = Schema.Schema.Type<
   typeof CreateUserStoryRequest
 >;
@@ -496,7 +552,7 @@ export interface UserStoriesService {
     milestone?: number;
     milestone__isnull?: boolean;
     status__is_archived?: boolean;
-    tags?: string;
+    tags?: string[];
     watchers?: UserId;
     assigned_to?: UserId;
     epic?: number;
@@ -507,7 +563,7 @@ export interface UserStoriesService {
     exclude_assigned_to?: UserId;
     exclude_role?: number;
     exclude_epic?: number;
-  }) => Promise<readonly UserStoryDetail[]>;
+  }) => Promise<readonly UserStoryListDetail[]>;
   create: (userStory: CreateUserStoryRequest) => Promise<UserStoryDetail>;
   get: (id: UserStoryId) => Promise<UserStoryDetail>;
   getByRef: (

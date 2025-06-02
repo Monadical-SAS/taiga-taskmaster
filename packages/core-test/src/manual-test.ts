@@ -18,9 +18,6 @@ import {
 } from "@taiga-task-master/taskmaster";
 import {
   syncTasks,
-  type SyncTasksDeps,
-  type TaskText,
-  type TaskTrackerTasksResult,
   createTaskTrackerDeps,
 } from "@taiga-task-master/tasktracker";
 import { Option } from "effect";

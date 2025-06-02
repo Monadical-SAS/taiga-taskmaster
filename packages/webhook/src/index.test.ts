@@ -34,12 +34,6 @@ describe("webhook implementation", () => {
         PORT: 3000 as WebhookConfig["PORT"],
       },
       generateTasks: mockGenerateTasks,
-      taskGeneratorDeps: {
-        taskmaster: mockTaskmaster,
-        tasktracker: {
-          syncTasks: vi.fn(),
-        },
-      },
     };
 
     return { mockDeps, mockGenerateTasks, mockTaskmaster };

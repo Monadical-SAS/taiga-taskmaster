@@ -1,7 +1,15 @@
 import { Schema } from "effect";
 
-export const PositiveInteger = Schema.Number.pipe(
+export const NonNegativeInteger = Schema.Number.pipe(
   Schema.int(),
+  Schema.nonNegative(),
+  Schema.brand("NonNegativeInteger")
+);
+export type NonNegativeInteger = Schema.Schema.Type<typeof NonNegativeInteger>;
+export const castNonNegativeInteger = (n: number): NonNegativeInteger => {
+  return Schema.decodeSync(NonNegativeInteger)(n);
+};
+export const PositiveInteger = NonNegativeInteger.pipe(
   Schema.positive(),
   Schema.brand("PositiveInteger")
 );

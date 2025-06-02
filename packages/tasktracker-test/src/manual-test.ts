@@ -10,15 +10,9 @@ import {
 } from "@taiga-task-master/common";
 import {
   syncTasks,
-  type SyncTasksDeps,
-  type TaskText,
   createTaskTrackerDeps,
 } from "@taiga-task-master/tasktracker";
-import { TaskText as TaskTextSchema } from "@taiga-task-master/tasktracker-interface";
-import {
-  type TaigaApi,
-  ProjectId as TaigaProjectId,
-} from "@taiga-task-master/taiga-api-interface";
+import type { UserStoryId } from '@taiga-task-master/taiga-api-interface';
 
 // Environment validation
 const validateEnvironment = () => {
@@ -91,24 +85,22 @@ const main = async (): Promise<void> => {
   const env = validateEnvironment();
   console.log(`🌐 Using Taiga project ID: ${env.projectId}`);
   console.log(`👤 Username: ${env.username}\n`);
+  // Get Taiga base URL from environment or use default
+  const taigaBaseUrl = process.env.TAIGA_BASE_URL || "https://api.taiga.io";
+  console.log(`🌐 Using Taiga base URL: ${taigaBaseUrl}`);
+  // Initialize Taiga API
+  console.log("🔌 Initializing Taiga API...");
+  const { taigaApiFactory } = await import("../../taiga-api/dist/index.js");
+  const api = taigaApiFactory.create({
+    baseUrl: Schema.decodeSync(Url)(taigaBaseUrl),
+    credentials: {
+      username: env.username,
+      password: env.password,
+      type: "normal",
+    },
+  });
 
   try {
-    // Initialize Taiga API
-    console.log("🔌 Initializing Taiga API...");
-    const { taigaApiFactory } = await import("../../taiga-api/dist/index.js");
-
-    // Get Taiga base URL from environment or use default
-    const taigaBaseUrl = process.env.TAIGA_BASE_URL || "https://api.taiga.io";
-    console.log(`🌐 Using Taiga base URL: ${taigaBaseUrl}`);
-
-    const api = taigaApiFactory.create({
-      baseUrl: Schema.decodeSync(Url)(taigaBaseUrl),
-      credentials: {
-        username: env.username,
-        password: env.password,
-        type: "normal",
-      },
-    });
 
     // Test authentication
     console.log("🔐 Testing authentication...");
@@ -132,6 +124,14 @@ const main = async (): Promise<void> => {
     // Test syncTasks functionality
     console.log("🔄 Testing syncTasks...");
     const projectId = SINGLETON_PROJECT_ID;
+
+    // const all = await api.userStories.list({
+    //   project: env.projectId
+    // })
+    //
+    // for (let t of all) {
+    //   await api.userStories.delete(t.id);
+    // }
 
     console.log("\n--- First sync (should add new tasks) ---");
     await syncTasks(taskTrackerDeps)(testTasks, projectId);
@@ -195,6 +195,7 @@ const main = async (): Promise<void> => {
     if (error instanceof Error && error.stack) {
       console.error("Stack trace:", error.stack);
     }
+
     process.exit(1);
   }
 };

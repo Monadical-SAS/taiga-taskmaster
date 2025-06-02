@@ -18,10 +18,8 @@ import {
   TaskIdTag,
 } from "./tags.js";
 import {
-  ProjectId as TaigaProjectId,
-  TaskDetail,
-  type TasksService,
-} from "@taiga-task-master/taiga-api-interface";
+  TaskDetail, UserStoryDetail, UserStoryDetailCommon, UserStoryListDetail
+} from '@taiga-task-master/taiga-api-interface';
 import { Either } from "effect";
 import { isSome, none, some } from "effect/Option";
 import { isLeft, left, right } from "effect/Either";
@@ -37,7 +35,7 @@ export type TaskTrackerTasksResult = Set<TaskId>;
 export type SyncTasksDeps = {
   getTasks: {
     // let the implementor no choice but use our filtering code
-    apiList: () => Promise<readonly TaskDetail[]>;
+    apiList: (projectId: ProjectId) => Promise<readonly UserStoryDetailCommon[]>;
   };
   addTasks: (
     tasks: Map<TaskId, TaskText>,
@@ -76,19 +74,19 @@ export const syncTasks: SyncTasksF = (di) => async (tasks, projectId) => {
 };
 
 // it's possible to have important stuff from the task deleted or edited out; we can't work with those anymore - so we don't let them into the app and report
-export const ValidTask = Schema.extend(
-  TaskDetail.pipe(Schema.omit("tags")),
+export const ValidUserStory = Schema.extend(
+  UserStoryDetailCommon.pipe(Schema.omit("tags")),
   Schema.Struct({
     masterId: TaskId,
     masterProjectId: ProjectId,
   })
 );
 
-export type ValidTask = typeof ValidTask.Type;
+export type ValidUserStory = typeof ValidUserStory.Type;
 
-export const ValidTaskTransformation = Schema.transformOrFail(
-  Schema.typeSchema(TaskDetail),
-  Schema.typeSchema(ValidTask),
+export const ValidUserStoryTransformation = Schema.transformOrFail(
+  Schema.typeSchema(UserStoryDetailCommon),
+  Schema.typeSchema(ValidUserStory),
   {
     strict: true,
     decode: (taigaTask) => {
@@ -132,22 +130,22 @@ export const ValidTaskTransformation = Schema.transformOrFail(
 
 export const filterTasks = (
   expected: Set<TaskId>,
-  allTasks: readonly TaskDetail[],
+  allTasks: readonly UserStoryDetailCommon[],
   projectId: ProjectId
 ): {
-  valid: Map<TaskId, ValidTask>;
+  valid: Map<TaskId, ValidUserStory>;
   unrelatedProject: Set<TaskId>;
   extra: Set<TaskId>;
   missing: Set<TaskId>;
   warnings: ParseResult.ParseError[];
   dupes: Set<TaskId>;
 } => {
-  const decode = (t: TaskDetail, _: number) =>
-    Schema.decodeEither(ValidTaskTransformation)(t);
+  const decode = (t: UserStoryDetailCommon, _: number) =>
+    Schema.decodeEither(ValidUserStoryTransformation)(t);
   const filteredTasks = allTasks.map(decode).reduce(
     (
       acc: {
-        valid: Map<TaskId, ValidTask>;
+        valid: Map<TaskId, ValidUserStory>;
         dupes: Set<TaskId>;
         unrelatedProject: Set<TaskId>;
         extra: Set<TaskId>;
@@ -198,7 +196,7 @@ export const filterTasks = (
       };
     },
     {
-      valid: new Map<TaskId, ValidTask>(),
+      valid: new Map<TaskId, ValidUserStory>(),
 
       unrelatedProject: new Set<TaskId>(),
       extra: new Set<TaskId>(),
@@ -221,13 +219,13 @@ const getTasks =
   (deps: SyncTasksDeps["getTasks"]) =>
   async (ids: Set<TaskId>, projectId: ProjectId): Promise<Set<TaskId>> => {
     // *all* tasks from the *Taiga* project
-    const allTasks = await deps.apiList();
+    const allTasks = await deps.apiList(projectId);
     const relevantTasks = filterTasks(ids, allTasks, projectId).valid;
     return new Set(relevantTasks.keys());
   };
 
 function splitByProjectIdAndTaskIdTags(
-  tags: TaskDetail["tags"]
+  tags: ReadonlyArray<readonly [string, null | string]>
 ): [ProjectIdTag[], TaskIdTag[]] {
   return pipe(
     tags,

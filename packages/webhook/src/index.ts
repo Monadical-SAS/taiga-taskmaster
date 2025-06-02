@@ -5,7 +5,7 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
-import { Schema, Option, pipe, Either } from "effect";
+import { Schema, pipe, Either } from "effect";
 
 // Import all types and functions from webhook-interface
 export * from "@taiga-task-master/webhook-interface";
@@ -85,7 +85,6 @@ export const sendResponse = (
  */
 export const webhookHandler: WebhookHandler = (deps) => async (request) => {
   try {
-    // Validate webhook signature using original raw body
     const signature = request.headers["x-taiga-webhook-signature"];
 
     if (
@@ -103,24 +102,10 @@ export const webhookHandler: WebhookHandler = (deps) => async (request) => {
       };
     }
 
-    // Extract PRD from user story description and validate it
     const prdDescription = request.body.data.description;
     const prd = Schema.decodeSync(PrdText)(prdDescription);
 
-    // Process PRD to generate tasks
-    // First generate tasks to get count, then sync happens automatically
-    const tasksContent = await deps.taskGeneratorDeps.taskmaster.generateTasks(
-      prd,
-      Option.none()
-    );
-
-    // Sync to Taiga (this is the full orchestration)
-    await deps.generateTasks(deps.taskGeneratorDeps)(prd);
-
-    // Count tasks in the generated content
-    const tasksCount = Array.isArray(tasksContent.tasks)
-      ? tasksContent.tasks.length
-      : 0;
+    const tasksCount = await deps.generateTasks(prd);
 
     return {
       status: 200,

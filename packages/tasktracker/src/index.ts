@@ -1,6 +1,6 @@
 // @vibe-generated: conforms to tasktracker-interface
-import { Schema } from "effect";
-import { TaskId, ProjectId, TaskFileContent } from "@taiga-task-master/common";
+import { Option, Schema } from 'effect';
+import { TaskId, ProjectId, TaskFileContent, bang } from '@taiga-task-master/common';
 import {
   syncTasks as syncTasksInterface,
   type SyncTasksDeps,
@@ -14,8 +14,9 @@ import {
   type TaigaApi,
   type CreateTaskRequest,
   type UpdateTaskRequest,
-  ProjectId as TaigaProjectId,
-} from "@taiga-task-master/taiga-api-interface";
+  ProjectId as TaigaProjectId, type UserStoryDetail, type CreateUserStoryRequest, type UpdateUserStoryRequest
+} from '@taiga-task-master/taiga-api-interface';
+import { none, some } from 'effect/Option';
 
 type TaskTrackerTasksResult = Set<TaskId>;
 
@@ -39,7 +40,7 @@ export const createTaskTrackerDeps = (
       async ([taskId, taskText]) => {
         const taskIdTag = encodeTaskIdToTag(taskId);
 
-        const createRequest: CreateTaskRequest = {
+        const createRequest: CreateUserStoryRequest = {
           project: taigaProjectId,
           subject: `TaskMaster Task ${taskId}`,
           description: taskText,
@@ -47,7 +48,7 @@ export const createTaskTrackerDeps = (
         };
 
         try {
-          const createdTask = await api.tasks.create(createRequest);
+          const createdTask = await api.userStories.create(createRequest);
           console.log(
             `  ✅ Created task ${taskId} (Taiga ID: ${createdTask.id})`
           );
@@ -69,7 +70,7 @@ export const createTaskTrackerDeps = (
     console.log(`🔄 Updating ${tasks.size} existing tasks in Taiga...`);
 
     // Use the robust filtering logic from tasktracker-interface
-    const allTasks = await api.tasks.list({ project: taigaProjectId });
+    const allTasks = await api.userStories.list({ project: taigaProjectId });
     const expectedTaskIds = new Set(tasks.keys());
     const filteredResult = filterTasks(expectedTaskIds, allTasks, projectId);
 
@@ -98,13 +99,13 @@ export const createTaskTrackerDeps = (
           return;
         }
 
-        const updateRequest: UpdateTaskRequest = {
+        const updateRequest: UpdateUserStoryRequest = {
           description: taskText,
           version: validTask.version,
         };
 
         try {
-          await api.tasks.update(validTask.id, updateRequest);
+          await api.userStories.update(validTask.id, updateRequest);
           console.log(
             `  ✅ Updated task ${taskId} (Taiga ID: ${validTask.id})`
           );
@@ -169,10 +170,16 @@ export const createTaskTrackerDeps = (
   return {
     getTasks: {
       // limits are not specified https://docs.taiga.io/api.html#tasks-list
-      apiList: () =>
-        api.tasks.list({
+      apiList: (projectId: ProjectId) => {
+        const projectTag = encodeProjectIdToTag(projectId);
+        return api.userStories.list({
           project: taigaProjectId,
-        }),
+          tags: [
+            projectTag
+          ]
+        })
+      },
+
     },
     addTasks,
     updateTasks,
