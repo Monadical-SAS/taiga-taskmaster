@@ -31,6 +31,8 @@ export const TextContent = NonEmptyString.pipe(Schema.brand("TextContent"));
 export type TextContent = typeof TextContent.Type;
 export const PrdText = NonEmptyString.pipe(Schema.brand("PrdText"));
 export type PrdText = typeof PrdText.Type;
+export const PrdTextHash = NonEmptyString.pipe(Schema.brand("PrdTextHash"))
+export type PrdTextHash = typeof PrdTextHash.Type
 // should prettify some types; doesn't work on schames...
 export type Prettify<T> = {
   [K in keyof T]: Prettify<T[K]>;

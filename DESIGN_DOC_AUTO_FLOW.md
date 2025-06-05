@@ -24,7 +24,7 @@ The system follows a modified V-model approach with heavy focus on requirement g
 
 ```typescript
 State = {
-  master_tasks_json: TasksFile,     // Single source of truth, edited by humans
+  master_tasks_json: TasksFile,     // Single source of truth
   executions: Execution[]           // Historical and active execution tracking
 }
 
