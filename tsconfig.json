@@ -2,7 +2,7 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "es2023",
+    "target": "esnext",
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
@@ -18,7 +18,7 @@
     "composite": true,
     "declarationMap": true,
     "incremental": true,
-    "lib": ["es2023"]
+    "lib": ["esnext"]
   },
   "exclude": ["eslint.config.js"],
   "references": [
@@ -32,7 +32,6 @@
     { "path": "./packages/taiga-api" },
     { "path": "./packages/webhook-interface" },
     { "path": "./packages/webhook" },
-    { "path": "./packages/tasks-machine-simulator" },
     { "path": "./packages/taiga-api-test" },
     { "path": "./packages/taskmaster-test" },
     { "path": "./packages/tasktracker-test" },

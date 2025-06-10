@@ -1,4 +1,5 @@
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
+import { NonEmptyArray } from "effect/Schema";
 
 export const NonNegativeInteger = Schema.Number.pipe(
   Schema.int(),
@@ -31,8 +32,8 @@ export const TextContent = NonEmptyString.pipe(Schema.brand("TextContent"));
 export type TextContent = typeof TextContent.Type;
 export const PrdText = NonEmptyString.pipe(Schema.brand("PrdText"));
 export type PrdText = typeof PrdText.Type;
-export const PrdTextHash = NonEmptyString.pipe(Schema.brand("PrdTextHash"))
-export type PrdTextHash = typeof PrdTextHash.Type
+export const PrdTextHash = NonEmptyString.pipe(Schema.brand("PrdTextHash"));
+export type PrdTextHash = typeof PrdTextHash.Type;
 // should prettify some types; doesn't work on schames...
 export type Prettify<T> = {
   [K in keyof T]: Prettify<T[K]>;
@@ -40,6 +41,30 @@ export type Prettify<T> = {
 export const castNonEmptyString = (s: string): NonEmptyString => {
   return Schema.decodeSync(NonEmptyString)(s);
 };
+export const oneOrNone = <T>(a: T[]) => {
+  if (a.length > 1) {
+    throw new Error(`Expected one or none elements, got ${a.length}`);
+  }
+  if (a.length === 0) {
+    return Option.none();
+  }
+  return Option.some(bang(a[0]));
+};
+
+export const onlyOne = <T>(a: T[]) => {
+  if (a.length !== 1) {
+    throw new Error(`Expected exactly one element, got ${a.length}`);
+  }
+  return a[0];
+};
+
+export const castNonEmptyArray = <T>(a: T[]): [T, ...T[]] => {
+  if (a.length === 0) {
+    throw new Error(`Expected at least one element, got ${a.length}`);
+  }
+  return a as [T, ...T[]];
+};
+
 export const Url = NonEmptyString.pipe(Schema.brand("Url"));
 
 // Taiga Tag Management

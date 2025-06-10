@@ -2,9 +2,11 @@ import type { GenerateTasksF } from "@taiga-task-master/taskmaster-interface";
 import type { SyncTasksF } from "@taiga-task-master/tasktracker-interface";
 import {
   bang,
+  castNonEmptyArray,
   castNonNegativeInteger,
   type NonEmptyString,
   type NonNegativeInteger,
+  oneOrNone,
   PrdText,
   type PrdTextHash, // eslint-disable-line @typescript-eslint/no-unused-vars
   SINGLETON_PROJECT_ID,
@@ -14,6 +16,7 @@ import {
 import { Either, HashSet, Option, pipe } from "effect";
 import { HashMap, Array } from "effect";
 import type { NonEmptyArray } from "effect/Array";
+import { isNone, isSome, none, some } from "effect/Option";
 
 export type GenerateTasksDeps = {
   taskmaster: {
@@ -44,17 +47,16 @@ export const generateTasks =
 
 // eslint-disable-next-line @typescript-eslint/no-namespace, @typescript-eslint/no-unused-vars
 namespace TasksMachine {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  type Tasks = HashMap.HashMap<TaskId, {}>;
+  type Task = unknown;
+  type Tasks = HashMap.HashMap<TaskId, Task>;
+  // artifact id could be generated branch name
   type ArtifactId = NonEmptyString;
   type Artifact = {
     id: ArtifactId;
     // invariant: artifact tasks + normal tasks constitute tasks.json content completely
     // only "completed"
     // invariant: always at least 1 (MVP: normally just 1)
-    tasks: Tasks & {
-      /*status: completed... TODO*/
-    };
+    tasks: Tasks;
   };
   // invariant: task ids are uniq
   export type State = {
@@ -152,7 +154,136 @@ namespace TasksMachine {
       };
     };
 
-  // TODO add artifact (move tasks from tasks to artifacts)
+  export const addArtifact =
+    (artifactId: ArtifactId, taskIds: Array<TaskId>) =>
+    (s: State): State => {
+      // Validate that all specified tasks exist in current tasks
+      const taskIdsSet = HashSet.fromIterable(taskIds);
+      const availableTaskIds = HashMap.keySet(s.tasks);
+      const missingTasks = pipe(
+        taskIdsSet,
+        HashSet.difference(availableTaskIds)
+      );
+
+      if (HashSet.size(missingTasks) > 0) {
+        throw new Error(
+          `panic! Cannot create artifact ${artifactId}: tasks not found in current tasks: ${pipe(
+            missingTasks,
+            HashSet.toValues,
+            (a) => a.join(", ")
+          )}`
+        );
+      }
+
+      // Validate that we have at least one task (artifact invariant)
+      if (taskIds.length === 0) {
+        throw new Error(
+          `panic! Cannot create artifact ${artifactId}: artifact must contain at least one task`
+        );
+      }
+
+      // Check for duplicate artifact ID
+      if (s.artifacts.some((artifact) => artifact.id === artifactId)) {
+        throw new Error(`panic! Artifact with id ${artifactId} already exists`);
+      }
+
+      // Extract the specified tasks from current tasks
+      const artifactTasks = pipe(
+        s.tasks,
+        HashMap.filter((_, taskId) => taskIds.includes(taskId))
+      );
+
+      // Remove the specified tasks from current tasks
+      const remainingTasks = pipe(
+        s.tasks,
+        HashMap.filter((_, taskId) => !taskIds.includes(taskId))
+      );
+
+      const newArtifact: Artifact = {
+        id: artifactId,
+        tasks: artifactTasks,
+      };
+
+      // Return new state with artifact added and tasks moved
+      return {
+        ...s,
+        tasks: remainingTasks,
+        artifacts: [...s.artifacts, newArtifact],
+      };
+    };
+
+  // remove last n artifacts
+  const removeArtifacts =
+    (n: NonNegativeInteger) =>
+    (s: State): [State, NonEmptyArray<ArtifactId>] => {
+      if (s.artifacts.length === 0) {
+        throw new Error(`panic! cannot remove artifacts: artifacts are empty`);
+      }
+      if (n > s.artifacts.length) {
+        throw new Error(
+          `panic! cannot remove artifacts: requested ${n} artifacts, but only ${s.artifacts.length} available`
+        );
+      }
+      const [take, keep] = Array.partition(
+        s.artifacts,
+        (_, i) => i < s.artifacts.length - n
+      );
+      const tasksToReturn = take.reduce(
+        (a, b) => uniqAppend(a, b.tasks),
+        HashMap.empty() as Tasks
+      );
+      return [
+        {
+          ...s,
+          artifacts: keep,
+          tasks: uniqAppend(s.tasks, tasksToReturn),
+        },
+        castNonEmptyArray(take.map((a) => a.id)),
+      ];
+    };
+
+  // edited task checks whether it's in artifacts already: if is, the artifact and all the artifacts after it get removed.
+  export const editTask =
+    (tid: TaskId, t: Task /*TODO task shape*/) =>
+    (s: State): [State, ArtifactId[]] => {
+      // check if we do have a non-completed task to edit
+      const task = HashMap.get(s.tasks, tid);
+      if (isSome(task)) {
+        // trivial:
+        return [
+          {
+            ...s,
+            tasks: pipe(s.tasks, HashMap.set(tid, t)),
+          },
+          [],
+        ];
+      }
+      const artifact = pipe(
+        s.artifacts,
+        Array.filterMap((a) => {
+          const here = HashMap.get(a.tasks, tid);
+          return pipe(
+            here,
+            Option.map((task) => ({
+              id: a.id,
+              task,
+            }))
+          );
+        }),
+        oneOrNone
+      );
+      if (isNone(artifact)) {
+        throw new Error(
+          `panic! cannot edit task ${tid}: no such task in artifacts neither in current tasks`
+        );
+      }
+      // the artifact and all artifacts before it have to go
+      const tail =
+        s.artifacts.length -
+        s.artifacts.findIndex((a) => a.id === artifact.value.id);
+      return removeArtifacts(castNonNegativeInteger(tail))(s);
+    };
+
   // TODO make sure the tasks are "completed" when they are supposed to be.
 }
 
