@@ -1,3 +1,4 @@
+/* eslint-disable functional/no-expression-statements */
 // @vibe-generated: conforms to taskmaster-interface
 import {
   generateTasks,

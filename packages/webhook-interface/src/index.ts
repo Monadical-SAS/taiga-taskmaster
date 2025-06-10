@@ -1,13 +1,17 @@
+/* eslint-disable functional/no-expression-statements */
 import { Schema } from "effect";
 import * as crypto from "node:crypto";
-import { NonEmptyString, NonNegativeInteger, type PositiveInteger, PrdText } from '@taiga-task-master/common';
-import { type GenerateTasksDeps } from "@taiga-task-master/core";
+import {
+  NonEmptyString,
+  NonNegativeInteger,
+  PrdText,
+} from "@taiga-task-master/common";
 import {
   ProjectReference,
   UserStoryWebhookMessage,
   WebhookUserStoryData,
 } from "@taiga-task-master/taiga-api-interface";
-import * as process from 'node:process';
+import * as process from "node:process";
 
 export const WebhookAuthToken = NonEmptyString.pipe(
   Schema.brand("WebhookAuthToken")
@@ -87,7 +91,7 @@ export const validateWebhookSignature = (
   body: string,
   expectedToken: WebhookAuthToken
 ): boolean => {
-  if (process.env.IGNORE_WEBHOOK_AUTH === 'true') {
+  if (process.env.IGNORE_WEBHOOK_AUTH === "true") {
     return true;
   }
   // Use the same HMAC-SHA1 implementation as taiga-api package

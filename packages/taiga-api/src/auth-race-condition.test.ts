@@ -29,7 +29,7 @@ describe("Authentication Race Condition Fix", () => {
     const { request } = await import("undici");
     mockRequest = request as ReturnType<typeof vi.fn>;
 
-    mockRequest.mockImplementation((url: string, options: any) => {
+    mockRequest.mockImplementation((url: string, _options: any) => {
       const urlStr = url.toString();
 
       if (urlStr.includes("/api/v1/auth") && !urlStr.includes("/refresh")) {

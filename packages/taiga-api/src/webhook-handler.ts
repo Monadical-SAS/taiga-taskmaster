@@ -1,3 +1,4 @@
+/* eslint-disable functional/no-expression-statements */
 // @vibe-generated: webhook signature verification utility
 import * as crypto from "node:crypto";
 

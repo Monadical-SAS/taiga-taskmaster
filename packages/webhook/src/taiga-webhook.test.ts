@@ -86,6 +86,7 @@ describe("taiga-webhook", () => {
       const originalToken = process.env.WEBHOOK_TOKEN;
       delete process.env.WEBHOOK_TOKEN;
 
+      // eslint-disable-next-line functional/prefer-tacit
       expect(() => createTaigaWebhookConfig()).toThrow(
         "WEBHOOK_TOKEN environment variable is required"
       );

@@ -1,18 +1,19 @@
-import { ParseResult, Schema } from 'effect';
+import { Schema } from "effect";
 import {
   type TaskId,
   type ProjectId,
   TaigaTag as TaigaTagSchema,
   TaskId as TaskIdSchema,
-  ProjectId as ProjectIdSchema, TaskIdFromString
-} from '@taiga-task-master/common';
-import { Unexpected } from 'effect/ParseResult';
+  ProjectId as ProjectIdSchema,
+  TaskIdFromString,
+} from "@taiga-task-master/common";
+import { Unexpected } from "effect/ParseResult";
 
 export const PROJECT_ID_TAG_PREFIX = "tm-project-" as const;
 export const TASK_ID_TAG_PREFIX = "tm-task-" as const;
 
 export const ProjectIdTag = TaigaTagSchema.pipe(
-  Schema.filter(s => {
+  Schema.filter((s) => {
     const isProjectIdTagFormat = s.startsWith(PROJECT_ID_TAG_PREFIX);
     if (!isProjectIdTagFormat) {
       return new Unexpected(`doesn't start with ${PROJECT_ID_TAG_PREFIX}`);
@@ -35,13 +36,12 @@ export const ProjectIdTagIsomorphism = Schema.transform(
     encode: (projectId) => {
       const tagString = `${PROJECT_ID_TAG_PREFIX}${projectId}`;
       return Schema.decodeSync(ProjectIdTag)(tagString);
-    }
+    },
   }
-)
-
+);
 
 export const TaskIdTag = TaigaTagSchema.pipe(
-  Schema.filter(s => {
+  Schema.filter((s) => {
     const isTaskIdTagFormat = s.startsWith(TASK_ID_TAG_PREFIX);
     if (!isTaskIdTagFormat) {
       return new Unexpected(`doesn't start with ${TASK_ID_TAG_PREFIX}`);
@@ -64,16 +64,16 @@ export const TaskIdTagIsomorphism = Schema.transform(
     encode: (taskId) => {
       const tagString = `${TASK_ID_TAG_PREFIX}${taskId}`;
       return Schema.decodeSync(TaskIdTag)(tagString);
-    }
+    },
   }
-)
+);
 
 export const encodeProjectIdToTag = (projectId: ProjectId): ProjectIdTag => {
-  return Schema.encodeSync(ProjectIdTagIsomorphism)(projectId)
+  return Schema.encodeSync(ProjectIdTagIsomorphism)(projectId);
 };
 
 export const decodeProjectIdFromTag = (tag: ProjectIdTag): ProjectId => {
-  return Schema.decodeSync(ProjectIdTagIsomorphism)(tag)
+  return Schema.decodeSync(ProjectIdTagIsomorphism)(tag);
 };
 
 export const encodeTaskIdToTag = (taskId: TaskId): TaskIdTag => {

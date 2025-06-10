@@ -1,3 +1,4 @@
+/* eslint-disable functional/no-expression-statements */
 import {
   TaskId,
   NonEmptyString,
@@ -17,9 +18,7 @@ import {
   ProjectIdTag,
   TaskIdTag,
 } from "./tags.js";
-import {
-  TaskDetail, UserStoryDetail, UserStoryDetailCommon, UserStoryListDetail
-} from '@taiga-task-master/taiga-api-interface';
+import { UserStoryDetailCommon } from "@taiga-task-master/taiga-api-interface";
 import { Either } from "effect";
 import { isSome, none, some } from "effect/Option";
 import { isLeft, left, right } from "effect/Either";
@@ -35,7 +34,9 @@ export type TaskTrackerTasksResult = Set<TaskId>;
 export type SyncTasksDeps = {
   getTasks: {
     // let the implementor no choice but use our filtering code
-    apiList: (projectId: ProjectId) => Promise<readonly UserStoryDetailCommon[]>;
+    apiList: (
+      projectId: ProjectId
+    ) => Promise<readonly UserStoryDetailCommon[]>;
   };
   addTasks: (
     tasks: Map<TaskId, TaskText>,

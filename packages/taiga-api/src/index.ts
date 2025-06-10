@@ -1,3 +1,4 @@
+/* eslint-disable functional/no-expression-statements */
 // @vibe-generated: conforms to taiga-api-interface
 import { request } from "undici";
 import { Schema } from "effect";
@@ -61,7 +62,6 @@ import {
   UserStoryListDetail,
 } from "@taiga-task-master/taiga-api-interface";
 import { isLeft } from "effect/Either";
-import { NonEmptyString } from "@taiga-task-master/common";
 
 // ============================================================================
 // HTTP Client Implementation
@@ -230,13 +230,12 @@ const createAuthenticatedHttpClient = (
       return await operation();
     } catch (error) {
       if (error instanceof Error && error.message.includes("HTTP 401")) {
-        // eslint-disable-next-line functional/no-expression-statements
         console.log(
           `🔄 [${new Date().toISOString()}] Token expired (401), attempting refresh...`
         );
-        // eslint-disable-next-line functional/no-expression-statements
+
         await refreshAuth();
-        // eslint-disable-next-line functional/no-expression-statements
+
         console.log(
           `✅ [${new Date().toISOString()}] Token refresh completed, retrying original request`
         );
@@ -338,13 +337,12 @@ const createAuthService = (
     },
 
     refresh: async (refreshToken: RefreshRequest): Promise<RefreshResponse> => {
-      // eslint-disable-next-line functional/no-expression-statements
       console.log(`🔄 [${new Date().toISOString()}] Refreshing auth token...`);
       const response = await client.post("/api/v1/auth/refresh", refreshToken);
       const refreshResponse = Schema.decodeUnknownSync(RefreshResponse)(
         response.data
       );
-      // eslint-disable-next-line functional/no-expression-statements
+
       console.log(
         `✅ [${new Date().toISOString()}] Token refresh successful, new token received`
       );
@@ -367,7 +365,6 @@ const createAuthService = (
   const refreshWithStoredToken = async (): Promise<void> => {
     // If a refresh is already in progress, wait for it to complete
     if (state.ongoingRefresh) {
-      // eslint-disable-next-line functional/no-expression-statements
       console.log(
         `⏳ [${new Date().toISOString()}] Auth refresh already in progress, waiting...`
       );
@@ -379,23 +376,20 @@ const createAuthService = (
     state.ongoingRefresh = (async (): Promise<void> => {
       try {
         if (!state.currentRefreshToken) {
-          // eslint-disable-next-line functional/no-expression-statements
           console.log(
             `🔄 [${new Date().toISOString()}] No refresh token available, attempting login with stored credentials...`
           );
           if (!state.storedCredentials) {
             throw new Error("No refresh token or stored credentials available");
           }
-          // eslint-disable-next-line functional/no-expression-statements
+
           await api.login(state.storedCredentials);
           return;
         }
 
         try {
-          // eslint-disable-next-line functional/no-expression-statements
           await api.refresh({ refresh: state.currentRefreshToken });
         } catch (error) {
-          // eslint-disable-next-line functional/no-expression-statements
           console.log(
             `❌ [${new Date().toISOString()}] Token refresh failed, attempting login with stored credentials...`,
             error
@@ -405,7 +399,7 @@ const createAuthService = (
               "Token refresh failed and no stored credentials available"
             );
           }
-          // eslint-disable-next-line functional/no-expression-statements
+
           await api.login(state.storedCredentials);
         }
       } finally {
@@ -511,7 +505,7 @@ const createUserStoriesService = (client: HttpClient): UserStoriesService => ({
         )(response.data).id;
         console.warn(`cleaning up faulty user story ${userStoryId}}`);
         await deleteUserStory(client)(userStoryId);
-      } catch (e) {
+      } catch {
         console.error(
           `cannot clean up faulty user story ${r.left}${userStoryId ? `with user story id ${userStoryId}` : ""}`
         );

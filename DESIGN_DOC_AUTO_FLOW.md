@@ -176,3 +176,135 @@ The architecture succeeds when:
 - System handles failures gracefully with full recovery capabilities
 - Each task increment provides meaningful client value
 - Development progress is completely transparent and auditable
+
+-------- FAQ
+
+> What are the complete task states?
+
+Think about tasks not as of "tasks in task tracker". This would be VERY WRONG point of view.. Think about them as "units of work" for the agent to do in an automatic way, reporting the progress in-between for humans to get involved.
+
+Therefore, the task can be only (from the point of view of the state machine): "queued", "running", (note that there's no "failed". failed tasks go back to "queued", report and stop execution until the tasks are specified better by human in the loop and machine is restarted, whether automatically or by human - TBD), "done" (effectively, PR is created in the PR chain), "committed" (went to master; no edits are possible) (although due to mutable nature of systems users can technically edit but it shouldn't change anything in the machine anymore). in type definitions the completed tasks become "artifacts".
+
+> How do we model task metadata (assignee, estimated effort, dependencies, deployment URLs)?
+
+Don't fucking think about it by the reasons above. The task is a atomic piece of work.
+
+> Should task status changes be events or direct mutations
+
+It's always functions, you get a state, you return a new state. Events are TBD but not to worry right now.
+
+> Can multiple executions run simultaneously on different task subsets
+
+One piece of task execution has: the state of the repo (all the tasks "done" up to the last one) (remember it's a chain of PRs). That means that the system is by-design can't get into race condition: even if two agents were working on the SAME task, they would just spawn two separate PRs.
+But for safety, we'll have a lock at some point. It's just not a concern right now for MVP.
+
+> What's the relationship between Execution (from the spec) and TaskExecutionState (from types)?
+
+Executions from the spec are rather "artifacts". TaskExecutionState is only one singular state per agent that concerns the in-progress of the current task being executed.
+
+> How do we model the git branch lifecycle
+
+This is an implementation detail that I'm not sure I want to include into the core; the sole fact of Artifacts being an array should model the git branch lifecycle pretty well, non?
+
+> Which task properties can humans edit, and when
+
+they are able to edit anything anytime, the question is whether the edit makes sense to the system. when the task became a committed artifact, any edit does't make sense and can be ignored. the "currently executing" task, if edited or reordered, will have to be rerun of course
+
+the task queue can be modified as the user wishes to (yet again note that the queue is not a real queue data structure, it's just a graph-like structure from which our code can "pull next task")
+
+> How do we prevent edits that would break running executions
+> we can't prevent edits but we can ignore them and report. the rest of the answer is above.
+
+> Should we use event sourcing for auditability of human interventions
+
+probably. we need to be able to rerun the state machnine from any point so..
+
+> How do we model the "abandon execution and restart" flow from the spec?
+
+I'm not sure we care much because it seems an implementation detail
+
+> No dependency modeling in types, but spec mentions dependencies.
+
+Consider the "task queue" as a black box already containing dependencies (because it's literally a graph inside).
+
+> Should dependency resolution be part of the state machine or external
+
+We DO already have a function that procures the next available task. no worries.
+
+> simplistic
+
+good. we need to keep core simple and free of implementation details. only domain design.
+
+> How do we handle agent failures and retries?
+
+what you mean how? exponential backoffs no?
+
+> What information flows from the state machine to the agent
+
+in the proposed implementation there's only "state" but we can return a state AND events if we want.
+
+> How do we track agent progress within a task
+
+we have no good way of doing it - it's a black box! we only have textual log of it, and we can give it some timeouts; but that's it. IN FAR FUTURE we can ask the agent to call our MCP to report its progress but that would be too very unreliable. agent is unreliable by design.
+
+> Should agent state be part of our state machine or external
+
+you will have to develop the question if you don't have the answer already
+
+> Spec says PRDs are discarded, but we need audit trails
+
+we'll have them somewhere, it's just not a concern of the task machine for now. don't think about it. it's whole another module of the system to TBD.
+
+> Artifact concept is unclear
+
+specific example: the code takes a task (or a group of tasks) as a unit of work. changes branch, sends the tasks to the agent. the agent modifies code in the branch. the control code sees that agent is finished successfully and PRs this branch into the _LAST ARTIFACT BRANCH AVAILABLE_ (to keep a chain of PRs) or into master. so artifact is a "task(s) completed" + its associated branch with PR and with deployment done (to check manually by a human)
+
+> How do we track deployment URLs and their lifecycle
+
+Not the concern of the core. We will work on it later.
+
+> Should we model this as a formal state machine with events
+
+It's already kind of that - it has state, it has functions that return new state. relax.
+
+> Should we use a library like XState or build our own
+
+again, relax, I know about XState buti t's really just reducers.
+
+> Should we use branded types for IDs to prevent mixing them up
+
+We should and you're welcome to add it to specs, but for now I keep the "guiding" code string-y to keep it short for LLMs to understand. We will definitely have branded types when I decide.
+
+> How do we validate state invariants at runtime
+
+Tests + assertions
+
+> Should we use a schema validation library like Zod
+
+Implemt-entation detail. But I alreadysch use effect-schema
+
+> How do we handle state migration as the system evolves
+
+we'll think about it later. no need to overcomplicate now
+
+> Performance & Scalability Considerations
+
+> How large can the task graph get
+
+Small enough. not more than 100.
+
+> Do we need pagination/lazy loading
+
+what do you mean? we're not building an ui right now.
+
+> Should we persist state to disk, and if so, how often
+
+State is event sourcing so it's in db/on disk somewhere.
+
+> How do we handle system crashes and state recovery
+
+all is in db + in artifacts. if it crashes during task execution in the black box, welp we can't do anything to save it.
+
+> Do we need event streaming for real-time UI updates
+
+We will have it at some point but right now we develop the core.

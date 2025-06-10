@@ -1,6 +1,7 @@
+/* eslint-disable functional/no-expression-statements */
 // @vibe-generated: conforms to tasktracker-interface
-import { Option, Schema } from 'effect';
-import { TaskId, ProjectId, TaskFileContent, bang } from '@taiga-task-master/common';
+import { Schema } from "effect";
+import { TaskId, ProjectId, TaskFileContent } from "@taiga-task-master/common";
 import {
   syncTasks as syncTasksInterface,
   type SyncTasksDeps,
@@ -12,11 +13,10 @@ import {
 } from "@taiga-task-master/tasktracker-interface";
 import {
   type TaigaApi,
-  type CreateTaskRequest,
-  type UpdateTaskRequest,
-  ProjectId as TaigaProjectId, type UserStoryDetail, type CreateUserStoryRequest, type UpdateUserStoryRequest
-} from '@taiga-task-master/taiga-api-interface';
-import { none, some } from 'effect/Option';
+  ProjectId as TaigaProjectId,
+  type CreateUserStoryRequest,
+  type UpdateUserStoryRequest,
+} from "@taiga-task-master/taiga-api-interface";
 
 type TaskTrackerTasksResult = Set<TaskId>;
 
@@ -174,12 +174,9 @@ export const createTaskTrackerDeps = (
         const projectTag = encodeProjectIdToTag(projectId);
         return api.userStories.list({
           project: taigaProjectId,
-          tags: [
-            projectTag
-          ]
-        })
+          tags: [projectTag],
+        });
       },
-
     },
     addTasks,
     updateTasks,
