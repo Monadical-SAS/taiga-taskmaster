@@ -1,0 +1,25 @@
+{
+  "name": "worker-interface",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Worker interface definitions and schemas",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "effect": "^3.15.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

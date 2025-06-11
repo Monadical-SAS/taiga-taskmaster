@@ -437,6 +437,16 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.17.50)
 
+  packages/worker-interface:
+    dependencies:
+      effect:
+        specifier: ^3.15.4
+        version: 3.15.4
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+
 packages:
 
   '@ampproject/remapping@2.3.0':
