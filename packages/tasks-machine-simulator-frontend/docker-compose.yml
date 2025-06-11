@@ -5,8 +5,6 @@ services:
     build:
       context: ../../
       dockerfile: packages/tasks-machine-simulator-frontend/Dockerfile
-    ports:
-      - "80:80"
     environment:
       - NODE_ENV=production
       - SERVICE_FQDN_FRONTEND_80
