@@ -17,9 +17,9 @@ COPY packages/ ./packages/
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Build the frontend package
-WORKDIR /app/packages/tasks-machine-simulator-frontend
-RUN pnpm build
+# Build all dependencies first from root
+WORKDIR /app
+RUN pnpm --filter @taiga-task-master/tasks-machine-simulator-frontend build
 
 # Production stage
 FROM nginx:alpine
