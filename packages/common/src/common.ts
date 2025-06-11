@@ -1,5 +1,4 @@
 import { Option, Schema } from "effect";
-import { NonEmptyArray } from "effect/Schema";
 
 export const NonNegativeInteger = Schema.Number.pipe(
   Schema.int(),

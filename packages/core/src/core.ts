@@ -8,15 +8,14 @@ import {
   type NonNegativeInteger,
   oneOrNone,
   PrdText,
-  type PrdTextHash, // eslint-disable-line @typescript-eslint/no-unused-vars
   SINGLETON_PROJECT_ID,
   type TaskId,
 } from "@taiga-task-master/common";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Either, HashSet, Option, pipe } from "effect";
+import { HashSet, Option, pipe } from "effect";
 import { HashMap, Array } from "effect";
 import type { NonEmptyArray } from "effect/Array";
-import { isNone, isSome, none, some } from "effect/Option";
+import { isNone, isSome } from "effect/Option";
+import { Tuple as TupleType } from 'effect';
 
 export type GenerateTasksDeps = {
   taskmaster: {
@@ -45,13 +44,13 @@ export const generateTasks =
 
 // FOLLOWING IS DATA MODELING WIP
 
-// eslint-disable-next-line @typescript-eslint/no-namespace, @typescript-eslint/no-unused-vars
-namespace TasksMachine {
-  type Task = unknown;
-  type Tasks = HashMap.HashMap<TaskId, Task>;
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace TasksMachine {
+  export type Task = unknown;
+  export type Tasks = HashMap.HashMap<TaskId, Task>;
   // artifact id could be generated branch name
-  type ArtifactId = NonEmptyString;
-  type Artifact = {
+  export type ArtifactId = NonEmptyString;
+  export type Artifact = {
     id: ArtifactId;
     // invariant: artifact tasks + normal tasks constitute tasks.json content completely
     // only "completed"
@@ -122,7 +121,25 @@ namespace TasksMachine {
       };
     };
 
-  // export const editTask TODO - can edit only the non-committed tasks; that destroys the edited task's artifact and all follow-up artifacts, if exist
+  export const startTaskExecution = (tid: TaskId) => (s: State): State => {
+    const task = HashMap.get(s.tasks, tid);
+    if (isNone(task)) {
+      throw new Error(`panic! cannot start task execution: no such task`);
+    }
+    if (s.taskExecutionState.agentExecutionState.step !== "stopped") {
+      throw new Error(
+        `panic! cannot start task execution: task execution already in progress`
+      );
+    }
+    return {
+      ...s,
+      tasks: HashMap.remove(s.tasks, tid),
+      taskExecutionState: {
+        ...s.taskExecutionState,
+        task: task.value,
+      },
+    }
+  }
 
   // only the first task in queue can be committed
   export const commitArtifact =
@@ -149,8 +166,7 @@ namespace TasksMachine {
         );
       return {
         ...s,
-        artifacts: Array.tailNonEmpty(artifacts),
-        tasks: pipe(uniqAppend(s.tasks, tasks)),
+        artifacts: Array.tailNonEmpty(artifacts)
       };
     };
 
@@ -281,10 +297,15 @@ namespace TasksMachine {
       const tail =
         s.artifacts.length -
         s.artifacts.findIndex((a) => a.id === artifact.value.id);
-      return removeArtifacts(castNonNegativeInteger(tail))(s);
+      return pipe(
+        removeArtifacts(castNonNegativeInteger(tail))(s),
+        TupleType.mapFirst(s => ({
+          ...s,
+          tasks: pipe(s.tasks, HashMap.set(tid, t))
+        }))
+      );
     };
 
-  // TODO make sure the tasks are "completed" when they are supposed to be.
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -293,7 +314,10 @@ namespace TaskExecution {
   // goose both starts and resumes a session with "goose session --name NAME".
   // to remove a session, `goose session remove -r "project-.*"` (with regex). we unlikely have good ID at this point (will require "session list" command parsing)
   export type TaskExecutionState = {
-    agentExecutionState: AgentExecution.AgentExecutionState;
+    task: TasksMachine.Task,
+    agentExecutionState: AgentExecution.AgentExecutionState & {step: "running"}
+  } | {
+    agentExecutionState: AgentExecution.AgentExecutionState & {step: "stopped"}
   };
   // task execution will be responsible for retries for errors, summarization retries, "business retries" when task wasn't successfully completed
 }

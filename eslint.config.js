@@ -3,7 +3,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/node_modules/**", "**/taiga-api-test/**"],
+    ignores: ["**/dist/**", "**/node_modules/**", "**/taiga-api-test/**", "**/tasks-machine-simulator-frontend/**"],
   },
   ...tseslint.configs.recommended,
   {
