@@ -2,11 +2,8 @@ import { useState, useCallback } from 'react'
 import {
   createSimulator,
   step,
-  back,
-  forward,
   getCurrentState,
   getStateSummary,
-  getHistoryInfo,
   resetCounters,
   generateMockTasks,
   type SimulationCommand,
@@ -31,22 +28,6 @@ function App() {
     }
   }, [simulator])
 
-  const goBack = useCallback(() => {
-    try {
-      setSimulator(back(simulator))
-    } catch (error) {
-      console.error('Back failed:', error)
-    }
-  }, [simulator])
-
-  const goForward = useCallback(() => {
-    try {
-      setSimulator(forward(simulator))
-    } catch (error) {
-      console.error('Forward failed:', error)
-    }
-  }, [simulator])
-
   const reset = useCallback(() => {
     resetCounters()
     setSimulator(createSimulator(5))
@@ -54,7 +35,6 @@ function App() {
 
   const currentState = getCurrentState(simulator)
   const summary = getStateSummary(currentState)
-  const historyInfo = getHistoryInfo(simulator)
 
   return (
     <div className="simulator">
@@ -72,7 +52,6 @@ function App() {
         <p><strong>Artifacts:</strong> {summary.artifactCount}</p>
         {summary.currentTask && <p><strong>Working on:</strong> Task {summary.currentTask}</p>}
         {summary.progressText && <p><strong>Progress:</strong> {summary.progressText}</p>}
-        <p><strong>History:</strong> Step {historyInfo.currentIndex + 1} of {historyInfo.totalStates}</p>
       </div>
 
       {/* Quick Action Controls */}
@@ -126,35 +105,24 @@ function App() {
         </button>
       </div>
 
-      {/* History Navigation */}
-      <div className="history-controls">
-        <button 
-          onClick={goBack}
-          disabled={!historyInfo.canGoBack}
-        >
-          ← Back
-        </button>
-        <button 
-          onClick={goForward}
-          disabled={!historyInfo.canGoForward}
-        >
-          Forward →
-        </button>
-      </div>
-
       {/* Event Creator */}
       <EventCreator 
         onExecuteCommand={executeCommand}
         currentState={currentState}
       />
 
-      {/* Tasks Visualization */}
-      <TasksVisualizer simulator={simulator} />
+      {/* Tasks and Artifacts Side by Side */}
+      <div className="content-grid">
+        {/* Tasks Visualization */}
+        <div className="tasks-section">
+          <TasksVisualizer simulator={simulator} />
+        </div>
 
-      {/* Artifacts Display */}
-      {currentState.artifacts.length > 0 && (
-        <ArtifactsDisplay artifacts={currentState.artifacts} />
-      )}
+        {/* Artifacts Display */}
+        <div className="artifacts-section">
+          <ArtifactsDisplay artifacts={currentState.artifacts} />
+        </div>
+      </div>
     </div>
   )
 }

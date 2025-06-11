@@ -30,9 +30,6 @@ export { executeCommand, findNextTask } from "./simulation.js";
 export {
   createSimulator,
   step,
-  back,
-  forward,
-  getHistoryInfo,
   reset,
   getStateSummary,
 } from "./simulator.js";

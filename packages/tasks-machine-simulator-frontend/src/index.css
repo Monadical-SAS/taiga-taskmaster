@@ -63,11 +63,29 @@ body {
   flex-wrap: wrap;
 }
 
-.history-controls {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
 }
+
+.tasks-section {
+  min-width: 0; /* Prevents overflow in grid */
+}
+
+.artifacts-section {
+  min-width: 0; /* Prevents overflow in grid */
+}
+
+/* Responsive design - stack on smaller screens */
+@media (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
 
 .event-creator {
   background: rgba(255, 255, 255, 0.05);
@@ -134,7 +152,7 @@ button:disabled {
 
 .tasks-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 }

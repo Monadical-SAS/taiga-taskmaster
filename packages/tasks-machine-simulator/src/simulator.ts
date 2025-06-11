@@ -57,45 +57,6 @@ export const step = (
   }
 };
 
-// Rollback to previous state
-export const back = (simulator: Simulator): Simulator => {
-  if (simulator.history.currentIndex <= 0) {
-    throw new Error("Cannot go back: already at initial state");
-  }
-
-  return {
-    history: {
-      ...simulator.history,
-      currentIndex: simulator.history.currentIndex - 1,
-    },
-  };
-};
-
-// Move forward in history (after rollback)
-export const forward = (simulator: Simulator): Simulator => {
-  if (simulator.history.currentIndex >= simulator.history.states.length - 1) {
-    throw new Error("Cannot go forward: already at latest state");
-  }
-
-  return {
-    history: {
-      ...simulator.history,
-      currentIndex: simulator.history.currentIndex + 1,
-    },
-  };
-};
-
-// Get history info
-export const getHistoryInfo = (simulator: Simulator) => {
-  return {
-    totalStates: simulator.history.states.length,
-    currentIndex: simulator.history.currentIndex,
-    canGoBack: simulator.history.currentIndex > 0,
-    canGoForward:
-      simulator.history.currentIndex < simulator.history.states.length - 1,
-  };
-};
-
 // Reset to initial state
 export const reset = (simulator: Simulator): Simulator => {
   return {

@@ -8,9 +8,6 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   createSimulator,
   step,
-  back,
-  forward,
-  getHistoryInfo,
   reset,
   getStateSummary,
   getCurrentState,
@@ -41,14 +38,6 @@ describe("Tasks Machine Simulator", () => {
       expect(summary.currentTask).toBeNull();
     });
 
-    it("should have initial history state", () => {
-      const historyInfo = getHistoryInfo(simulator);
-
-      expect(historyInfo.totalStates).toBe(1);
-      expect(historyInfo.currentIndex).toBe(0);
-      expect(historyInfo.canGoBack).toBe(false);
-      expect(historyInfo.canGoForward).toBe(false);
-    });
   });
 
   describe("Task Execution Flow", () => {
@@ -61,9 +50,6 @@ describe("Tasks Machine Simulator", () => {
       expect(summary.agentStatus).toBe("running");
       expect(summary.currentTask).toBeTruthy();
 
-      const historyInfo = getHistoryInfo(newSimulator);
-      expect(historyInfo.totalStates).toBe(2);
-      expect(historyInfo.currentIndex).toBe(1);
     });
 
     it("should fail to take next task when agent is running", () => {
@@ -175,63 +161,6 @@ describe("Tasks Machine Simulator", () => {
     });
   });
 
-  describe("History Management", () => {
-    it("should go back in history successfully", () => {
-      const step1 = step(simulator, { type: "take_next_task" });
-      const step2 = step(step1, { type: "agent_step" });
-
-      expect(getHistoryInfo(step2).currentIndex).toBe(2);
-
-      const backOne = back(step2);
-      expect(getHistoryInfo(backOne).currentIndex).toBe(1);
-      expect(getStateSummary(getCurrentState(backOne)).agentStatus).toBe(
-        "running"
-      );
-
-      const backTwo = back(backOne);
-      expect(getHistoryInfo(backTwo).currentIndex).toBe(0);
-      expect(getStateSummary(getCurrentState(backTwo)).agentStatus).toBe(
-        "stopped"
-      );
-    });
-
-    it("should fail to go back from initial state", () => {
-      expect(() => {
-        back(simulator);
-      }).toThrow("Cannot go back: already at initial state");
-    });
-
-    it("should go forward in history after rollback", () => {
-      const step1 = step(simulator, { type: "take_next_task" });
-      const step2 = step(step1, { type: "agent_step" });
-      const backOne = back(step2);
-
-      const forwardOne = forward(backOne);
-      expect(getHistoryInfo(forwardOne).currentIndex).toBe(2);
-      expect(getStateSummary(getCurrentState(forwardOne)).agentStatus).toBe(
-        "running"
-      );
-    });
-
-    it("should fail to go forward from latest state", () => {
-      const step1 = step(simulator, { type: "take_next_task" });
-
-      expect(() => {
-        forward(step1);
-      }).toThrow("Cannot go forward: already at latest state");
-    });
-
-    it("should reset to initial state", () => {
-      const step1 = step(simulator, { type: "take_next_task" });
-      const step2 = step(step1, { type: "agent_step" });
-
-      const resetSimulator = reset(step2);
-      expect(getHistoryInfo(resetSimulator).currentIndex).toBe(0);
-      expect(getStateSummary(getCurrentState(resetSimulator)).agentStatus).toBe(
-        "stopped"
-      );
-    });
-  });
 
   describe("Edit Task", () => {
     it("should edit task in current tasks successfully", () => {
@@ -458,10 +387,6 @@ describe("Tasks Machine Simulator", () => {
         getStateSummary(getCurrentState(currentSimulator)).agentStatus
       ).toBe("running");
 
-      // Verify history
-      const historyInfo = getHistoryInfo(currentSimulator);
-      expect(historyInfo.totalStates).toBe(6); // Initial + 5 steps
-      expect(historyInfo.canGoBack).toBe(true);
     });
   });
 });
