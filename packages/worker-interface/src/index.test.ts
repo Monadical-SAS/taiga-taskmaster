@@ -21,7 +21,34 @@ import {
   type CommandScenario,
 } from "./index.js";
 import * as assert from 'node:assert';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { isDone } from 'effect/FiberStatus';
+
+// Helper functions for environment-agnostic test paths
+const generateTestSessionPath = (sessionId: string = "20250612_131655"): string => {
+  const homeDir = os.homedir();
+  return path.join(homeDir, '.local', 'share', 'goose', 'sessions', `${sessionId}.jsonl`);
+};
+
+const generateTestWorkingDirectory = (): string => {
+  // Use current working directory as a base for test working directory
+  return process.cwd();
+};
+
+const formatGooseLogMessage = (sessionId: string = "20250612_131655"): string => {
+  return `    logging to ${generateTestSessionPath(sessionId)}`;
+};
+
+const formatWorkingDirectoryMessage = (workingDir?: string): string => {
+  const dir = workingDir || generateTestWorkingDirectory();
+  return `    working directory: ${dir}`;
+};
+
+const formatGooseWelcomeMessage = (workingDir?: string): string => {
+  const dir = workingDir || generateTestWorkingDirectory();
+  return `I'm currently in your project directory at \`${dir}\`, ready to help with whatever you need!`;
+};
 
 // Helper function to create test scenarios with proper command-key matching
 const createTestScenario = (command: Command.Command, scenario: CommandScenario): Record<string, CommandScenario> => {
@@ -316,8 +343,8 @@ describe("Goose Integration - Mocked Execution", () => {
   it("should execute goose with mocked realistic output", async () => {
     const mockGooseOutput = [
       "starting session | provider: openrouter model: anthropic/claude-sonnet-4",
-      "    logging to /Users/firfi/.local/share/goose/sessions/20250612_131655.jsonl",
-      "    working directory: /Users/firfi/work/clients/monadical/taiga-task-master/packages/worker-interface",
+      formatGooseLogMessage(),
+      formatWorkingDirectoryMessage(),
       "# Hello! 👋",
       "",
       "I'm **Goose**, an AI agent created by Block (the parent company of Square, CashApp, and Tidal). I'm designed to help you with a wide variety of tasks, from software development and file management to problem-solving and analysis.",
@@ -331,7 +358,7 @@ describe("Goose Integration - Mocked Execution", () => {
       "- **Process images** when needed",
       "- **Search for and enable extensions** to expand my capabilities",
       "",
-      "I'm currently in your project directory at `/Users/firfi/work/clients/monadical/taiga-task-master/packages/worker-interface`, ready to help with whatever you need!",
+      formatGooseWelcomeMessage(),
       "",
       "## Getting Started",
       "",
@@ -403,8 +430,8 @@ describe("Goose Integration - Mocked Execution", () => {
   it("should simulate long-running goose session with realistic periodic output", async () => {
     const mockOutput = [
       "starting session | provider: openrouter model: anthropic/claude-haiku",
-      "    logging to /Users/firfi/.local/share/goose/sessions/20250612_134200.jsonl",
-      "    working directory: /Users/firfi/work/clients/monadical/taiga-task-master/packages/worker-interface",
+      formatGooseLogMessage("20250612_134200"),
+      formatWorkingDirectoryMessage(),
       "# Analyzing Project Structure",
       "",
       "I'll help you implement the requested feature. Let me start by examining the current codebase structure.",
