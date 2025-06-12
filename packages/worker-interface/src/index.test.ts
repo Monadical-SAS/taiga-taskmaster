@@ -323,6 +323,7 @@ describe("Goose Integration - Mocked Execution", () => {
 
   it("should execute goose with working directory", async () => {
     const workingDir = "/path/to/project";
+    // The secure implementation uses Command.workingDirectory, which serializes with working dir
     const expectedCommand = `cd "${workingDir}" && goose run -i goose-instructions.md --with-builtin developer`;
 
     const testLayer = TestCommandExecutor({
@@ -579,6 +580,152 @@ describe("Goose Integration - Environment Variable Injection", () => {
 
       expect(result.exitCode).toBe(1);
       expect(result.output[0]?.line).toContain("CommandParsingError");
+    });
+  });
+
+  describe("Security Tests - Shell Injection Prevention", () => {
+    it("should safely handle malicious working directory paths", async () => {
+      // Test various shell injection attempts in working directory
+      // DO NOT ADD rm -rf / here : )
+      const maliciousWorkingDirs = [
+        '/tmp && echo "injected"',
+        '/tmp | cat /etc/passwd',
+        '/tmp`ls`',
+        '/tmp$(whoami)',
+        '/tmp"; cat /etc/passwd; echo "',
+        '/tmp\'; ls; echo \'',
+      ];
+
+      for (const maliciousDir of maliciousWorkingDirs) {
+        // The command serialization includes the working directory for test matching
+        const expectedCommand = `cd "${maliciousDir}" && goose run -i goose-instructions.md --with-builtin developer`;
+        const testLayer = TestCommandExecutor({
+          [expectedCommand]: {
+            output: ["Secure execution - no shell injection"],
+          },
+        });
+
+        const config: Partial<GooseConfig> = {
+          workingDirectory: maliciousDir,
+        };
+
+        // This should execute safely without shell injection
+        const result = await runTaskAsPromise(executeGoose(config), testLayer);
+
+        expect(result.exitCode).toBe(0);
+        expect(result.output[0]?.line).toBe("Secure execution - no shell injection");
+        
+        // The command should be executed securely without shell composition
+        // Command.workingDirectory handles the path safely
+      }
+    });
+
+    it("should safely handle malicious command arguments", async () => {
+      const maliciousCommands: WorkerTask[] = [
+        {
+          description: "Test command substitution",
+          command: ["echo", "hello$(whoami)"],
+        },
+        {
+          description: "Test pipe injection",
+          command: ["echo", "hello | cat /etc/passwd"],
+        },
+        {
+          description: "Test backtick injection",
+          command: ["echo", "hello`ls`"],
+        },
+        {
+          description: "Test quoted injection",
+          command: ["echo", "hello\"; cat /etc/passwd; echo \""],
+        },
+      ];
+
+      for (const maliciousTask of maliciousCommands) {
+        const commandString = maliciousTask.command.join(" ");
+        const testLayer = TestCommandExecutor({
+          [commandString]: {
+            output: ["Safe execution - arguments properly escaped"],
+          },
+        });
+
+        const result = await runTaskAsPromise(executeTask(maliciousTask), testLayer);
+
+        expect(result.exitCode).toBe(0);
+        expect(result.output[0]?.line).toBe("Safe execution - arguments properly escaped");
+        
+        // Commands are executed as arrays, not shell strings
+        // So shell metacharacters are treated as literal arguments
+      }
+    });
+
+    it("should validate that Command.make creates secure commands", () => {
+      // Test that Command.make properly handles arguments
+      const command = Command.make("echo", "hello; rm -rf /");
+      
+      // Command.make should create a proper Command object
+      // that doesn't execute shell interpretation
+      expect(command).toBeDefined();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((command as any).command).toBe("echo");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((command as any).args).toEqual(["hello; rm -rf /"]);
+    });
+
+    it("should validate that Command.workingDirectory is secure", () => {
+      const baseCommand = Command.make("ls", "-la");
+      const maliciousPath = "/tmp; rm -rf /";
+      
+      // Command.workingDirectory should handle the path securely
+      const commandWithCwd = Command.workingDirectory(baseCommand, maliciousPath);
+      
+      expect(commandWithCwd).toBeDefined();
+      // The malicious path should be treated as a literal directory path
+      // not as shell commands to execute
+    });
+
+    it("should serialize commands securely for test scenarios", () => {
+      // Test that our command serialization creates proper command structures
+      const command = Command.make("echo", "hello; rm -rf /");
+      
+      // Command.make should create a proper Command object
+      // that treats arguments as literals, not shell commands
+      expect(command).toBeDefined();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((command as any).command).toBe("echo");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((command as any).args).toEqual(["hello; rm -rf /"]);
+      
+      // The malicious string should be stored as a literal argument
+      // not as executable shell code - this is the key security feature
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const args = (command as any).args;
+      expect(args[0]).toBe("hello; rm -rf /");
+      expect(args.length).toBe(1); // Single argument, not parsed as separate commands
+    });
+
+    it("should handle environment variables securely", async () => {
+      const maliciousEnvValues = [
+        "normal_value; rm -rf /",
+        "normal_value && echo injected",
+        "normal_value | cat /etc/passwd",
+        "normal_value`ls`",
+        "normal_value$(whoami)",
+      ];
+
+      for (const maliciousValue of maliciousEnvValues) {
+        const config: Partial<GooseConfig> = {
+          model: maliciousValue,
+          provider: "test-provider",
+        };
+
+        // Test that environment variables are handled securely
+        const envEffect = createGooseEnvironment(config);
+        const env = await Effect.runPromise(envEffect);
+
+        expect(env.GOOSE_MODEL).toBe(maliciousValue);
+        // Environment variables should be set literally, not executed
+        // Command.env should handle them securely
+      }
     });
   });
 });

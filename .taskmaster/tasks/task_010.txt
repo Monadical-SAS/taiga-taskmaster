@@ -1,6 +1,6 @@
 # Task ID: 10
 # Title: Fix Shell Injection Risk
-# Status: pending
+# Status: done
 # Dependencies: 3
 # Priority: high
 # Description: Address the security vulnerability where user-controlled input is directly passed to shell commands without proper escaping.
