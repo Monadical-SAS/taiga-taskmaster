@@ -15,7 +15,7 @@ import {
   DEFAULT_GOOSE_CONFIG,
   executeCommandWithTimeout,
   runCommandWithLiveExecutorAndTimeout,
-  runGooseWithLiveExecutorAndTimeout,
+  runGooseWithLiveExecutor,
   type GooseConfig,
   type CommandScenario,
 } from "./index.js";
@@ -956,13 +956,13 @@ describe("Goose Integration - Environment Variable Injection", () => {
 
       // These functions should be exported and available for use
       expect(typeof runCommandWithLiveExecutorAndTimeout).toBe("function");
-      expect(typeof runGooseWithLiveExecutorAndTimeout).toBe("function");
+      expect(typeof runGooseWithLiveExecutor).toBe("function");
       
       // Basic smoke test - these would normally be used with real commands
       // but we're just verifying they're properly exported
       // Note: .length only counts parameters without default values
       expect(runCommandWithLiveExecutorAndTimeout.length).toBe(1); // command param (timeout has default)
-      expect(runGooseWithLiveExecutorAndTimeout.length).toBe(0); // config param has default
+      expect(runGooseWithLiveExecutor.length).toBe(0); // config param has default
     });
   });
 });

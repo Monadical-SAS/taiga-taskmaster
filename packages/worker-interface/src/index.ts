@@ -72,7 +72,6 @@ export type CommandScenario = Readonly<{
 export type GooseConfig = Readonly<{
   model: string;
   provider: string;
-  timeout?: number;
   processTimeout?: number;
   workingDirectory?: string;
   instructionsFile?: string;
@@ -81,7 +80,6 @@ export type GooseConfig = Readonly<{
 export const DEFAULT_GOOSE_CONFIG: GooseConfig = {
   model: "anthropic/claude-sonnet-4",
   provider: "openrouter",
-  timeout: 120000, // 120s in milliseconds
   processTimeout: 300000, // 300s in milliseconds
   instructionsFile: "goose-instructions.md",
 };
@@ -292,22 +290,8 @@ export const runGooseWithLiveExecutor = (config: Partial<GooseConfig> = {}): Pro
     )
   );
 
-export const runGooseWithLiveExecutorAndTimeout = (config: Partial<GooseConfig> = {}): Promise<WorkerResult> =>
-  Effect.runPromise(
-    Effect.provide(
-      executeGoose(config), 
-      GooseCommandExecutor(config)
-    )
-  );
-
 export const runGooseInDirectory = (
   workingDirectory: string, 
   config: Partial<GooseConfig> = {}
 ): Promise<WorkerResult> =>
   runGooseWithLiveExecutor({ ...config, workingDirectory });
-
-export const runGooseInDirectoryWithTimeout = (
-  workingDirectory: string, 
-  config: Partial<GooseConfig> = {}
-): Promise<WorkerResult> =>
-  runGooseWithLiveExecutorAndTimeout({ ...config, workingDirectory });
