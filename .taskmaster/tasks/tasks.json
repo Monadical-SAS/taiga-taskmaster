@@ -1,0 +1,126 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Fix Type Safety Violation in Stream Error Types",
+      "description": "Replace the 'unknown' error type in streamLines function with proper error types to maintain Effect's type safety guarantees.",
+      "details": "1. Identify all possible error types that can occur during command execution\n2. Create proper error type definitions if they don't exist\n3. Update the streamLines function signature to use union types of specific errors:\n```typescript\nreadonly streamLines: (command: Command.Command) => Stream.Stream<string, CommandExecutionError | FileSystemError | TimeoutError>;\n```\n4. Ensure all implementations of this interface properly handle and propagate these error types\n5. Update any consumers of this API to handle the specific error types",
+      "testStrategy": "1. Write unit tests that verify errors are properly typed and propagated\n2. Create test scenarios that trigger each error type\n3. Verify that TypeScript compiler catches incompatible error handling\n4. Test error recovery paths to ensure they work with the new typed errors",
+      "priority": "high",
+      "dependencies": [],
+      "status": "done",
+      "subtasks": []
+    },
+    {
+      "id": 2,
+      "title": "Fix Broken Mock Testing Logic",
+      "description": "Correct the mock implementation that ignores input commands and always selects the first scenario key, making tests unreliable.",
+      "details": "1. Refactor the mock implementation to properly match commands to scenarios:\n```typescript\nstreamLines: (command) => {\n  // Serialize command to a string key or use a proper matching function\n  const commandKey = serializeCommand(command);\n  const scenario = scenarios[commandKey] ?? scenarios['default'] ?? { output: ['default mock output'] };\n  // Rest of implementation\n}\n```\n2. Create a command serializer function that converts Command objects to consistent string keys\n3. Update test scenarios to use these serialized keys\n4. Add validation to ensure commands match expected scenarios",
+      "testStrategy": "1. Write tests that verify different commands map to different scenarios\n2. Test edge cases like empty commands or commands with special characters\n3. Verify that the same command always maps to the same scenario\n4. Create tests with multiple scenarios to ensure correct selection",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 3,
+      "title": "Fix Command Parsing Logic",
+      "description": "Replace naive space-splitting command parsing with a proper approach that handles quoted arguments and complex shell commands.",
+      "details": "1. Remove string concatenation in command creation:\n```typescript\n// Instead of returning a string from createGooseCommand\nconst createGooseCommand = (args: string[]): Command.Command => ({\n  cmd: 'goose',\n  args: args\n});\n\n// Update command executor to work with structured commands\nconst executeCommand = ({ cmd, args }: Command.Command) => {\n  // Use cmd and args directly without string manipulation\n}\n```\n2. Update all command creation functions to return structured Command objects\n3. Modify command execution to use the structured format\n4. Remove any string splitting/joining operations",
+      "testStrategy": "1. Test commands with quoted arguments (e.g., `echo \"hello world\"`)\n2. Test commands with special characters\n3. Verify complex commands are correctly parsed and executed\n4. Create integration tests that verify real command execution matches expected behavior",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 4,
+      "title": "Implement Error Type Propagation",
+      "description": "Ensure all functions properly type and propagate their error cases to maintain type safety throughout the codebase.",
+      "details": "1. Create a comprehensive error type hierarchy for the worker interface:\n```typescript\nexport type WorkerError =\n  | { _tag: 'EmptyCommandError'; message: string }\n  | { _tag: 'CommandExecutionError'; command: string; exitCode: number; stderr: string }\n  | { _tag: 'CommandTimeoutError'; command: string; timeout: number }\n  | { _tag: 'FileSystemError'; path: string; operation: string; message: string };\n```\n2. Update all function signatures to include specific error types in their Effect/Stream return types\n3. Ensure executeTask() and similar functions properly type their error cases\n4. Update error handling code to use pattern matching on error types",
+      "testStrategy": "1. Write tests that verify each error type is correctly propagated\n2. Test error recovery paths to ensure they handle specific error types\n3. Create test scenarios that trigger each error condition\n4. Verify TypeScript compiler catches incompatible error handling",
+      "priority": "medium",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 5,
+      "title": "Fix Test Command Matching",
+      "description": "Correct the test implementation to ensure mock commands are properly matched with their scenarios for accurate testing.",
+      "details": "1. Update test layer creation to use consistent command keys:\n```typescript\nconst testLayer = TestCommandExecutor({\n  // Use a serialized version of the actual command being tested\n  [serializeCommand(commandObj)]: {\n    output: [expectedOutput],\n  },\n});\n```\n2. Create a helper function for test scenario creation that ensures keys match\n3. Update all tests to use this consistent approach\n4. Add validation to test setup to catch mismatched commands",
+      "testStrategy": "1. Create meta-tests that verify test infrastructure works correctly\n2. Test with various command types to ensure proper matching\n3. Verify that tests fail when expected (negative testing)\n4. Create tests that verify the same command always matches the same scenario",
+      "priority": "medium",
+      "dependencies": [
+        2
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 6,
+      "title": "Remove Hardcoded Test Values",
+      "description": "Replace environment-specific hardcoded values in tests with dynamic or relative values to improve test portability.",
+      "details": "1. Identify all hardcoded paths like `/Users/firfi/.local/share/goose/sessions/...`\n2. Replace absolute paths with relative paths or environment variables:\n```typescript\n// Instead of hardcoded paths\nconst testPath = path.join(process.env.HOME || os.homedir(), '.local', 'share', 'goose', 'sessions');\n\n// Or use test-specific directories\nconst testDir = path.join(os.tmpdir(), 'worker-interface-tests');\n```\n3. Create helper functions for generating test paths\n4. Update all test data to use these dynamic approaches",
+      "testStrategy": "1. Run tests in different environments to verify portability\n2. Test with various user configurations\n3. Verify tests work in CI/CD environments\n4. Create tests that explicitly verify path handling is environment-agnostic",
+      "priority": "low",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 7,
+      "title": "Add Timeout Handling to Command Execution",
+      "description": "Implement timeout handling for all command executions to prevent indefinite hanging on long-running commands.",
+      "details": "1. Use Effect's timeout functionality for all command executions:\n```typescript\nimport { Duration } from 'effect/Duration';\nimport { Effect } from 'effect/Effect';\n\nconst executeCommandWithTimeout = (command: Command.Command, timeoutMs = 30000) =>\n  executeCommand(command).pipe(\n    Effect.timeout(Duration.millis(timeoutMs)),\n    Effect.catchTag('TimeoutException', (error) =>\n      Effect.fail({ _tag: 'CommandTimeoutError', command: serializeCommand(command), timeout: timeoutMs })\n    )\n  );\n```\n2. Add timeout configuration options to all command execution functions\n3. Use Effect's TestClock for testing timeout scenarios\n4. Update documentation to explain timeout behavior",
+      "testStrategy": "1. Write tests that verify commands timeout after the specified duration\n2. Use TestClock to simulate timeouts without waiting\n3. Test error handling for timeout cases\n4. Verify timeout errors are properly typed and propagated",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 8,
+      "title": "Implement Stream Size Limits",
+      "description": "Add buffering limits to stream collectors to prevent memory leaks with large command outputs.",
+      "details": "1. Add size limits to stream processing:\n```typescript\nimport { Stream } from 'effect/Stream';\n\nconst MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB limit\n\nconst streamLinesWithLimit = (command: Command.Command) =>\n  streamLines(command).pipe(\n    Stream.catchAll((error) => Stream.fail(error)), // Preserve error types\n    Stream.buffer(MAX_BUFFER_SIZE),\n    Stream.catchTag('BufferOverflowException', () =>\n      Stream.fail({ _tag: 'BufferOverflowError', command: serializeCommand(command), limit: MAX_BUFFER_SIZE })\n    )\n  );\n```\n2. Make buffer size configurable\n3. Add documentation about memory usage and limits\n4. Update consumers to handle buffer overflow errors",
+      "testStrategy": "1. Create tests with large output streams to verify buffering\n2. Test buffer overflow error handling\n3. Verify memory usage stays within expected bounds\n4. Test with various buffer size configurations",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 9,
+      "title": "Fix Side Effects in Pure Functions",
+      "description": "Replace direct calls to Date.now() with Effect's proper time handling to maintain function purity.",
+      "details": "1. Replace direct Date.now() calls with Effect's time handling:\n```typescript\nimport { Effect } from 'effect/Effect';\nimport { Stream } from 'effect/Stream';\n\nconst addTimestamp = (line: string) =>\n  Effect.gen(function* (_) {\n    const now = yield* _(Effect.clock.currentTimeMillis);\n    return { timestamp: now, line };\n  });\n\nconst streamLinesWithTimestamp = (command: Command.Command) =>\n  streamLines(command).pipe(\n    Stream.flatMap((line) => Stream.fromEffect(addTimestamp(line)))\n  );\n```\n2. Update all time-dependent code to use Effect's clock\n3. Use TestClock for deterministic testing\n4. Document the approach to time handling",
+      "testStrategy": "1. Write tests using TestClock to verify timestamp generation\n2. Test with fixed clock times to ensure deterministic results\n3. Verify function purity by testing multiple invocations\n4. Create tests that explicitly verify time handling",
+      "priority": "medium",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 10,
+      "title": "Fix Shell Injection Risk",
+      "description": "Address the security vulnerability where user-controlled input is directly passed to shell commands without proper escaping.",
+      "details": "1. Remove shell composition and use proper command arrays:\n```typescript\n// Instead of string composition like: `cd \"${workingDir}\" && ${commandString}`\n// Use proper command execution:\nconst executeInDirectory = (cmd: string, args: string[], workingDir: string) =>\n  Effect.gen(function* (_) {\n    // Use proper options object with cwd instead of cd command\n    const options = { cwd: workingDir };\n    return yield* _(executeCommand({ cmd, args }, options));\n  });\n```\n2. Use a shell escaping library if shell commands are absolutely necessary\n3. Validate all user inputs before using in commands\n4. Add security documentation about command handling",
+      "testStrategy": "1. Create security-focused tests with malicious input patterns\n2. Test with inputs containing shell metacharacters\n3. Verify command injection is not possible\n4. Create tests that explicitly verify security properties",
+      "priority": "high",
+      "dependencies": [
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    }
+  ]
+}

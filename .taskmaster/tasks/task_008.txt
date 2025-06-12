@@ -1,0 +1,31 @@
+# Task ID: 8
+# Title: Implement Stream Size Limits
+# Status: pending
+# Dependencies: 1, 3
+# Priority: medium
+# Description: Add buffering limits to stream collectors to prevent memory leaks with large command outputs.
+# Details:
+1. Add size limits to stream processing:
+```typescript
+import { Stream } from 'effect/Stream';
+
+const MAX_BUFFER_SIZE = 10 * 1024 * 1024; // 10MB limit
+
+const streamLinesWithLimit = (command: Command.Command) =>
+  streamLines(command).pipe(
+    Stream.catchAll((error) => Stream.fail(error)), // Preserve error types
+    Stream.buffer(MAX_BUFFER_SIZE),
+    Stream.catchTag('BufferOverflowException', () =>
+      Stream.fail({ _tag: 'BufferOverflowError', command: serializeCommand(command), limit: MAX_BUFFER_SIZE })
+    )
+  );
+```
+2. Make buffer size configurable
+3. Add documentation about memory usage and limits
+4. Update consumers to handle buffer overflow errors
+
+# Test Strategy:
+1. Create tests with large output streams to verify buffering
+2. Test buffer overflow error handling
+3. Verify memory usage stays within expected bounds
+4. Test with various buffer size configurations

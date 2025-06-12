@@ -1,0 +1,25 @@
+# Task ID: 2
+# Title: Fix Broken Mock Testing Logic
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Correct the mock implementation that ignores input commands and always selects the first scenario key, making tests unreliable.
+# Details:
+1. Refactor the mock implementation to properly match commands to scenarios:
+```typescript
+streamLines: (command) => {
+  // Serialize command to a string key or use a proper matching function
+  const commandKey = serializeCommand(command);
+  const scenario = scenarios[commandKey] ?? scenarios['default'] ?? { output: ['default mock output'] };
+  // Rest of implementation
+}
+```
+2. Create a command serializer function that converts Command objects to consistent string keys
+3. Update test scenarios to use these serialized keys
+4. Add validation to ensure commands match expected scenarios
+
+# Test Strategy:
+1. Write tests that verify different commands map to different scenarios
+2. Test edge cases like empty commands or commands with special characters
+3. Verify that the same command always maps to the same scenario
+4. Create tests with multiple scenarios to ensure correct selection

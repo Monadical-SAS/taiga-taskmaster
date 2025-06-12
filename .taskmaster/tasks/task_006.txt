@@ -1,0 +1,24 @@
+# Task ID: 6
+# Title: Remove Hardcoded Test Values
+# Status: pending
+# Dependencies: None
+# Priority: low
+# Description: Replace environment-specific hardcoded values in tests with dynamic or relative values to improve test portability.
+# Details:
+1. Identify all hardcoded paths like `/Users/firfi/.local/share/goose/sessions/...`
+2. Replace absolute paths with relative paths or environment variables:
+```typescript
+// Instead of hardcoded paths
+const testPath = path.join(process.env.HOME || os.homedir(), '.local', 'share', 'goose', 'sessions');
+
+// Or use test-specific directories
+const testDir = path.join(os.tmpdir(), 'worker-interface-tests');
+```
+3. Create helper functions for generating test paths
+4. Update all test data to use these dynamic approaches
+
+# Test Strategy:
+1. Run tests in different environments to verify portability
+2. Test with various user configurations
+3. Verify tests work in CI/CD environments
+4. Create tests that explicitly verify path handling is environment-agnostic

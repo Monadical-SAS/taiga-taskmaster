@@ -1,0 +1,21 @@
+# Task ID: 1
+# Title: Fix Type Safety Violation in Stream Error Types
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Replace the 'unknown' error type in streamLines function with proper error types to maintain Effect's type safety guarantees.
+# Details:
+1. Identify all possible error types that can occur during command execution
+2. Create proper error type definitions if they don't exist
+3. Update the streamLines function signature to use union types of specific errors:
+```typescript
+readonly streamLines: (command: Command.Command) => Stream.Stream<string, CommandExecutionError | FileSystemError | TimeoutError>;
+```
+4. Ensure all implementations of this interface properly handle and propagate these error types
+5. Update any consumers of this API to handle the specific error types
+
+# Test Strategy:
+1. Write unit tests that verify errors are properly typed and propagated
+2. Create test scenarios that trigger each error type
+3. Verify that TypeScript compiler catches incompatible error handling
+4. Test error recovery paths to ensure they work with the new typed errors

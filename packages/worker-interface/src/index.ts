@@ -1,6 +1,45 @@
-import { Effect, Stream, pipe, Array as EffectArray, Context, Layer, Schedule, Config } from "effect";
+import { Effect, Stream, pipe, Array as EffectArray, Context, Layer, Schedule, Config, Data } from "effect";
 import { Command } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
+
+// Helper function to convert Command to string for error reporting
+const commandToString = (command: Command.Command): string => {
+  // Since Command.toString might not be available, we'll use a simple representation
+  return `Command(${JSON.stringify(command)})`;
+};
+
+// Error types for proper type safety
+// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance, functional/readonly-type
+export class CommandExecutionError extends Data.TaggedError("CommandExecutionError")<{
+  readonly command: string;
+  readonly exitCode: number;
+  readonly stderr?: string;
+}> {}
+
+// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance, functional/readonly-type
+export class CommandTimeoutError extends Data.TaggedError("CommandTimeoutError")<{
+  readonly command: string;
+  readonly timeoutMs: number;
+}> {}
+
+// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance, functional/readonly-type
+export class CommandParsingError extends Data.TaggedError("CommandParsingError")<{
+  readonly input: string;
+  readonly reason: string;
+}> {}
+
+// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance, functional/readonly-type
+export class ConfigurationError extends Data.TaggedError("ConfigurationError")<{
+  readonly field: string;
+  readonly value?: string;
+  readonly reason: string;
+}> {}
+
+export type WorkerError = 
+  | CommandExecutionError 
+  | CommandTimeoutError 
+  | CommandParsingError 
+  | ConfigurationError;
 
 export type WorkerTask = Readonly<{
   description: string;
@@ -18,7 +57,7 @@ export type WorkerResult = Readonly<{
 }>;
 
 export interface CommandExecutor {
-  readonly streamLines: (command: Command.Command) => Stream.Stream<string, unknown>;
+  readonly streamLines: (command: Command.Command) => Stream.Stream<string, WorkerError>;
 }
 
 export const CommandExecutor = Context.GenericTag<CommandExecutor>("CommandExecutor");
@@ -45,7 +84,7 @@ export const DEFAULT_GOOSE_CONFIG: GooseConfig = {
   processTimeout: 300000, // 300s in milliseconds
   instructionsFile: "goose-instructions.md",
 };
-export const executeCommand = (command: Command.Command): Effect.Effect<WorkerResult, Error, CommandExecutor> =>
+export const executeCommand = (command: Command.Command): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> =>
   pipe(
     CommandExecutor,
     Effect.flatMap((executor) =>
@@ -68,21 +107,26 @@ export const executeCommand = (command: Command.Command): Effect.Effect<WorkerRe
         output: [
           {
             timestamp: Date.now(),
-            line: `Error: ${String(error)}`,
+            line: `Error: ${error._tag}: ${JSON.stringify(error)}`,
           },
         ],
       })
     )
   );
 
-export const executeTask = (task: WorkerTask): Effect.Effect<WorkerResult, Error, CommandExecutor> => {
+export const executeTask = (task: WorkerTask): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
   const commandString = task.command ?? task.description;
   const commandParts = commandString.split(" ");
   const cmd = commandParts[0];
   const args = commandParts.slice(1);
   
   if (!cmd) {
-    return Effect.fail(new Error("Empty command"));
+    return Effect.fail(
+      new CommandParsingError({
+        input: commandString,
+        reason: "Empty command after parsing"
+      })
+    );
   }
   
   return executeCommand(Command.make(cmd, ...args));
@@ -100,7 +144,14 @@ export const LiveCommandExecutor = Layer.succeed(
       pipe(
         command,
         Command.streamLines,
-        Stream.provideLayer(NodeContext.layer)
+        Stream.provideLayer(NodeContext.layer),
+        Stream.mapError((error) => 
+          new CommandExecutionError({
+            command: commandToString(command),
+            exitCode: -1,
+            stderr: String(error)
+          })
+        )
       ),
   })
 );
@@ -111,12 +162,18 @@ export const TestCommandExecutor = (
   Layer.succeed(
     CommandExecutor,
     CommandExecutor.of({
-      streamLines: (_command) => {
+      streamLines: (command) => {
         const commandKey = Object.keys(scenarios)[0] ?? "default-command";
         const scenario = scenarios[commandKey] ?? { output: ["default mock output"] };
 
         if (scenario.error) {
-          return Stream.fail(new Error(scenario.error));
+          return Stream.fail(
+            new CommandExecutionError({
+              command: commandToString(command),
+              exitCode: 1,
+              stderr: scenario.error
+            })
+          );
         }
 
         const stream = Stream.fromIterable(scenario.output ?? []);
@@ -187,14 +244,15 @@ export const createGooseEnvironment = (config: Partial<GooseConfig> = {}) =>
         GOOSE_PROVIDER: finalConfig.provider,
       };
       
-      // Add OPENROUTER_API_KEY from project env if available
-      return projectEnv.OPENROUTER_API_KEY
-        ? { ...gooseEnv, OPENROUTER_API_KEY: projectEnv.OPENROUTER_API_KEY }
-        : gooseEnv;
+      // Always include OPENROUTER_API_KEY from project env (even if empty string)
+      return {
+        ...gooseEnv,
+        OPENROUTER_API_KEY: projectEnv.OPENROUTER_API_KEY
+      };
     })
   );
 
-export const executeGoose = (config: Partial<GooseConfig> = {}): Effect.Effect<WorkerResult, Error, CommandExecutor> => {
+export const executeGoose = (config: Partial<GooseConfig> = {}): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
   const commandString = createGooseCommand(config);
   const workingDir = config.workingDirectory;
   
@@ -208,7 +266,12 @@ export const executeGoose = (config: Partial<GooseConfig> = {}): Effect.Effect<W
     const args = commandParts.slice(1);
     
     if (!cmd) {
-      return Effect.fail(new Error("Empty goose command"));
+      return Effect.fail(
+        new CommandParsingError({
+          input: commandString,
+          reason: "Empty goose command after parsing"
+        })
+      );
     }
     
     return executeCommand(Command.make(cmd, ...args));
@@ -227,7 +290,14 @@ export const GooseCommandExecutor = (config: Partial<GooseConfig> = {}) =>
               command,
               Command.env(gooseEnv),
               Command.streamLines,
-              Stream.provideLayer(NodeContext.layer)
+              Stream.provideLayer(NodeContext.layer),
+              Stream.mapError((error) => 
+                new CommandExecutionError({
+                  command: commandToString(command),
+                  exitCode: -1,
+                  stderr: String(error)
+                })
+              )
             ),
         })
       )
