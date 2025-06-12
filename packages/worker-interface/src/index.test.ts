@@ -4,10 +4,8 @@ import { Effect, Fiber, TestClock, TestContext, Layer } from 'effect';
 import { Command } from "@effect/platform";
 import {
   executeCommand,
-  executeTask,
   runTaskAsPromise,
   TestCommandExecutor,
-  runWithLiveExecutor,
   runCommandWithLiveExecutor,
   loadProjectEnv,
   createGooseCommand,
@@ -15,7 +13,10 @@ import {
   executeGoose,
   GooseCommandExecutor,
   DEFAULT_GOOSE_CONFIG,
-  type WorkerTask,
+  executeCommandWithTimeout,
+  executeGooseWithTimeout,
+  runCommandWithLiveExecutorAndTimeout,
+  runGooseWithLiveExecutorAndTimeout,
   type GooseConfig,
   type CommandScenario,
 } from "./index.js";
@@ -122,18 +123,13 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
     expect(result.output[0]?.timestamp).toBeTypeOf("number");
   });
 
-  it("should execute a worker task with mocked command", async () => {
-    const task: WorkerTask = {
-      description: "Test task",
-      command: ["echo", "Task", "executed"],
-    };
-
+  it("should execute a command with multiple arguments", async () => {
     const command = Command.make("echo", "Task", "executed");
     const testLayer = TestCommandExecutor(createTestScenario(command, {
       output: ["Task executed"],
     }));
 
-    const result = await runTaskAsPromise(executeTask(task), testLayer);
+    const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
     expect(result.exitCode).toBe(0);
     expect(result.output).toHaveLength(1);
@@ -200,13 +196,10 @@ describe("Worker Interface - Live CommandExecutor", () => {
     expect(result.output[0]?.timestamp).toBeTypeOf("number");
   });
 
-  it("should execute a real worker task", async () => {
-    const task: WorkerTask = {
-      description: "Test task",
-      command: ["echo", "Task executed"],
-    };
+  it("should execute a real command with multiple words", async () => {
+    const command = Command.make("echo", "Task executed");
 
-    const result = await runWithLiveExecutor(executeTask(task));
+    const result = await runCommandWithLiveExecutor(command);
 
     expect(result.exitCode).toBe(0);
     expect(result.output).toHaveLength(1);
@@ -566,101 +559,58 @@ describe("Goose Integration - Environment Variable Injection", () => {
 
   describe("Command Arrays", () => {
     it("should handle commands with arguments that contain spaces", async () => {
-      const task: WorkerTask = {
-        description: "Test task with arguments containing spaces",
-        command: ["echo", "hello world"],
-      };
-
       const command = Command.make("echo", "hello world");
       const testLayer = TestCommandExecutor(createTestScenario(command, {
         output: ["hello world"],
       }));
 
-      const result = await runTaskAsPromise(executeTask(task), testLayer);
+      const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
       expect(result.exitCode).toBe(0);
       expect(result.output[0]?.line).toBe("hello world");
     });
 
     it("should handle commands with multiple arguments", async () => {
-      const task: WorkerTask = {
-        description: "Test task with multiple arguments",
-        command: ["cp", "source file.txt", "destination file.txt"],
-      };
-
       const command = Command.make("cp", "source file.txt", "destination file.txt");
       const testLayer = TestCommandExecutor(createTestScenario(command, {
         output: ["file copied"],
       }));
 
-      const result = await runTaskAsPromise(executeTask(task), testLayer);
+      const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
       expect(result.exitCode).toBe(0);
       expect(result.output[0]?.line).toBe("file copied");
     });
 
     it("should handle commands with flags and arguments", async () => {
-      const task: WorkerTask = {
-        description: "Test command with flags",
-        command: ["grep", "-n", "search term", "file.txt"],
-      };
-
       const command = Command.make("grep", "-n", "search term", "file.txt");
       const testLayer = TestCommandExecutor(createTestScenario(command, {
         output: ["1:found search term here"],
       }));
 
-      const result = await runTaskAsPromise(executeTask(task), testLayer);
+      const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
       expect(result.exitCode).toBe(0);
       expect(result.output[0]?.line).toBe("1:found search term here");
     });
 
-    it("should handle empty command array", async () => {
-      const task: WorkerTask = {
-        description: "Test with empty command",
-        command: [],
-      };
-
-      const testLayer = TestCommandExecutor({});
-
-      // This should fail with CommandParsingError, but executeCommand catches all errors
-      // and returns a WorkerResult with exitCode 1
-      const result = await runTaskAsPromise(executeTask(task), testLayer);
-
-      expect(result.exitCode).toBe(1);
-      expect(result.output[0]?.line).toContain("CommandParsingError");
-    });
   });
 
   describe("Security Tests - Shell Injection Prevention", () => {
     it("should safely handle malicious command arguments", async () => {
-      const maliciousCommands: WorkerTask[] = [
-        {
-          description: "Test command substitution",
-          command: ["echo", "hello$(whoami)"],
-        },
-        {
-          description: "Test pipe injection",
-          command: ["echo", "hello | cat /etc/passwd"],
-        },
-        {
-          description: "Test backtick injection",
-          command: ["echo", "hello`ls`"],
-        },
-        {
-          description: "Test quoted injection",
-          command: ["echo", "hello\"; cat /etc/passwd; echo \""],
-        },
+      const maliciousCommands = [
+        Command.make("echo", "hello$(whoami)"),
+        Command.make("echo", "hello | cat /etc/passwd"),
+        Command.make("echo", "hello`ls`"),
+        Command.make("echo", "hello\"; cat /etc/passwd; echo \""),
       ];
 
-      for (const maliciousTask of maliciousCommands) {
-        const command = Command.make(maliciousTask.command[0] ?? "", ...maliciousTask.command.slice(1));
+      for (const command of maliciousCommands) {
         const testLayer = TestCommandExecutor(createTestScenario(command, {
           output: ["Safe execution - arguments properly escaped"],
         }));
 
-        const result = await runTaskAsPromise(executeTask(maliciousTask), testLayer);
+        const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
         expect(result.exitCode).toBe(0);
         expect(result.output[0]?.line).toBe("Safe execution - arguments properly escaped");
@@ -769,30 +719,158 @@ describe("Goose Integration - Environment Variable Injection", () => {
       expect(result.output[0]?.timestamp).toBe(1000); // Deterministic timestamp
     });
 
-    it("should handle errors with deterministic timestamps using TestClock", async () => {
-      const task: WorkerTask = {
-        description: "Test with empty command array",
-        command: [], // Empty command should trigger error
-      };
+  });
+
+  describe("Timeout Functionality", () => {
+    it("should execute command with timeout using TestClock", async () => {
+      const command = Command.make("echo", "test output");
+      const testLayer = TestCommandExecutor(createTestScenario(command, {
+        output: ["test output"],
+      }));
 
       const program = Effect.gen(function* (_) {
-        yield* _(TestClock.adjust(3000)); // Set to 3000ms
+        yield* _(TestClock.adjust(1000)); // Set time to 1000ms
         
-        const result = yield* _(executeTask(task));
+        const result = yield* _(executeCommandWithTimeout(command, 5000)); // 5 second timeout
         
         return result;
       });
 
-      const mockLayer = TestCommandExecutor({});
-      
       const result = await Effect.runPromise(
-        Effect.provide(program, Layer.merge(mockLayer, TestContext.TestContext))
+        Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
+      );
+
+      expect(result.exitCode).toBe(0);
+      expect(result.output).toHaveLength(1);
+      expect(result.output[0]?.line).toBe("test output");
+      expect(result.output[0]?.timestamp).toBe(1000);
+    });
+
+    it("should timeout commands that take too long", async () => {
+      const command = Command.make("long-running-command");
+      const testLayer = TestCommandExecutor(createTestScenario(command, {
+        output: ["this should timeout"],
+        delay: 1000, // 1 second delay per line
+      }));
+
+      const program = Effect.gen(function* (_) {
+        const fork = yield* _(Effect.fork(executeCommandWithTimeout(command, 500))); // 500ms timeout
+        
+        // Advance time by 600ms (beyond timeout)
+        yield* _(TestClock.adjust(600));
+        
+        const result = yield* _(Fiber.join(fork));
+        
+        return result;
+      });
+
+      const result = await Effect.runPromise(
+        Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
       );
 
       expect(result.exitCode).toBe(1);
       expect(result.output).toHaveLength(1);
-      expect(result.output[0]?.line).toContain("CommandParsingError");
-      expect(result.output[0]?.timestamp).toBe(3000); // Deterministic timestamp
+      expect(result.output[0]?.line).toContain("CommandTimeoutError");
+      expect(result.output[0]?.line).toContain("timeoutMs\":500");
+    });
+
+    it("should timeout command execution", async () => {
+      const command = Command.make("slow-command", "arg1");
+      const testLayer = TestCommandExecutor(createTestScenario(command, {
+        output: ["slow output"],
+        delay: 2000, // 2 second delay
+      }));
+
+      const program = Effect.gen(function* (_) {
+        const fork = yield* _(Effect.fork(executeCommandWithTimeout(command, 1000))); // 1 second timeout
+        
+        // Advance time by 1100ms (beyond timeout)
+        yield* _(TestClock.adjust(1100));
+        
+        const result = yield* _(Fiber.join(fork));
+        
+        return result;
+      });
+
+      const result = await Effect.runPromise(
+        Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
+      );
+
+      expect(result.exitCode).toBe(1);
+      expect(result.output).toHaveLength(1);
+      expect(result.output[0]?.line).toContain("CommandTimeoutError");
+      expect(result.output[0]?.line).toContain("timeoutMs\":1000");
+    });
+
+    it("should timeout Goose execution with config timeout", async () => {
+      const config: Partial<GooseConfig> = {
+        processTimeout: 2000, // 2 second timeout
+        instructionsFile: "test-timeout.md",
+      };
+      const gooseCommand = Command.make("goose", "run", "-i", "test-timeout.md", "--with-builtin", "developer");
+      const testLayer = TestCommandExecutor(createTestScenario(gooseCommand, {
+        output: ["goose starting..."],
+        delay: 5000, // 5 second delay
+      }));
+
+      const program = Effect.gen(function* (_) {
+        const fork = yield* _(Effect.fork(executeGooseWithTimeout(config)));
+        
+        // Advance time by 2100ms (beyond timeout)
+        yield* _(TestClock.adjust(2100));
+        
+        const result = yield* _(Fiber.join(fork));
+        
+        return result;
+      });
+
+      const result = await Effect.runPromise(
+        Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
+      );
+
+      expect(result.exitCode).toBe(1);
+      expect(result.output).toHaveLength(1);
+      expect(result.output[0]?.line).toContain("CommandTimeoutError");
+      expect(result.output[0]?.line).toContain("timeoutMs\":2000");
+    });
+
+
+    it("should use default timeout when not specified", async () => {
+      const command = Command.make("test-default-timeout");
+      const testLayer = TestCommandExecutor(createTestScenario(command, {
+        output: ["completed before default timeout"],
+      }));
+
+      const program = Effect.gen(function* (_) {
+        yield* _(TestClock.adjust(1000));
+        
+        // Should use default timeout (30 seconds)
+        const result = yield* _(executeCommandWithTimeout(command));
+        
+        return result;
+      });
+
+      const result = await Effect.runPromise(
+        Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
+      );
+
+      expect(result.exitCode).toBe(0);
+      expect(result.output).toHaveLength(1);
+      expect(result.output[0]?.line).toBe("completed before default timeout");
+    });
+
+    // Test convenience functions to prevent linting warnings
+    it("should provide convenient timeout wrapper functions", async () => {
+
+      // These functions should be exported and available for use
+      expect(typeof runCommandWithLiveExecutorAndTimeout).toBe("function");
+      expect(typeof runGooseWithLiveExecutorAndTimeout).toBe("function");
+      
+      // Basic smoke test - these would normally be used with real commands
+      // but we're just verifying they're properly exported
+      // Note: .length only counts parameters without default values
+      expect(runCommandWithLiveExecutorAndTimeout.length).toBe(1); // command param (timeout has default)
+      expect(runGooseWithLiveExecutorAndTimeout.length).toBe(0); // config param has default
     });
   });
 });
