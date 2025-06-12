@@ -10,7 +10,7 @@ const commandToString = (command: Command.Command): string => {
 
 // Serialize Command to a consistent string key for testing scenarios
 const serializeCommand = (command: Command.Command): string => {
-  // Extract command parts to create a consistent string representation  
+  // Extract command parts to create a consistent string representation
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cmd = (command as any).command;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

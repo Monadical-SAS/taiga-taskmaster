@@ -449,6 +449,9 @@ importers:
         specifier: ^3.16.5
         version: 3.16.5
     devDependencies:
+      '@effect/vitest':
+        specifier: ^0.23.5
+        version: 0.23.5(effect@3.16.5)(vitest@2.1.9(@types/node@20.17.50))
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -611,6 +614,12 @@ packages:
       '@effect/experimental': ^0.48.10
       '@effect/platform': ^0.84.9
       effect: ^3.16.5
+
+  '@effect/vitest@0.23.5':
+    resolution: {integrity: sha512-cBiNyQQ+vslFnAuhjEz0NoNs/YD7hbyKPyIA1Xiu+m/jry6xVoFRQZEt5l5McIWbDfrbzBDEfEE6PpPS7U1D0Q==}
+    peerDependencies:
+      effect: ^3.16.5
+      vitest: ^3.0.0
 
   '@effect/workflow@0.1.12':
     resolution: {integrity: sha512-nKpuhi91/l2xcvEVd0GwT7llJYWPF+EX1iQuIN9gB32ebpSCFEWszkwZ5fwRRQmFXEL4SxZTfBu4IzfiZTFyGA==}
@@ -2814,6 +2823,11 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.34.0
       effect: 3.16.5
       uuid: 11.1.0
+
+  '@effect/vitest@0.23.5(effect@3.16.5)(vitest@2.1.9(@types/node@20.17.50))':
+    dependencies:
+      effect: 3.16.5
+      vitest: 2.1.9(@types/node@20.17.50)
 
   '@effect/workflow@0.1.12(@effect/platform@0.84.9(effect@3.16.5))(@effect/rpc@0.61.13(@effect/platform@0.84.9(effect@3.16.5))(effect@3.16.5))(effect@3.16.5)':
     dependencies:

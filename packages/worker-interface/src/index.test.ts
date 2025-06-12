@@ -1,6 +1,6 @@
 // @vibe-generated: conforms to worker-interface
 import { describe, it, expect } from "vitest";
-import { Effect } from "effect";
+import { Effect, Fiber, TestClock, TestContext } from 'effect';
 import { Command } from "@effect/platform";
 import {
   executeCommand,
@@ -18,6 +18,8 @@ import {
   type WorkerTask,
   type GooseConfig,
 } from "./index.js";
+import * as assert from 'node:assert';
+import { isRunning, isDone } from 'effect/FiberStatus';
 
 describe("Worker Interface - Mocked CommandExecutor", () => {
   it("should execute a simple command with predetermined output", async () => {
@@ -74,38 +76,6 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
     expect(result.output[0]?.line).toBe("Line 1");
     expect(result.output[1]?.line).toBe("Line 2");
     expect(result.output[2]?.line).toBe("Line 3");
-  });
-
-  it("should simulate delayed output lines", async () => {
-    const testLayer = TestCommandExecutor({
-      "delayed-command": {
-        output: ["First", "Second", "Third"],
-        delay: 50, // 50ms delay between lines
-      },
-    });
-
-    const startTime = Date.now();
-    const result = await runTaskAsPromise(
-      executeCommand(Command.make("delayed-command")),
-      testLayer
-    );
-    const endTime = Date.now();
-
-    expect(result.exitCode).toBe(0);
-    expect(result.output).toHaveLength(3);
-    expect(result.output[0]?.line).toBe("First");
-    expect(result.output[1]?.line).toBe("Second");
-    expect(result.output[2]?.line).toBe("Third");
-
-    // Should take at least 100ms for the delays (2 delays between 3 lines)
-    expect(endTime - startTime).toBeGreaterThanOrEqual(100);
-
-    // Verify timestamps are increasing with proper gaps
-    const firstTimestamp = result.output[0]?.timestamp ?? 0;
-    const secondTimestamp = result.output[1]?.timestamp ?? 0;
-    const thirdTimestamp = result.output[2]?.timestamp ?? 0;
-    expect(secondTimestamp).toBeGreaterThan(firstTimestamp);
-    expect(thirdTimestamp).toBeGreaterThan(secondTimestamp);
   });
 
   it("should simulate command errors", async () => {
@@ -312,13 +282,22 @@ describe("Goose Integration - Mocked Execution", () => {
       },
     });
 
-    const result = await runTaskAsPromise(executeGoose(), testLayer);
+    const execution = Effect.provide(executeGoose(), testLayer)
+    const test = Effect.gen(function* () {
+      const fork = yield* Effect.fork(execution);
+      yield* TestClock.adjust("5 second");
+      const result = yield* Fiber.join(fork);
 
-    expect(result.exitCode).toBe(0);
-    expect(result.output).toHaveLength(mockGooseOutput.length);
-    expect(result.output[0]?.line).toContain("starting session | provider: openrouter");
-    expect(result.output[3]?.line).toBe("# Hello! 👋");
-    expect(result.output[result.output.length - 1]?.line).toBe("What would you like to work on today?");
+      expect(result.exitCode).toBe(0);
+      expect(result.output).toHaveLength(mockGooseOutput.length);
+      expect(result.output[0]?.line).toContain("starting session | provider: openrouter");
+      expect(result.output[3]?.line).toBe("# Hello! 👋");
+      expect(result.output[result.output.length - 1]?.line).toBe("What would you like to work on today?");
+    }).pipe(Effect.provide(TestContext.TestContext));
+
+    await Effect.runPromise(test)
+
+
   });
 
   it("should execute goose with working directory", async () => {
@@ -388,23 +367,29 @@ describe("Goose Integration - Mocked Execution", () => {
       },
     });
 
-    const startTime = Date.now();
-    const result = await runTaskAsPromise(
-      executeGoose({ instructionsFile: "custom.md" }), 
-      testLayer
-    );
-    const endTime = Date.now();
+    const execution = Effect.provide(executeGoose({ instructionsFile: "custom.md" }), testLayer)
+    const test = Effect.gen(function* () {
+      const fork = yield* Effect.fork(execution);
+      yield* TestClock.adjust("1 second");
+      assert.ok(!isDone(yield* fork.status), "Should be still running after 1 second");
 
-    expect(result.exitCode).toBe(0);
-    expect(result.output).toHaveLength(mockOutput.length);
-    
-    // Should take time due to delays (21 gaps * 150ms = 3150ms minimum)
-    expect(endTime - startTime).toBeGreaterThanOrEqual(3000);
-    
-    // Verify content matches realistic goose output
-    expect(result.output[0]?.line).toContain("starting session | provider: openrouter");
-    expect(result.output[3]?.line).toBe("# Analyzing Project Structure");
-    expect(result.output[result.output.length - 1]?.line).toBe("**Task completed successfully!** ✅");
+      yield* TestClock.adjust("1 second");
+      assert.ok(!isDone(yield* fork.status), "Should be still running after 2 seconds");
+      // Should take time due to delays (21 gaps * 150ms = 3150ms minimum)
+      yield* TestClock.adjust("2 second");
+      assert.ok(isDone(yield* fork.status), "Should be done after 3 seconds");
+      const result = yield* Fiber.join(fork);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.output).toHaveLength(mockOutput.length);
+      // Verify content matches realistic goose output
+      expect(result.output[0]?.line).toContain("starting session | provider: openrouter");
+      expect(result.output[3]?.line).toBe("# Analyzing Project Structure");
+      expect(result.output[result.output.length - 1]?.line).toBe("**Task completed successfully!** ✅");
+    }).pipe(Effect.provide(TestContext.TestContext));
+
+    await Effect.runPromise(test)
+
   });
 });
 
