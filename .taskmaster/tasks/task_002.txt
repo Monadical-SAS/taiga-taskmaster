@@ -1,6 +1,6 @@
 # Task ID: 2
 # Title: Fix Broken Mock Testing Logic
-# Status: pending
+# Status: done
 # Dependencies: None
 # Priority: high
 # Description: Correct the mock implementation that ignores input commands and always selects the first scenario key, making tests unreliable.

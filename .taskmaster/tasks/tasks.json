@@ -19,7 +19,7 @@
       "testStrategy": "1. Write tests that verify different commands map to different scenarios\n2. Test edge cases like empty commands or commands with special characters\n3. Verify that the same command always maps to the same scenario\n4. Create tests with multiple scenarios to ensure correct selection",
       "priority": "high",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
       "subtasks": []
     },
     {

@@ -426,7 +426,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
     // Test that the GooseCommandExecutor properly executes the command
     // with environment variables using Command.env
     const testLayer = TestCommandExecutor({
-      "mock-goose-command": {
+      "goose run -i test.md --with-builtin developer": {
         output: ["Goose running with Command.env environment variables"],
       },
     });
@@ -438,5 +438,74 @@ describe("Goose Integration - Environment Variable Injection", () => {
 
     expect(result.exitCode).toBe(0);
     expect(result.output[0]?.line).toBe("Goose running with Command.env environment variables");
+  });
+
+  it("should map different commands to different scenarios correctly", async () => {
+    const testLayer = TestCommandExecutor({
+      "echo hello": {
+        output: ["hello"],
+      },
+      "echo world": {
+        output: ["world"],
+      },
+      "ls -la": {
+        output: ["total 0", "drwxr-xr-x 2 user user 64 Dec 6 14:26 ."],
+      },
+    });
+
+    // Test first command
+    const result1 = await runTaskAsPromise(
+      executeCommand(Command.make("echo", "hello")),
+      testLayer
+    );
+    expect(result1.output[0]?.line).toBe("hello");
+
+    // Test second command
+    const result2 = await runTaskAsPromise(
+      executeCommand(Command.make("echo", "world")),
+      testLayer
+    );
+    expect(result2.output[0]?.line).toBe("world");
+
+    // Test third command
+    const result3 = await runTaskAsPromise(
+      executeCommand(Command.make("ls", "-la")),
+      testLayer
+    );
+    expect(result3.output[0]?.line).toBe("total 0");
+    expect(result3.output[1]?.line).toBe("drwxr-xr-x 2 user user 64 Dec 6 14:26 .");
+  });
+
+  it("should fall back to default scenario when command not found", async () => {
+    const testLayer = TestCommandExecutor({
+      "echo hello": {
+        output: ["hello"],
+      },
+      "default": {
+        output: ["default fallback output"],
+      },
+    });
+
+    // Test command that doesn't exist in scenarios - should use default
+    const result = await runTaskAsPromise(
+      executeCommand(Command.make("unknown", "command")),
+      testLayer
+    );
+    expect(result.output[0]?.line).toBe("default fallback output");
+  });
+
+  it("should use hardcoded fallback when no default scenario exists", async () => {
+    const testLayer = TestCommandExecutor({
+      "echo hello": {
+        output: ["hello"],
+      },
+    });
+
+    // Test command that doesn't exist and no default - should use hardcoded fallback
+    const result = await runTaskAsPromise(
+      executeCommand(Command.make("unknown", "command")),
+      testLayer
+    );
+    expect(result.output[0]?.line).toBe("default mock output");
   });
 });

@@ -8,6 +8,29 @@ const commandToString = (command: Command.Command): string => {
   return `Command(${JSON.stringify(command)})`;
 };
 
+// Serialize Command to a consistent string key for testing scenarios
+const serializeCommand = (command: Command.Command): string => {
+  // Extract command parts to create a consistent string representation  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cmd = (command as any).command;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const args = (command as any).args || [];
+  
+  if (typeof cmd !== 'string') {
+    // Fallback to JSON representation if structure is unexpected
+    return JSON.stringify(command);
+  }
+  
+  // Special handling for shell commands that change directory
+  if (cmd === 'sh' && args.length >= 2 && args[0] === '-c') {
+    // For "sh -c 'cd "/path" && command'", return just the shell command content
+    return args[1] || '';
+  }
+  
+  // For regular commands, join cmd and args
+  return args.length > 0 ? `${cmd} ${args.join(' ')}` : cmd;
+};
+
 // Error types for proper type safety
 // eslint-disable-next-line functional/no-classes, functional/no-class-inheritance, functional/readonly-type
 export class CommandExecutionError extends Data.TaggedError("CommandExecutionError")<{
@@ -163,8 +186,9 @@ export const TestCommandExecutor = (
     CommandExecutor,
     CommandExecutor.of({
       streamLines: (command) => {
-        const commandKey = Object.keys(scenarios)[0] ?? "default-command";
-        const scenario = scenarios[commandKey] ?? { output: ["default mock output"] };
+        // Use the serialized command as the key to match scenarios
+        const commandKey = serializeCommand(command);
+        const scenario = scenarios[commandKey] ?? scenarios['default'] ?? { output: ["default mock output"] };
 
         if (scenario.error) {
           return Stream.fail(
@@ -239,7 +263,7 @@ export const createGooseEnvironment = (config: Partial<GooseConfig> = {}) =>
     Effect.map((projectEnv) => {
       const finalConfig = { ...DEFAULT_GOOSE_CONFIG, ...config };
       
-      const gooseEnv: Record<string, string> = {
+      const gooseEnv = {
         GOOSE_MODEL: finalConfig.model,
         GOOSE_PROVIDER: finalConfig.provider,
       };
