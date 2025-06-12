@@ -15,6 +15,8 @@ const serializeCommand = (command: Command.Command): string => {
   const cmd = (command as any).command;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const args = (command as any).args || [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cwd = (command as any).cwd;
   
   if (typeof cmd !== 'string') {
     // Fallback to JSON representation if structure is unexpected
@@ -27,8 +29,15 @@ const serializeCommand = (command: Command.Command): string => {
     return args[1] || '';
   }
   
-  // For regular commands, join cmd and args
-  return args.length > 0 ? `${cmd} ${args.join(' ')}` : cmd;
+  // For commands with working directory, create shell-like representation
+  const baseCommand = args.length > 0 ? `${cmd} ${args.join(' ')}` : cmd;
+  
+  // Handle Effect Option type for cwd
+  if (cwd && typeof cwd === 'object' && cwd._tag === 'Some' && cwd.value) {
+    return `cd "${cwd.value}" && ${baseCommand}`;
+  }
+  
+  return baseCommand;
 };
 
 // Error types for proper type safety
@@ -66,7 +75,7 @@ export type WorkerError =
 
 export type WorkerTask = Readonly<{
   description: string;
-  command?: string;
+  command: readonly string[];
 }>;
 
 export type WorkerOutputLine = Readonly<{
@@ -138,18 +147,18 @@ export const executeCommand = (command: Command.Command): Effect.Effect<WorkerRe
   );
 
 export const executeTask = (task: WorkerTask): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
-  const commandString = task.command ?? task.description;
-  const commandParts = commandString.split(" ");
-  const cmd = commandParts[0];
-  const args = commandParts.slice(1);
+  const [cmd, ...args] = task.command;
   
   if (!cmd) {
-    return Effect.fail(
-      new CommandParsingError({
-        input: commandString,
-        reason: "Empty command after parsing"
-      })
-    );
+    return Effect.succeed({
+      exitCode: 1,
+      output: [
+        {
+          timestamp: Date.now(),
+          line: `Error: CommandParsingError: {"input":"","reason":"Empty command","_tag":"CommandParsingError"}`,
+        },
+      ],
+    });
   }
   
   return executeCommand(Command.make(cmd, ...args));
@@ -241,20 +250,18 @@ export const loadProjectEnv = () =>
     GOOSE_PROVIDER: GooseProvider,
   });
 
-export const createGooseCommand = (config: Partial<GooseConfig> = {}): string => {
+export const createGooseCommand = (config: Partial<GooseConfig> = {}): Command.Command => {
   const finalConfig = { ...DEFAULT_GOOSE_CONFIG, ...config };
   const instructionsFile = finalConfig.instructionsFile ?? "goose-instructions.md";
   
-  const args = [
+  return Command.make(
     "goose",
     "run", 
     "-i", 
     instructionsFile,
     "--with-builtin",
     "developer"
-  ];
-  
-  return args.join(" ");
+  );
 };
 
 export const createGooseEnvironment = (config: Partial<GooseConfig> = {}) =>
@@ -277,28 +284,14 @@ export const createGooseEnvironment = (config: Partial<GooseConfig> = {}) =>
   );
 
 export const executeGoose = (config: Partial<GooseConfig> = {}): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
-  const commandString = createGooseCommand(config);
+  const command = createGooseCommand(config);
   const workingDir = config.workingDirectory;
   
   if (workingDir) {
-    // Use shell to change directory and run command
-    return executeCommand(Command.make("sh", "-c", `cd "${workingDir}" && ${commandString}`));
+    // Use Command.workingDirectory instead of shell injection
+    return executeCommand(Command.workingDirectory(command, workingDir));
   } else {
-    // Parse goose command directly
-    const commandParts = commandString.split(" ");
-    const cmd = commandParts[0];
-    const args = commandParts.slice(1);
-    
-    if (!cmd) {
-      return Effect.fail(
-        new CommandParsingError({
-          input: commandString,
-          reason: "Empty goose command after parsing"
-        })
-      );
-    }
-    
-    return executeCommand(Command.make(cmd, ...args));
+    return executeCommand(command);
   }
 };
 

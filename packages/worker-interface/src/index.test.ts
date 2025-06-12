@@ -41,7 +41,7 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
   it("should execute a worker task with mocked command", async () => {
     const task: WorkerTask = {
       description: "Test task",
-      command: "echo Task executed",
+      command: ["echo", "Task", "executed"],
     };
 
     const testLayer = TestCommandExecutor({
@@ -154,7 +154,7 @@ describe("Worker Interface - Live CommandExecutor", () => {
   it("should execute a real worker task", async () => {
     const task: WorkerTask = {
       description: "Test task",
-      command: "echo Task executed",
+      command: ["echo", "Task executed"],
     };
 
     const result = await runWithLiveExecutor(executeTask(task));
@@ -238,7 +238,8 @@ describe("Goose Integration - Environment and Command Building", () => {
   it("should create goose command with default config", () => {
     const command = createGooseCommand();
     
-    expect(command).toBe("goose run -i goose-instructions.md --with-builtin developer");
+    // Test that it's a proper Command object with expected structure
+    expect(command).toEqual(Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer"));
   });
 
   it("should create goose command with custom instructions file", () => {
@@ -247,7 +248,7 @@ describe("Goose Integration - Environment and Command Building", () => {
     };
     const command = createGooseCommand(config);
     
-    expect(command).toBe("goose run -i custom-instructions.md --with-builtin developer");
+    expect(command).toEqual(Command.make("goose", "run", "-i", "custom-instructions.md", "--with-builtin", "developer"));
   });
 
   it("should create goose environment variables using Effect", async () => {
@@ -507,5 +508,77 @@ describe("Goose Integration - Environment Variable Injection", () => {
       testLayer
     );
     expect(result.output[0]?.line).toBe("default mock output");
+  });
+
+  describe("Command Arrays", () => {
+    it("should handle commands with arguments that contain spaces", async () => {
+      const task: WorkerTask = {
+        description: "Test task with arguments containing spaces",
+        command: ["echo", "hello world"],
+      };
+
+      const testLayer = TestCommandExecutor({
+        'echo hello world': {
+          output: ["hello world"],
+        },
+      });
+
+      const result = await runTaskAsPromise(executeTask(task), testLayer);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.output[0]?.line).toBe("hello world");
+    });
+
+    it("should handle commands with multiple arguments", async () => {
+      const task: WorkerTask = {
+        description: "Test task with multiple arguments",
+        command: ["cp", "source file.txt", "destination file.txt"],
+      };
+
+      const testLayer = TestCommandExecutor({
+        'cp source file.txt destination file.txt': {
+          output: ["file copied"],
+        },
+      });
+
+      const result = await runTaskAsPromise(executeTask(task), testLayer);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.output[0]?.line).toBe("file copied");
+    });
+
+    it("should handle commands with flags and arguments", async () => {
+      const task: WorkerTask = {
+        description: "Test command with flags",
+        command: ["grep", "-n", "search term", "file.txt"],
+      };
+
+      const testLayer = TestCommandExecutor({
+        'grep -n search term file.txt': {
+          output: ["1:found search term here"],
+        },
+      });
+
+      const result = await runTaskAsPromise(executeTask(task), testLayer);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.output[0]?.line).toBe("1:found search term here");
+    });
+
+    it("should handle empty command array", async () => {
+      const task: WorkerTask = {
+        description: "Test with empty command",
+        command: [],
+      };
+
+      const testLayer = TestCommandExecutor({});
+
+      // This should fail with CommandParsingError, but executeCommand catches all errors
+      // and returns a WorkerResult with exitCode 1
+      const result = await runTaskAsPromise(executeTask(task), testLayer);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.output[0]?.line).toContain("CommandParsingError");
+    });
   });
 });
