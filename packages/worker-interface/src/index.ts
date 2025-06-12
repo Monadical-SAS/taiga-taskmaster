@@ -5,39 +5,12 @@ import { NodeContext } from "@effect/platform-node";
 // Helper function to convert Command to string for error reporting
 const commandToString = (command: Command.Command): string => {
   // Since Command.toString might not be available, we'll use a simple representation
-  return `Command(${JSON.stringify(command)})`;
+  return command.toString();
 };
 
 // Serialize Command to a consistent string key for testing scenarios
 const serializeCommand = (command: Command.Command): string => {
-  // Extract command parts to create a consistent string representation
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cmd = (command as any).command;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const args = (command as any).args || [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cwd = (command as any).cwd;
-  
-  if (typeof cmd !== 'string') {
-    // Fallback to JSON representation if structure is unexpected
-    return JSON.stringify(command);
-  }
-  
-  // Special handling for shell commands that change directory
-  if (cmd === 'sh' && args.length >= 2 && args[0] === '-c') {
-    // For "sh -c 'cd "/path" && command'", return just the shell command content
-    return args[1] || '';
-  }
-  
-  // For commands with working directory, create shell-like representation
-  const baseCommand = args.length > 0 ? `${cmd} ${args.join(' ')}` : cmd;
-  
-  // Handle Effect Option type for cwd
-  if (cwd && typeof cwd === 'object' && cwd._tag === 'Some' && cwd.value) {
-    return `cd "${cwd.value}" && ${baseCommand}`;
-  }
-  
-  return baseCommand;
+  return command.toString();
 };
 
 // Error types for proper type safety
@@ -197,6 +170,8 @@ export const TestCommandExecutor = (
       streamLines: (command) => {
         // Use the serialized command as the key to match scenarios
         const commandKey = serializeCommand(command);
+        console.log('commandKeycommandKey', commandKey);
+        console.log('scenarios]', Object.keys(scenarios).join());
         const scenario = scenarios[commandKey] ?? scenarios['default'] ?? { output: ["default mock output"] };
 
         if (scenario.error) {
@@ -286,9 +261,7 @@ export const createGooseEnvironment = (config: Partial<GooseConfig> = {}) =>
 export const executeGoose = (config: Partial<GooseConfig> = {}): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
   const command = createGooseCommand(config);
   const workingDir = config.workingDirectory;
-  
   if (workingDir) {
-    // Use Command.workingDirectory instead of shell injection
     return executeCommand(Command.workingDirectory(command, workingDir));
   } else {
     return executeCommand(command);
