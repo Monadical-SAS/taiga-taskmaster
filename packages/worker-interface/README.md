@@ -1,3 +1,13 @@
+# Requirements
+
+- mock goose executions / testability
+- mock timeouts and execution time flow
+- retries
+- telemetry
+- resource management
+- streaming
+- pause-ability
+
 # @vibe-generated
 
 # Worker Interface

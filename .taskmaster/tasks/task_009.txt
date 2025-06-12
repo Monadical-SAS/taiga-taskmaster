@@ -1,6 +1,6 @@
 # Task ID: 9
 # Title: Fix Side Effects in Pure Functions
-# Status: pending
+# Status: done
 # Dependencies: None
 # Priority: medium
 # Description: Replace direct calls to Date.now() with Effect's proper time handling to maintain function purity.

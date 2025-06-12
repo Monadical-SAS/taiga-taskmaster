@@ -1,6 +1,6 @@
 // @vibe-generated: conforms to worker-interface
 import { describe, it, expect } from "vitest";
-import { Effect, Fiber, TestClock, TestContext } from 'effect';
+import { Effect, Fiber, TestClock, TestContext, Layer } from 'effect';
 import { Command } from "@effect/platform";
 import {
   executeCommand,
@@ -19,7 +19,7 @@ import {
   type GooseConfig,
 } from "./index.js";
 import * as assert from 'node:assert';
-import { isRunning, isDone } from 'effect/FiberStatus';
+import { isDone } from 'effect/FiberStatus';
 
 describe("Worker Interface - Mocked CommandExecutor", () => {
   it("should execute a simple command with predetermined output", async () => {
@@ -589,7 +589,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
 
       for (const maliciousTask of maliciousCommands) {
         const testLayer = TestCommandExecutor({
-          [Command.make(maliciousTask.command[0]!, ...maliciousTask.command.slice(1)).toString()]: {
+          [Command.make(maliciousTask.command[0] ?? "", ...maliciousTask.command.slice(1)).toString()]: {
             output: ["Safe execution - arguments properly escaped"],
           },
         });
@@ -672,6 +672,61 @@ describe("Goose Integration - Environment Variable Injection", () => {
         // Environment variables should be set literally, not executed
         // Command.env should handle them securely
       }
+    });
+  });
+
+  describe("timestamp testing with TestClock", () => {
+    it("should produce deterministic timestamps using TestClock", async () => {
+      const expectedOutput = "Test output";
+      const command = Command.make("test-command");
+      const testLayer = TestCommandExecutor({
+        [command.toString()]: {
+          output: [expectedOutput],
+        },
+      });
+
+      const program = Effect.gen(function* (_) {
+        yield* _(TestClock.adjust(1000)); // Set to 1000ms
+        
+        const result = yield* _(executeCommand(command));
+        
+        return result;
+      });
+
+      const result = await Effect.runPromise(
+        Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
+      );
+
+      expect(result.exitCode).toBe(0);
+      expect(result.output).toHaveLength(1);
+      expect(result.output[0]?.line).toBe(expectedOutput);
+      expect(result.output[0]?.timestamp).toBe(1000); // Deterministic timestamp
+    });
+
+    it("should handle errors with deterministic timestamps using TestClock", async () => {
+      const task: WorkerTask = {
+        description: "Test with empty command array",
+        command: [], // Empty command should trigger error
+      };
+
+      const program = Effect.gen(function* (_) {
+        yield* _(TestClock.adjust(3000)); // Set to 3000ms
+        
+        const result = yield* _(executeTask(task));
+        
+        return result;
+      });
+
+      const mockLayer = TestCommandExecutor({});
+      
+      const result = await Effect.runPromise(
+        Effect.provide(program, Layer.merge(mockLayer, TestContext.TestContext))
+      );
+
+      expect(result.exitCode).toBe(1);
+      expect(result.output).toHaveLength(1);
+      expect(result.output[0]?.line).toContain("CommandParsingError");
+      expect(result.output[0]?.timestamp).toBe(3000); // Deterministic timestamp
     });
   });
 });

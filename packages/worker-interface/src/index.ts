@@ -1,4 +1,4 @@
-import { Effect, Stream, pipe, Array as EffectArray, Context, Layer, Schedule, Config, Data } from "effect";
+import { Effect, Stream, pipe, Array as EffectArray, Context, Layer, Schedule, Config, Data, Clock } from "effect";
 import { Command } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
 
@@ -95,10 +95,12 @@ export const executeCommand = (command: Command.Command): Effect.Effect<WorkerRe
     Effect.flatMap((executor) =>
       pipe(
         executor.streamLines(command),
-        Stream.map((line) => ({
-          timestamp: Date.now(),
-          line,
-        })),
+        Stream.mapEffect((line) => 
+          Effect.map(Clock.currentTimeMillis, (timestamp) => ({
+            timestamp,
+            line,
+          }))
+        ),
         Stream.runCollect,
         Effect.map((output) => ({
           exitCode: 0,
@@ -107,15 +109,15 @@ export const executeCommand = (command: Command.Command): Effect.Effect<WorkerRe
       )
     ),
     Effect.catchAll((error) =>
-      Effect.succeed({
+      Effect.map(Clock.currentTimeMillis, (timestamp) => ({
         exitCode: 1,
         output: [
           {
-            timestamp: Date.now(),
+            timestamp,
             line: `Error: ${error._tag}: ${JSON.stringify(error)}`,
           },
         ],
-      })
+      }))
     )
   );
 
@@ -123,15 +125,15 @@ export const executeTask = (task: WorkerTask): Effect.Effect<WorkerResult, Worke
   const [cmd, ...args] = task.command;
   
   if (!cmd) {
-    return Effect.succeed({
+    return Effect.map(Clock.currentTimeMillis, (timestamp) => ({
       exitCode: 1,
       output: [
         {
-          timestamp: Date.now(),
+          timestamp,
           line: `Error: CommandParsingError: {"input":"","reason":"Empty command","_tag":"CommandParsingError"}`,
         },
       ],
-    });
+    }));
   }
   
   return executeCommand(Command.make(cmd, ...args));
@@ -170,8 +172,6 @@ export const TestCommandExecutor = (
       streamLines: (command) => {
         // Use the serialized command as the key to match scenarios
         const commandKey = serializeCommand(command);
-        console.log('commandKeycommandKey', commandKey);
-        console.log('scenarios]', Object.keys(scenarios).join());
         const scenario = scenarios[commandKey] ?? scenarios['default'] ?? { output: ["default mock output"] };
 
         if (scenario.error) {
