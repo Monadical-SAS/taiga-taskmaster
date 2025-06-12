@@ -17,20 +17,102 @@ import {
   DEFAULT_GOOSE_CONFIG,
   type WorkerTask,
   type GooseConfig,
+  type CommandScenario,
 } from "./index.js";
 import * as assert from 'node:assert';
 import { isDone } from 'effect/FiberStatus';
 
+// Helper function to create test scenarios with proper command-key matching
+const createTestScenario = (command: Command.Command, scenario: CommandScenario): Record<string, CommandScenario> => {
+  const commandKey = command.toString();
+  return {
+    [commandKey]: scenario
+  };
+};
+
+// Helper function to create multiple test scenarios
+const createTestScenarios = (scenarioMap: Array<[Command.Command, CommandScenario]>): Record<string, CommandScenario> => {
+  const scenarios: Record<string, CommandScenario> = {};
+  for (const [command, scenario] of scenarioMap) {
+    const commandKey = command.toString();
+    scenarios[commandKey] = scenario;
+  }
+  return scenarios;
+};
+
+// Validation helper to ensure command will match a scenario
+const validateCommandScenario = (command: Command.Command, scenarios: Record<string, CommandScenario>): boolean => {
+  const commandKey = command.toString();
+  return commandKey in scenarios || 'default' in scenarios;
+};
+
+describe("Test Infrastructure Validation", () => {
+  it("should validate createTestScenario helper function", () => {
+    const command = Command.make("echo", "test");
+    const scenario: CommandScenario = { output: ["test output"] };
+    const scenarios = createTestScenario(command, scenario);
+    
+    expect(validateCommandScenario(command, scenarios)).toBe(true);
+    expect(scenarios[command.toString()]).toEqual(scenario);
+  });
+
+  it("should validate createTestScenarios helper function", () => {
+    const command1 = Command.make("echo", "hello");
+    const command2 = Command.make("echo", "world");
+    const scenarios = createTestScenarios([
+      [command1, { output: ["hello"] }],
+      [command2, { output: ["world"] }]
+    ]);
+    
+    expect(validateCommandScenario(command1, scenarios)).toBe(true);
+    expect(validateCommandScenario(command2, scenarios)).toBe(true);
+    expect(scenarios[command1.toString()]).toEqual({ output: ["hello"] });
+    expect(scenarios[command2.toString()]).toEqual({ output: ["world"] });
+  });
+
+  it("should detect unmatched commands", () => {
+    const command1 = Command.make("echo", "hello");
+    const command2 = Command.make("echo", "world");
+    const scenarios = createTestScenario(command1, { output: ["hello"] });
+    
+    expect(validateCommandScenario(command1, scenarios)).toBe(true);
+    expect(validateCommandScenario(command2, scenarios)).toBe(false);
+  });
+
+  it("should fall back to default scenario when available", () => {
+    const command = Command.make("echo", "test");
+    const scenarios = { "default": { output: ["default output"] } };
+    
+    expect(validateCommandScenario(command, scenarios)).toBe(true);
+  });
+
+  it("should demonstrate negative testing - command mismatch leads to default behavior", async () => {
+    const actualCommand = Command.make("echo", "actual");
+    const differentCommand = Command.make("echo", "different");
+    
+    // Create scenario for a different command
+    const testLayer = TestCommandExecutor(createTestScenario(differentCommand, {
+      output: ["different output"],
+    }));
+    
+    // Execute the actual command - should fall back to default behavior
+    const result = await runTaskAsPromise(executeCommand(actualCommand), testLayer);
+    
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toHaveLength(1);
+    expect(result.output[0]?.line).toBe("default mock output"); // Falls back to hardcoded default
+  });
+});
+
 describe("Worker Interface - Mocked CommandExecutor", () => {
   it("should execute a simple command with predetermined output", async () => {
-    const testLayer = TestCommandExecutor({
-      [Command.make("echo", "Hello World").toString()]: {
-        output: ["Hello World"],
-      },
-    });
+    const command = Command.make("echo", "Hello World");
+    const testLayer = TestCommandExecutor(createTestScenario(command, {
+      output: ["Hello World"],
+    }));
 
     const result = await runTaskAsPromise(
-      executeCommand(Command.make("echo", "Hello World")),
+      executeCommand(command),
       testLayer
     );
 
@@ -46,11 +128,10 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
       command: ["echo", "Task", "executed"],
     };
 
-    const testLayer = TestCommandExecutor({
-      [Command.make("echo", "Task", "executed").toString()]: {
-        output: ["Task executed"],
-      },
-    });
+    const command = Command.make("echo", "Task", "executed");
+    const testLayer = TestCommandExecutor(createTestScenario(command, {
+      output: ["Task executed"],
+    }));
 
     const result = await runTaskAsPromise(executeTask(task), testLayer);
 
@@ -60,14 +141,13 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
   });
 
   it("should handle multiple output lines with controlled responses", async () => {
-    const testLayer = TestCommandExecutor({
-      [Command.make("multi-line-command").toString()]: {
-        output: ["Line 1", "Line 2", "Line 3"],
-      },
-    });
+    const command = Command.make("multi-line-command");
+    const testLayer = TestCommandExecutor(createTestScenario(command, {
+      output: ["Line 1", "Line 2", "Line 3"],
+    }));
 
     const result = await runTaskAsPromise(
-      executeCommand(Command.make("multi-line-command")),
+      executeCommand(command),
       testLayer
     );
 
@@ -79,14 +159,13 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
   });
 
   it("should simulate command errors", async () => {
-    const testLayer = TestCommandExecutor({
-      [Command.make("failing-command").toString()]: {
-        error: "Command not found",
-      },
-    });
+    const command = Command.make("failing-command");
+    const testLayer = TestCommandExecutor(createTestScenario(command, {
+      error: "Command not found",
+    }));
 
     const result = await runTaskAsPromise(
-      executeCommand(Command.make("failing-command")),
+      executeCommand(command),
       testLayer
     );
 
@@ -176,12 +255,10 @@ describe("Worker Interface - Cross-validation", () => {
     const commandObj = Command.make("echo", "Cross validation test");
     const expectedOutput = "Cross validation test";
 
-    // Mock version
-    const testLayer = TestCommandExecutor({
-      "mock-command": {
-        output: [expectedOutput],
-      },
-    });
+    // Mock version - using helper function to ensure proper command matching
+    const testLayer = TestCommandExecutor(createTestScenario(commandObj, {
+      output: [expectedOutput],
+    }));
     const mockedResult = await runTaskAsPromise(executeCommand(commandObj), testLayer);
 
     // Real version  
@@ -275,12 +352,11 @@ describe("Goose Integration - Mocked Execution", () => {
       "What would you like to work on today?"
     ];
 
-    const testLayer = TestCommandExecutor({
-      [Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer").toString()]: {
-        output: mockGooseOutput,
-        delay: 50, // Simulate real-time processing
-      },
-    });
+    const gooseCommand = Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer");
+    const testLayer = TestCommandExecutor(createTestScenario(gooseCommand, {
+      output: mockGooseOutput,
+      delay: 50, // Simulate real-time processing
+    }));
 
     const execution = Effect.provide(executeGoose(), testLayer)
     const test = Effect.gen(function* () {
@@ -302,12 +378,12 @@ describe("Goose Integration - Mocked Execution", () => {
 
   it("should execute goose with working directory", async () => {
     const workingDir = "/path/to/project";
+    const baseCommand = Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer");
+    const commandWithWorkingDir = Command.workingDirectory(baseCommand, workingDir);
 
-    const testLayer = TestCommandExecutor({
-      [Command.workingDirectory(Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer"), workingDir).toString()]: {
-        output: ["Goose running in project directory"],
-      },
-    });
+    const testLayer = TestCommandExecutor(createTestScenario(commandWithWorkingDir, {
+      output: ["Goose running in project directory"],
+    }));
 
     const config: Partial<GooseConfig> = {
       workingDirectory: workingDir,
@@ -320,11 +396,10 @@ describe("Goose Integration - Mocked Execution", () => {
   });
 
   it("should handle goose errors gracefully", async () => {
-    const testLayer = TestCommandExecutor({
-      [Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer").toString()]: {
-        error: "Goose command not found",
-      },
-    });
+    const gooseCommand = Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer");
+    const testLayer = TestCommandExecutor(createTestScenario(gooseCommand, {
+      error: "Goose command not found",
+    }));
 
     const result = await runTaskAsPromise(executeGoose(), testLayer);
 
@@ -358,12 +433,11 @@ describe("Goose Integration - Mocked Execution", () => {
       "**Task completed successfully!** ✅"
     ];
 
-    const testLayer = TestCommandExecutor({
-      [Command.make("goose", "run", "-i", "custom.md", "--with-builtin", "developer").toString()]: {
-        output: mockOutput,
-        delay: 150, // 150ms between lines
-      },
-    });
+    const customGooseCommand = Command.make("goose", "run", "-i", "custom.md", "--with-builtin", "developer");
+    const testLayer = TestCommandExecutor(createTestScenario(customGooseCommand, {
+      output: mockOutput,
+      delay: 150, // 150ms between lines
+    }));
 
     const execution = Effect.provide(executeGoose({ instructionsFile: "custom.md" }), testLayer)
     const test = Effect.gen(function* () {
@@ -410,11 +484,9 @@ describe("Goose Integration - Environment Variable Injection", () => {
     
     // Test that the GooseCommandExecutor properly executes the command
     // with environment variables using Command.env
-    const testLayer = TestCommandExecutor({
-      [Command.make("goose", "run", "-i", "test.md", "--with-builtin", "developer").toString()]: {
-        output: ["Goose running with Command.env environment variables"],
-      },
-    });
+    const testLayer = TestCommandExecutor(createTestScenario(mockCommandObj, {
+      output: ["Goose running with Command.env environment variables"],
+    }));
 
     const result = await runTaskAsPromise(
       executeCommand(mockCommandObj),
@@ -426,35 +498,33 @@ describe("Goose Integration - Environment Variable Injection", () => {
   });
 
   it("should map different commands to different scenarios correctly", async () => {
-    const testLayer = TestCommandExecutor({
-      [Command.make("echo", "hello").toString()]: {
-        output: ["hello"],
-      },
-      [Command.make("echo", "world").toString()]: {
-        output: ["world"],
-      },
-      [Command.make("ls", "-la").toString()]: {
-        output: ["total 0", "drwxr-xr-x 2 user user 64 Dec 6 14:26 ."],
-      },
-    });
+    const command1 = Command.make("echo", "hello");
+    const command2 = Command.make("echo", "world");
+    const command3 = Command.make("ls", "-la");
+    
+    const testLayer = TestCommandExecutor(createTestScenarios([
+      [command1, { output: ["hello"] }],
+      [command2, { output: ["world"] }],
+      [command3, { output: ["total 0", "drwxr-xr-x 2 user user 64 Dec 6 14:26 ."] }],
+    ]));
 
     // Test first command
     const result1 = await runTaskAsPromise(
-      executeCommand(Command.make("echo", "hello")),
+      executeCommand(command1),
       testLayer
     );
     expect(result1.output[0]?.line).toBe("hello");
 
     // Test second command
     const result2 = await runTaskAsPromise(
-      executeCommand(Command.make("echo", "world")),
+      executeCommand(command2),
       testLayer
     );
     expect(result2.output[0]?.line).toBe("world");
 
     // Test third command
     const result3 = await runTaskAsPromise(
-      executeCommand(Command.make("ls", "-la")),
+      executeCommand(command3),
       testLayer
     );
     expect(result3.output[0]?.line).toBe("total 0");
@@ -462,33 +532,33 @@ describe("Goose Integration - Environment Variable Injection", () => {
   });
 
   it("should fall back to default scenario when command not found", async () => {
-    const testLayer = TestCommandExecutor({
-      [Command.make("echo", "hello").toString()]: {
-        output: ["hello"],
-      },
-      "default": {
-        output: ["default fallback output"],
-      },
-    });
+    const knownCommand = Command.make("echo", "hello");
+    const unknownCommand = Command.make("unknown", "command");
+    
+    const scenarios = createTestScenario(knownCommand, { output: ["hello"] });
+    scenarios["default"] = { output: ["default fallback output"] };
+    
+    const testLayer = TestCommandExecutor(scenarios);
 
     // Test command that doesn't exist in scenarios - should use default
     const result = await runTaskAsPromise(
-      executeCommand(Command.make("unknown", "command")),
+      executeCommand(unknownCommand),
       testLayer
     );
     expect(result.output[0]?.line).toBe("default fallback output");
   });
 
   it("should use hardcoded fallback when no default scenario exists", async () => {
-    const testLayer = TestCommandExecutor({
-      [Command.make("echo", "hello").toString()]: {
-        output: ["hello"],
-      },
-    });
+    const knownCommand = Command.make("echo", "hello");
+    const unknownCommand = Command.make("unknown", "command");
+    
+    const testLayer = TestCommandExecutor(createTestScenario(knownCommand, {
+      output: ["hello"],
+    }));
 
     // Test command that doesn't exist and no default - should use hardcoded fallback
     const result = await runTaskAsPromise(
-      executeCommand(Command.make("unknown", "command")),
+      executeCommand(unknownCommand),
       testLayer
     );
     expect(result.output[0]?.line).toBe("default mock output");
@@ -501,11 +571,10 @@ describe("Goose Integration - Environment Variable Injection", () => {
         command: ["echo", "hello world"],
       };
 
-      const testLayer = TestCommandExecutor({
-        [Command.make("echo", "hello world").toString()]: {
-          output: ["hello world"],
-        },
-      });
+      const command = Command.make("echo", "hello world");
+      const testLayer = TestCommandExecutor(createTestScenario(command, {
+        output: ["hello world"],
+      }));
 
       const result = await runTaskAsPromise(executeTask(task), testLayer);
 
@@ -519,11 +588,10 @@ describe("Goose Integration - Environment Variable Injection", () => {
         command: ["cp", "source file.txt", "destination file.txt"],
       };
 
-      const testLayer = TestCommandExecutor({
-        [Command.make("cp", "source file.txt", "destination file.txt").toString()]: {
-          output: ["file copied"],
-        },
-      });
+      const command = Command.make("cp", "source file.txt", "destination file.txt");
+      const testLayer = TestCommandExecutor(createTestScenario(command, {
+        output: ["file copied"],
+      }));
 
       const result = await runTaskAsPromise(executeTask(task), testLayer);
 
@@ -537,11 +605,10 @@ describe("Goose Integration - Environment Variable Injection", () => {
         command: ["grep", "-n", "search term", "file.txt"],
       };
 
-      const testLayer = TestCommandExecutor({
-        [Command.make("grep", "-n", "search term", "file.txt").toString()]: {
-          output: ["1:found search term here"],
-        },
-      });
+      const command = Command.make("grep", "-n", "search term", "file.txt");
+      const testLayer = TestCommandExecutor(createTestScenario(command, {
+        output: ["1:found search term here"],
+      }));
 
       const result = await runTaskAsPromise(executeTask(task), testLayer);
 
@@ -588,11 +655,10 @@ describe("Goose Integration - Environment Variable Injection", () => {
       ];
 
       for (const maliciousTask of maliciousCommands) {
-        const testLayer = TestCommandExecutor({
-          [Command.make(maliciousTask.command[0] ?? "", ...maliciousTask.command.slice(1)).toString()]: {
-            output: ["Safe execution - arguments properly escaped"],
-          },
-        });
+        const command = Command.make(maliciousTask.command[0] ?? "", ...maliciousTask.command.slice(1));
+        const testLayer = TestCommandExecutor(createTestScenario(command, {
+          output: ["Safe execution - arguments properly escaped"],
+        }));
 
         const result = await runTaskAsPromise(executeTask(maliciousTask), testLayer);
 
