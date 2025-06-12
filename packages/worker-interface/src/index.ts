@@ -97,14 +97,9 @@ export const executeCommandWithTimeout = (
     executeCommand(command),
     Effect.timeout(Duration.millis(timeoutMs)),
     Effect.catchTag("TimeoutException", () =>
-      Effect.map(Clock.currentTimeMillis, (timestamp) => ({
-        exitCode: 1,
-        output: [
-          {
-            timestamp,
-            line: `Error: CommandTimeoutError: {"command":"${commandToString(command)}","timeoutMs":${timeoutMs},"_tag":"CommandTimeoutError"}`,
-          },
-        ],
+      Effect.fail(new CommandTimeoutError({
+        command: commandToString(command),
+        timeoutMs
       }))
     )
   );
@@ -127,17 +122,6 @@ export const executeCommand = (command: Command.Command): Effect.Effect<WorkerRe
           output: EffectArray.fromIterable(output),
         }))
       )
-    ),
-    Effect.catchAll((error) =>
-      Effect.map(Clock.currentTimeMillis, (timestamp) => ({
-        exitCode: 1,
-        output: [
-          {
-            timestamp,
-            line: `Error: ${error._tag}: ${JSON.stringify(error)}`,
-          },
-        ],
-      }))
     )
   );
 
@@ -265,27 +249,13 @@ export const createGooseEnvironment = (config: Partial<GooseConfig> = {}) =>
     })
   );
 
-export const executeGooseWithTimeout = (config: Partial<GooseConfig> = {}): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
-  const finalConfig = { ...DEFAULT_GOOSE_CONFIG, ...config };
-  const command = createGooseCommand(config);
-  const workingDir = config.workingDirectory;
-  const timeoutMs = finalConfig.processTimeout ?? DEFAULT_COMMAND_TIMEOUT_MS;
-  
-  if (workingDir) {
-    return executeCommandWithTimeout(Command.workingDirectory(command, workingDir), timeoutMs);
-  } else {
-    return executeCommandWithTimeout(command, timeoutMs);
-  }
-};
-
 export const executeGoose = (config: Partial<GooseConfig> = {}): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
-  const command = createGooseCommand(config);
-  const workingDir = config.workingDirectory;
-  if (workingDir) {
-    return executeCommand(Command.workingDirectory(command, workingDir));
-  } else {
-    return executeCommand(command);
-  }
+  const finalConfig = { ...DEFAULT_GOOSE_CONFIG, ...config };
+  const command = createGooseCommand(finalConfig);
+  const workingDir = finalConfig.workingDirectory;
+  const timeoutMs = finalConfig.processTimeout ?? DEFAULT_COMMAND_TIMEOUT_MS;
+  const commandWithWorkingDir = workingDir ? Command.workingDirectory(command, workingDir) : command;
+  return executeCommandWithTimeout(commandWithWorkingDir, timeoutMs);
 };
 
 export const GooseCommandExecutor = (config: Partial<GooseConfig> = {}) =>
@@ -325,7 +295,7 @@ export const runGooseWithLiveExecutor = (config: Partial<GooseConfig> = {}): Pro
 export const runGooseWithLiveExecutorAndTimeout = (config: Partial<GooseConfig> = {}): Promise<WorkerResult> =>
   Effect.runPromise(
     Effect.provide(
-      executeGooseWithTimeout(config), 
+      executeGoose(config), 
       GooseCommandExecutor(config)
     )
   );

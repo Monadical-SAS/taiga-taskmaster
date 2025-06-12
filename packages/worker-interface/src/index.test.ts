@@ -14,7 +14,6 @@ import {
   GooseCommandExecutor,
   DEFAULT_GOOSE_CONFIG,
   executeCommandWithTimeout,
-  executeGooseWithTimeout,
   runCommandWithLiveExecutorAndTimeout,
   runGooseWithLiveExecutorAndTimeout,
   type GooseConfig,
@@ -187,14 +186,22 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
       error: "Command not found",
     }));
 
-    const result = await runTaskAsPromise(
-      executeCommand(command),
-      testLayer
+    const result = await Effect.runPromise(
+      Effect.provide(
+        executeCommand(command).pipe(
+          Effect.either
+        ),
+        testLayer
+      )
     );
 
-    expect(result.exitCode).toBe(1);
-    expect(result.output).toHaveLength(1);
-    expect(result.output[0]?.line).toContain("Command not found");
+    expect(result._tag).toBe("Left");
+    if (result._tag === "Left") {
+      expect(result.left._tag).toBe("CommandExecutionError");
+      if (result.left._tag === "CommandExecutionError") {
+        expect(result.left.stderr).toBe("Command not found");
+      }
+    }
   });
 
   it("should use default mock output for unspecified commands", async () => {
@@ -421,10 +428,22 @@ describe("Goose Integration - Mocked Execution", () => {
       error: "Goose command not found",
     }));
 
-    const result = await runTaskAsPromise(executeGoose(), testLayer);
+    const result = await Effect.runPromise(
+      Effect.provide(
+        executeGoose().pipe(
+          Effect.either
+        ),
+        testLayer
+      )
+    );
 
-    expect(result.exitCode).toBe(1);
-    expect(result.output[0]?.line).toContain("Goose command not found");
+    expect(result._tag).toBe("Left");
+    if (result._tag === "Left") {
+      expect(result.left._tag).toBe("CommandExecutionError");
+      if (result.left._tag === "CommandExecutionError") {
+        expect(result.left.stderr).toBe("Goose command not found");
+      }
+    }
   });
 
   it("should simulate long-running goose session with realistic periodic output", async () => {
@@ -781,7 +800,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
       }));
 
       const program = Effect.gen(function* (_) {
-        const fork = yield* _(Effect.fork(executeCommandWithTimeout(command, 500))); // 500ms timeout
+        const fork = yield* _(Effect.fork(executeCommandWithTimeout(command, 500).pipe(Effect.either))); // 500ms timeout
         
         // Advance time by 600ms (beyond timeout)
         yield* _(TestClock.adjust(600));
@@ -795,10 +814,13 @@ describe("Goose Integration - Environment Variable Injection", () => {
         Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
       );
 
-      expect(result.exitCode).toBe(1);
-      expect(result.output).toHaveLength(1);
-      expect(result.output[0]?.line).toContain("CommandTimeoutError");
-      expect(result.output[0]?.line).toContain("timeoutMs\":500");
+      expect(result._tag).toBe("Left");
+      if (result._tag === "Left") {
+        expect(result.left._tag).toBe("CommandTimeoutError");
+        if (result.left._tag === "CommandTimeoutError") {
+          expect(result.left.timeoutMs).toBe(500);
+        }
+      }
     });
 
     it("should timeout command execution", async () => {
@@ -809,7 +831,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
       }));
 
       const program = Effect.gen(function* (_) {
-        const fork = yield* _(Effect.fork(executeCommandWithTimeout(command, 1000))); // 1 second timeout
+        const fork = yield* _(Effect.fork(executeCommandWithTimeout(command, 1000).pipe(Effect.either))); // 1 second timeout
         
         // Advance time by 1100ms (beyond timeout)
         yield* _(TestClock.adjust(1100));
@@ -823,10 +845,13 @@ describe("Goose Integration - Environment Variable Injection", () => {
         Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
       );
 
-      expect(result.exitCode).toBe(1);
-      expect(result.output).toHaveLength(1);
-      expect(result.output[0]?.line).toContain("CommandTimeoutError");
-      expect(result.output[0]?.line).toContain("timeoutMs\":1000");
+      expect(result._tag).toBe("Left");
+      if (result._tag === "Left") {
+        expect(result.left._tag).toBe("CommandTimeoutError");
+        if (result.left._tag === "CommandTimeoutError") {
+          expect(result.left.timeoutMs).toBe(1000);
+        }
+      }
     });
 
     it("should timeout Goose execution with config timeout", async () => {
@@ -841,7 +866,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
       }));
 
       const program = Effect.gen(function* (_) {
-        const fork = yield* _(Effect.fork(executeGooseWithTimeout(config)));
+        const fork = yield* _(Effect.fork(executeGoose(config).pipe(Effect.either)));
         
         // Advance time by 2100ms (beyond timeout)
         yield* _(TestClock.adjust(2100));
@@ -855,10 +880,13 @@ describe("Goose Integration - Environment Variable Injection", () => {
         Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
       );
 
-      expect(result.exitCode).toBe(1);
-      expect(result.output).toHaveLength(1);
-      expect(result.output[0]?.line).toContain("CommandTimeoutError");
-      expect(result.output[0]?.line).toContain("timeoutMs\":2000");
+      expect(result._tag).toBe("Left");
+      if (result._tag === "Left") {
+        expect(result.left._tag).toBe("CommandTimeoutError");
+        if (result.left._tag === "CommandTimeoutError") {
+          expect(result.left.timeoutMs).toBe(2000);
+        }
+      }
     });
 
 
@@ -884,6 +912,43 @@ describe("Goose Integration - Environment Variable Injection", () => {
       expect(result.exitCode).toBe(0);
       expect(result.output).toHaveLength(1);
       expect(result.output[0]?.line).toBe("completed before default timeout");
+    });
+
+    it("should use config timeout over default timeout for executeGoose", async () => {
+      const customTimeout = 1500; // 1.5 second timeout
+      const config: Partial<GooseConfig> = {
+        processTimeout: customTimeout,
+        instructionsFile: "test-custom-timeout.md",
+      };
+      const gooseCommand = Command.make("goose", "run", "-i", "test-custom-timeout.md", "--with-builtin", "developer");
+      const testLayer = TestCommandExecutor(createTestScenario(gooseCommand, {
+        output: ["goose with custom timeout"],
+        delay: 2000, // 2 second delay (longer than custom timeout)
+      }));
+
+      const program = Effect.gen(function* (_) {
+        const fork = yield* _(Effect.fork(executeGoose(config).pipe(Effect.either)));
+        
+        // Advance time by 1600ms (beyond custom timeout but less than default)
+        yield* _(TestClock.adjust(1600));
+        
+        const result = yield* _(Fiber.join(fork));
+        
+        return result;
+      });
+
+      const result = await Effect.runPromise(
+        Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
+      );
+
+      // Should timeout with custom timeout, not default timeout
+      expect(result._tag).toBe("Left");
+      if (result._tag === "Left") {
+        expect(result.left._tag).toBe("CommandTimeoutError");
+        if (result.left._tag === "CommandTimeoutError") {
+          expect(result.left.timeoutMs).toBe(customTimeout);
+        }
+      }
     });
 
     // Test convenience functions to prevent linting warnings
