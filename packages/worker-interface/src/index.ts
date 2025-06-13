@@ -300,7 +300,7 @@ export const runGooseWithLiveExecutor = (config: Partial<GooseConfig> = {}, opti
     options
   );
 
-type LooperDeps = {
+export type LooperDeps = {
   runWorker: (task: {
     description: string;
   }, options?: { readonly signal?: AbortSignal } | undefined) => Promise<WorkerResult>,
@@ -323,6 +323,11 @@ type LooperDeps = {
     // call of isClean() right after commitAndPush should return true
     commitAndPush: () => Promise<void>,
   },
+  log: {
+    info: (message: string, ...args: unknown[]) => void,
+    error: (message: string, ...args: unknown[]) => void,
+  },
+  sleep: (ms: number) => Promise<void>,
 };
 
 
@@ -339,31 +344,31 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
       try {
         const task = await deps.pullTask(options);
         if (!await deps.git.isClean()) {
-          console.error("FATAL: git repo isn't clean, aborting");
+          deps.log.error("FATAL: git repo isn't clean, aborting");
           break;
         }
         const branch = nonEmptyStringFromNumber(cyrb53(task));
         previousBranch = await deps.git.branch(branch);
         const result = await deps.runWorker({ description: task }, options);
-        console.log('result log', result); // TODO probably in file
+        deps.log.info('result log', result);
         await deps.git.commitAndPush();
         if (!await deps.git.isClean()) {
-          console.error("FATAL: git repo isn't clean, after commitAndPush, aborting");
+          deps.log.error("FATAL: git repo isn't clean, after commitAndPush, aborting");
           break;
         }
         taskAcknowledging = true;
         await deps.ackTask(Option.some({ branch }), options);
         taskAcknowledging = false;
       } catch (error) {
-        console.error('uncaight error in main loop, retrying in 1 second: ', error);
+        deps.log.error('uncaught error in main loop, retrying in 1 second: ', error);
         await cleanupBranch();
         if (!taskAcknowledging) {
           await deps.ackTask(none(), options);
         } else {
-          console.error(`unidentified condition, task was in the middle of acknowledgement when error happened. trying to unacknowledge`);
+          deps.log.error(`unidentified condition, task was in the middle of acknowledgement when error happened. trying to unacknowledge`);
           await deps.ackTask(none(), options);
         }
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await deps.sleep(1000);
       }
     }
 };

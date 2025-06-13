@@ -1,7 +1,8 @@
 // @vibe-generated: conforms to worker-interface
 import { describe, it, expect } from "vitest";
-import { Effect, Fiber, TestClock, TestContext, Layer } from 'effect';
+import { Effect, Fiber, TestClock, TestContext, Layer, Option } from 'effect';
 import { Command } from "@effect/platform";
+import { nonEmptyStringFromNumber, castNonEmptyString } from '@taiga-task-master/common';
 import {
   executeCommand,
   runTaskAsPromise,
@@ -16,8 +17,10 @@ import {
   executeCommandWithTimeout,
   runCommandWithLiveExecutorAndTimeout,
   runGooseWithLiveExecutor,
+  loop,
   type GooseConfig,
   type CommandScenario,
+  type LooperDeps,
 } from "./index.js";
 import * as assert from 'node:assert';
 import * as os from 'node:os';
@@ -953,6 +956,588 @@ describe("Goose Integration - Environment Variable Injection", () => {
       // Note: .length only counts parameters without default values
       expect(runCommandWithLiveExecutorAndTimeout.length).toBe(1); // command param (timeout has default)
       expect(runGooseWithLiveExecutor.length).toBe(0); // config param has default
+    });
+  });
+});
+
+describe("Loop Function Tests", () => {
+  const createMockDeps = (overrides: Partial<LooperDeps> = {}): LooperDeps => ({
+    runWorker: async (task) => ({ output: [{ line: `Processed: ${task.description}`, timestamp: Date.now() }] }),
+    pullTask: async () => castNonEmptyString("default task"),
+    ackTask: async () => {},
+    git: {
+      isClean: async () => true,
+      cleanup: async () => {},
+      branch: async (name) => name,
+      commitAndPush: async () => {},
+    },
+    log: {
+      info: () => {},
+      error: () => {},
+    },
+    sleep: async (ms) => new Promise(resolve => setTimeout(resolve, ms)),
+    ...overrides,
+  });
+
+  describe("Happy Path", () => {
+    it("should process a single task successfully", async () => {
+      const mockResults: string[] = [];
+      const deps = createMockDeps({
+        runWorker: async (task) => {
+          mockResults.push(`Processed: ${task.description}`);
+          return { output: [{ line: `Processed: ${task.description}`, timestamp: Date.now() }] };
+        },
+        pullTask: async () => {
+          if (mockResults.length === 0) return castNonEmptyString("make todo mvp");
+          // Simulate no more tasks by hanging
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      // Wait a bit for processing
+      await new Promise(resolve => setTimeout(resolve, 50));
+      controller.abort();
+      
+      await loopPromise;
+      expect(mockResults).toEqual(["Processed: make todo mvp"]);
+    });
+
+    it("should handle multiple tasks in sequence", async () => {
+      const mockResults: string[] = [];
+      const taskCountRef = { value: 0 };
+      const deps = createMockDeps({
+        runWorker: async (task) => {
+          mockResults.push(`Processed: ${task.description}`);
+          return { output: [{ line: `Processed: ${task.description}`, timestamp: Date.now() }] };
+        },
+        pullTask: async () => {
+          taskCountRef.value++;
+          if (taskCountRef.value <= 3) return castNonEmptyString(`task ${taskCountRef.value}`);
+          // Stop after 3 tasks
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      // Wait for processing
+      await new Promise(resolve => setTimeout(resolve, 100));
+      controller.abort();
+      
+      await loopPromise;
+      expect(mockResults).toEqual([
+        "Processed: task 1",
+        "Processed: task 2", 
+        "Processed: task 3"
+      ]);
+    });
+  });
+
+  describe("Git Operations", () => {
+    it("should abort when git repo is not clean initially", async () => {
+      const logMessages: string[] = [];
+      const deps = createMockDeps({
+        git: {
+          isClean: async () => false,
+          cleanup: async () => {},
+          branch: async (name) => name,
+          commitAndPush: async () => {},
+        },
+        log: {
+          info: () => {},
+          error: (msg) => logMessages.push(msg),
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 50));
+      controller.abort();
+      
+      await loopPromise;
+      expect(logMessages).toContain("FATAL: git repo isn't clean, aborting");
+    });
+
+    it("should abort when git repo is not clean after commitAndPush", async () => {
+      const logMessages: string[] = [];
+      const isCleanCallCountRef = { value: 0 };
+      const deps = createMockDeps({
+        git: {
+          isClean: async () => {
+            isCleanCallCountRef.value++;
+            return isCleanCallCountRef.value === 1; // Clean initially, dirty after commit
+          },
+          cleanup: async () => {},
+          branch: async (name) => name,
+          commitAndPush: async () => {},
+        },
+        log: {
+          info: () => {},
+          error: (msg) => logMessages.push(msg),
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 50));
+      controller.abort();
+      
+      await loopPromise;
+      expect(logMessages).toContain("FATAL: git repo isn't clean, after commitAndPush, aborting");
+    });
+
+    it("should create and cleanup git branches correctly", async () => {
+      const gitOperations: string[] = [];
+      const deps = createMockDeps({
+        git: {
+          isClean: async () => true,
+          cleanup: async (branch) => { gitOperations.push(`cleanup: ${branch}`); },
+          branch: async (name) => {
+            gitOperations.push(`branch: ${name}`);
+            return name;
+          },
+          commitAndPush: async () => { gitOperations.push("commitAndPush"); },
+        },
+        pullTask: async () => {
+          if (gitOperations.length === 0) return castNonEmptyString("consistent task name");
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 50));
+      controller.abort();
+      
+      await loopPromise;
+      expect(gitOperations).toContain("branch: 2260761063047429");
+      expect(gitOperations).toContain("commitAndPush");
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should handle runWorker errors gracefully and retry", async () => {
+      const logMessages: string[] = [];
+      const sleepCalls: number[] = [];
+      const ackTaskCalls: Array<{ ok: boolean; branch?: string }> = [];
+      const attemptCountRef = { value: 0 };
+
+      const deps = createMockDeps({
+        runWorker: async () => {
+          attemptCountRef.value++;
+          if (attemptCountRef.value === 1) {
+            throw new Error("Worker failed");
+          }
+          return { output: [{ line: "Success on retry", timestamp: Date.now() }] };
+        },
+        ackTask: async (ok) => {
+          ackTaskCalls.push({
+            ok: Option.isSome(ok),
+            branch: Option.isSome(ok) ? ok.value.branch : undefined,
+          });
+        },
+        log: {
+          info: () => {},
+          error: (msg, ...args) => logMessages.push(`${msg} ${args.join(" ")}`),
+        },
+        sleep: async (ms) => {
+          sleepCalls.push(ms);
+          return new Promise(resolve => setTimeout(resolve, 10));
+        },
+        pullTask: async () => {
+          if (attemptCountRef.value <= 2) return castNonEmptyString("retry task");
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      controller.abort();
+      
+      await loopPromise;
+      
+      expect(logMessages.some(msg => msg.includes("uncaught error in main loop"))).toBe(true);
+      expect(sleepCalls).toContain(1000);
+      expect(ackTaskCalls).toEqual([
+        { ok: false }, // Failed task
+        { ok: true, branch: "3004853278509851" }, // Successful retry
+      ]);
+    });
+
+    it("should handle pullTask errors gracefully", async () => {
+      const logMessages: string[] = [];
+      const sleepCalls: number[] = [];
+      const attemptCountRef2 = { value: 0 };
+
+      const deps = createMockDeps({
+        pullTask: async () => {
+          attemptCountRef2.value++;
+          if (attemptCountRef2.value === 1) {
+            throw new Error("Failed to pull task");
+          }
+          return castNonEmptyString("after error task");
+        },
+        log: {
+          info: () => {},
+          error: (msg, ...args) => logMessages.push(`${msg} ${args.join(" ")}`),
+        },
+        sleep: async (ms) => {
+          sleepCalls.push(ms);
+          return new Promise(resolve => setTimeout(resolve, 10));
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      controller.abort();
+      
+      await loopPromise;
+      
+      expect(logMessages.some(msg => msg.includes("uncaught error in main loop"))).toBe(true);
+      expect(sleepCalls).toContain(1000);
+    });
+
+    it("should handle git branch errors gracefully", async () => {
+      const logMessages: string[] = [];
+      const cleanupCalls: string[] = [];
+      const attemptCountRef3 = { value: 0 };
+
+      const deps = createMockDeps({
+        git: {
+          isClean: async () => true,
+          cleanup: async (branch) => { cleanupCalls.push(branch); },
+          branch: async () => {
+            attemptCountRef3.value++;
+            if (attemptCountRef3.value === 1) {
+              throw new Error("Git branch failed");
+            }
+            return nonEmptyStringFromNumber(555);
+          },
+          commitAndPush: async () => {},
+        },
+        log: {
+          info: () => {},
+          error: (msg, ...args) => logMessages.push(`${msg} ${args.join(" ")}`),
+        },
+        sleep: async () => new Promise(resolve => setTimeout(resolve, 10)),
+        pullTask: async () => {
+          if (attemptCountRef3.value <= 2) return castNonEmptyString("git error task");
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      controller.abort();
+      
+      await loopPromise;
+      
+      expect(logMessages.some(msg => msg.includes("uncaught error in main loop"))).toBe(true);
+      // Should not cleanup branch if branch creation failed
+      expect(cleanupCalls).toHaveLength(0);
+    });
+  });
+
+  describe("Task Acknowledgment Edge Cases", () => {
+    it("should handle ackTask error during task acknowledgment", async () => {
+      const logMessages: string[] = [];
+      const ackTaskCalls: Array<{ ok: boolean; branch?: string }> = [];
+      const ackAttemptCountRef = { value: 0 };
+
+      const deps = createMockDeps({
+        ackTask: async (ok) => {
+          ackAttemptCountRef.value++;
+          ackTaskCalls.push({
+            ok: Option.isSome(ok),
+            branch: Option.isSome(ok) ? ok.value.branch : undefined,
+          });
+          
+          if (ackAttemptCountRef.value === 1) {
+            throw new Error("Ack task failed");
+          }
+        },
+        log: {
+          info: () => {},
+          error: (msg, ...args) => logMessages.push(`${msg} ${args.join(" ")}`),
+        },
+        sleep: async () => new Promise(resolve => setTimeout(resolve, 10)),
+        pullTask: async () => {
+          if (ackTaskCalls.length < 2) return castNonEmptyString("ack error task");
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      controller.abort();
+      
+      await loopPromise;
+      
+      expect(logMessages.some(msg => 
+        msg.includes("unidentified condition, task was in the middle of acknowledgement")
+      )).toBe(true);
+      expect(ackTaskCalls).toEqual([
+        { ok: true, branch: "5598032483945536" }, // Failed acknowledgment
+        { ok: false }, // Retry as failed
+      ]);
+    });
+
+    it("should differentiate between acknowledgment states correctly", async () => {
+      const logMessages: string[] = [];
+      const ackTaskCalls: Array<{ ok: boolean; branch?: string }> = [];
+      const callCountRef = { value: 0 };
+
+      const deps = createMockDeps({
+        runWorker: async () => {
+          callCountRef.value++;
+          if (callCountRef.value === 1) {
+            throw new Error("Worker failed before acknowledgment");
+          }
+          return { output: [{ line: "Success", timestamp: Date.now() }] };
+        },
+        ackTask: async (ok) => {
+          ackTaskCalls.push({
+            ok: Option.isSome(ok),
+            branch: Option.isSome(ok) ? ok.value.branch : undefined,
+          });
+          
+          if (callCountRef.value === 2) {
+            throw new Error("Ack failed during acknowledgment");
+          }
+        },
+        log: {
+          info: () => {},
+          error: (msg, ...args) => logMessages.push(`${msg} ${args.join(" ")}`),
+        },
+        sleep: async () => new Promise(resolve => setTimeout(resolve, 10)),
+        pullTask: async () => {
+          if (callCountRef.value < 3) return castNonEmptyString("acknowledgment test task");
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 150));
+      controller.abort();
+      
+      await loopPromise;
+      
+      // Should have different error messages for different failure modes
+      const beforeAckError = logMessages.some(msg => 
+        msg.includes("uncaught error in main loop") && 
+        !msg.includes("unidentified condition")
+      );
+      const duringAckError = logMessages.some(msg => 
+        msg.includes("unidentified condition, task was in the middle of acknowledgement")
+      );
+      
+      expect(beforeAckError).toBe(true);
+      expect(duringAckError).toBe(true);
+    });
+  });
+
+  describe("Signal Handling", () => {
+    it("should stop gracefully when abort signal is triggered", async () => {
+      const taskCount = { value: 0 };
+      const deps = createMockDeps({
+        pullTask: async () => {
+          taskCount.value++;
+          return castNonEmptyString(`task ${taskCount.value}`);
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      // Let it run for a bit
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Abort and wait for clean shutdown
+      controller.abort();
+      await loopPromise;
+      
+      // Should have processed at least one task but stopped cleanly
+      expect(taskCount.value).toBeGreaterThan(0);
+    });
+
+    it("should handle abort signal during task processing", async () => {
+      const processedTasks: string[] = [];
+      const longRunningTaskStartedRef = { value: false };
+      
+      const deps = createMockDeps({
+        runWorker: async (task) => {
+          processedTasks.push(task.description);
+          if (task.description === "long running task") {
+            longRunningTaskStartedRef.value = true;
+            // Simulate long-running task
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+          return { output: [{ line: `Processed: ${task.description}`, timestamp: Date.now() }] };
+        },
+        pullTask: async () => {
+          if (processedTasks.length === 0) return castNonEmptyString("long running task");
+          return castNonEmptyString("next task");
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      // Wait for task to start
+      while (!longRunningTaskStartedRef.value) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+      
+      // Abort while task is running
+      controller.abort();
+      await loopPromise;
+      
+      // Should process the long-running task but stop before the next one
+      expect(processedTasks).toEqual(["long running task"]);
+    });
+  });
+
+  describe("Logging Integration", () => {
+    it("should use injected logger for all log messages", async () => {
+      const infoLogs: Array<{ message: string; args: unknown[] }> = [];
+      const errorLogs: Array<{ message: string; args: unknown[] }> = [];
+      
+      const deps = createMockDeps({
+        log: {
+          info: (message, ...args) => infoLogs.push({ message, args }),
+          error: (message, ...args) => errorLogs.push({ message, args }),
+        },
+        pullTask: async () => {
+          if (infoLogs.length === 0) return castNonEmptyString("logging test task");
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 50));
+      controller.abort();
+      
+      await loopPromise;
+      
+      // Should have logged the result
+      expect(infoLogs.some(log => log.message === "result log")).toBe(true);
+    });
+
+    it("should use injected sleep function", async () => {
+      const sleepCalls: number[] = [];
+      
+      const deps = createMockDeps({
+        runWorker: async () => {
+          throw new Error("Test error for sleep");
+        },
+        sleep: async (ms) => {
+          sleepCalls.push(ms);
+          // Use shorter sleep for testing
+          return new Promise(resolve => setTimeout(resolve, 10));
+        },
+        pullTask: async () => {
+          if (sleepCalls.length === 0) return castNonEmptyString("sleep test task");
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      controller.abort();
+      
+      await loopPromise;
+      
+      // Should have called sleep with 1000ms
+      expect(sleepCalls).toContain(1000);
+    });
+  });
+
+  describe("Branch Name Generation", () => {
+    it("should generate consistent branch names for same task", async () => {
+      const branchNames: string[] = [];
+      
+      const deps = createMockDeps({
+        git: {
+          isClean: async () => true,
+          cleanup: async () => {},
+          branch: async (name) => {
+            branchNames.push(name);
+            return name;
+          },
+          commitAndPush: async () => {},
+        },
+        pullTask: async () => {
+          if (branchNames.length < 2) return castNonEmptyString("same task description");
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      controller.abort();
+      
+      await loopPromise;
+      
+      // Should generate same branch name for same task
+      expect(branchNames).toHaveLength(2);
+      expect(branchNames[0]).toBe(branchNames[1]);
+    });
+
+    it("should generate different branch names for different tasks", async () => {
+      const branchNames: string[] = [];
+      const taskNumberRef = { value: 0 };
+      
+      const deps = createMockDeps({
+        git: {
+          isClean: async () => true,
+          cleanup: async () => {},
+          branch: async (name) => {
+            branchNames.push(name);
+            return name;
+          },
+          commitAndPush: async () => {},
+        },
+        pullTask: async () => {
+          taskNumberRef.value++;
+          if (taskNumberRef.value <= 2) return castNonEmptyString(`different task ${taskNumberRef.value}`);
+          return new Promise(() => {});
+        },
+      });
+
+      const controller = new AbortController();
+      const loopPromise = loop(deps)({ signal: controller.signal });
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      controller.abort();
+      
+      await loopPromise;
+      
+      // Should generate different branch names for different tasks
+      expect(branchNames).toHaveLength(2);
+      expect(branchNames[0]).not.toBe(branchNames[1]);
     });
   });
 });
