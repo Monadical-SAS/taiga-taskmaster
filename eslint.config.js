@@ -32,6 +32,7 @@ export default tseslint.config(
       "functional/no-throw-statements": "off",
       "functional/no-return-void": "off",
       "functional/no-conditional-statements": "off",
+      "functional/readonly-type": "off",
       // Prohibit vi.doMock to prevent global mocking issues
       "no-restricted-syntax": [
         "error",

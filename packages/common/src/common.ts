@@ -27,6 +27,10 @@ export const NonEmptyString = Schema.NonEmptyString.pipe(
   Schema.brand(NonEmptyStringBrand)
 );
 export type NonEmptyString = typeof NonEmptyString.Type;
+export const nonEmptyStringFromNumber = (n: number): NonEmptyString => {
+  // can always map
+  return Schema.decodeSync(NonEmptyString)(n.toString());
+};
 export const TextContent = NonEmptyString.pipe(Schema.brand("TextContent"));
 export type TextContent = typeof TextContent.Type;
 export const PrdText = NonEmptyString.pipe(Schema.brand("PrdText"));

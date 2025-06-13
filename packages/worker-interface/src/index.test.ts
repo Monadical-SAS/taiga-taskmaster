@@ -125,7 +125,7 @@ describe("Test Infrastructure Validation", () => {
     // Execute the actual command - should fall back to default behavior
     const result = await runTaskAsPromise(executeCommand(actualCommand), testLayer);
     
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(1);
     expect(result.output[0]?.line).toBe("default mock output"); // Falls back to hardcoded default
   });
@@ -143,7 +143,7 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
       testLayer
     );
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(1);
     expect(result.output[0]?.line).toBe("Hello World");
     expect(result.output[0]?.timestamp).toBeTypeOf("number");
@@ -157,7 +157,7 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
 
     const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(1);
     expect(result.output[0]?.line).toBe("Task executed");
   });
@@ -173,7 +173,7 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
       testLayer
     );
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(3);
     expect(result.output[0]?.line).toBe("Line 1");
     expect(result.output[1]?.line).toBe("Line 2");
@@ -214,7 +214,7 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
       testLayer
     );
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(1);
     expect(result.output[0]?.line).toBe("default mock output");
   });
@@ -224,7 +224,7 @@ describe("Worker Interface - Live CommandExecutor", () => {
   it("should execute a real simple command", async () => {
     const result = await runCommandWithLiveExecutor(Command.make("echo", "Hello World"));
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(1);
     expect(result.output[0]?.line).toBe("Hello World");
     expect(result.output[0]?.timestamp).toBeTypeOf("number");
@@ -235,7 +235,7 @@ describe("Worker Interface - Live CommandExecutor", () => {
 
     const result = await runCommandWithLiveExecutor(command);
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(1);
     expect(result.output[0]?.line).toBe("Task executed");
   });
@@ -243,7 +243,7 @@ describe("Worker Interface - Live CommandExecutor", () => {
   it("should handle real multiple output lines", async () => {
     const result = await runCommandWithLiveExecutor(Command.make("printf", "Line 1\\nLine 2\\nLine 3"));
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(3);
     expect(result.output[0]?.line).toBe("Line 1");
     expect(result.output[1]?.line).toBe("Line 2");
@@ -255,7 +255,7 @@ describe("Worker Interface - Live CommandExecutor", () => {
       Command.make("sh", "-c", `echo "Starting task..."; sleep 0.1; echo "Processing work..."; sleep 0.1; echo "Task completed!"`)
     );
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(3);
     expect(result.output[0]?.line).toBe("Starting task...");
     expect(result.output[1]?.line).toBe("Processing work...");
@@ -272,7 +272,7 @@ describe("Worker Interface - Live CommandExecutor", () => {
   it("should handle real command that produces no output", async () => {
     const result = await runCommandWithLiveExecutor(Command.make("true")); // 'true' command succeeds with no output
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output).toHaveLength(0);
   });
 });
@@ -292,7 +292,6 @@ describe("Worker Interface - Cross-validation", () => {
     const realResult = await runCommandWithLiveExecutor(commandObj);
 
     // Both should have same structure and content
-    expect(mockedResult.exitCode).toBe(realResult.exitCode);
     expect(mockedResult.output).toHaveLength(realResult.output.length);
     expect(realResult.output[0]?.line).toBe(expectedOutput);
   });
@@ -391,7 +390,7 @@ describe("Goose Integration - Mocked Execution", () => {
       yield* TestClock.adjust("5 second");
       const result = yield* Fiber.join(fork);
 
-      expect(result.exitCode).toBe(0);
+      
       expect(result.output).toHaveLength(mockGooseOutput.length);
       expect(result.output[0]?.line).toContain("starting session | provider: openrouter");
       expect(result.output[3]?.line).toBe("# Hello! 👋");
@@ -418,7 +417,7 @@ describe("Goose Integration - Mocked Execution", () => {
 
     const result = await runTaskAsPromise(executeGoose(config), testLayer);
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output[0]?.line).toBe("Goose running in project directory");
   });
 
@@ -491,7 +490,7 @@ describe("Goose Integration - Mocked Execution", () => {
       assert.ok(isDone(yield* fork.status), "Should be done after 3 seconds");
       const result = yield* Fiber.join(fork);
 
-      expect(result.exitCode).toBe(0);
+      
       expect(result.output).toHaveLength(mockOutput.length);
       // Verify content matches realistic goose output
       expect(result.output[0]?.line).toContain("starting session | provider: openrouter");
@@ -532,7 +531,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
       testLayer
     );
 
-    expect(result.exitCode).toBe(0);
+    
     expect(result.output[0]?.line).toBe("Goose running with Command.env environment variables");
   });
 
@@ -612,7 +611,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
 
       const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
-      expect(result.exitCode).toBe(0);
+      
       expect(result.output[0]?.line).toBe("hello world");
     });
 
@@ -624,7 +623,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
 
       const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
-      expect(result.exitCode).toBe(0);
+      
       expect(result.output[0]?.line).toBe("file copied");
     });
 
@@ -636,7 +635,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
 
       const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
-      expect(result.exitCode).toBe(0);
+      
       expect(result.output[0]?.line).toBe("1:found search term here");
     });
 
@@ -658,7 +657,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
 
         const result = await runTaskAsPromise(executeCommand(command), testLayer);
 
-        expect(result.exitCode).toBe(0);
+        
         expect(result.output[0]?.line).toBe("Safe execution - arguments properly escaped");
         
         // Commands are executed as arrays, not shell strings
@@ -759,7 +758,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
         Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
       );
 
-      expect(result.exitCode).toBe(0);
+      
       expect(result.output).toHaveLength(1);
       expect(result.output[0]?.line).toBe(expectedOutput);
       expect(result.output[0]?.timestamp).toBe(1000); // Deterministic timestamp
@@ -786,7 +785,7 @@ describe("Goose Integration - Environment Variable Injection", () => {
         Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
       );
 
-      expect(result.exitCode).toBe(0);
+      
       expect(result.output).toHaveLength(1);
       expect(result.output[0]?.line).toBe("test output");
       expect(result.output[0]?.timestamp).toBe(1000);
@@ -896,20 +895,11 @@ describe("Goose Integration - Environment Variable Injection", () => {
         output: ["completed before default timeout"],
       }));
 
-      const program = Effect.gen(function* (_) {
-        yield* _(TestClock.adjust(1000));
-        
-        // Should use default timeout (30 seconds)
-        const result = yield* _(executeCommandWithTimeout(command));
-        
-        return result;
-      });
-
       const result = await Effect.runPromise(
-        Effect.provide(program, Layer.merge(testLayer, TestContext.TestContext))
+        Effect.provide(executeCommandWithTimeout(command), Layer.merge(testLayer, TestContext.TestContext))
       );
 
-      expect(result.exitCode).toBe(0);
+      
       expect(result.output).toHaveLength(1);
       expect(result.output[0]?.line).toBe("completed before default timeout");
     });

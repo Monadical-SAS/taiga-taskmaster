@@ -1,6 +1,21 @@
-import { Effect, Stream, pipe, Array as EffectArray, Context, Layer, Schedule, Config, Data, Clock, Duration } from "effect";
+import {
+  Effect,
+  Stream,
+  pipe,
+  Array as EffectArray,
+  Context,
+  Layer,
+  Schedule,
+  Config,
+  Data,
+  Clock,
+  Duration,
+  Option
+} from 'effect';
 import { Command } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
+import { NonEmptyString, nonEmptyStringFromNumber } from '@taiga-task-master/common';
+import { none } from 'effect/Option';
 
 // Helper function to convert Command to string for error reporting
 const commandToString = (command: Command.Command): string => {
@@ -14,26 +29,25 @@ const serializeCommand = (command: Command.Command): string => {
 };
 
 // Error types for proper type safety
-// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance, functional/readonly-type
+// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance
 export class CommandExecutionError extends Data.TaggedError("CommandExecutionError")<{
   readonly command: string;
-  readonly exitCode: number;
   readonly stderr?: string;
 }> {}
 
-// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance, functional/readonly-type
+// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance
 export class CommandTimeoutError extends Data.TaggedError("CommandTimeoutError")<{
   readonly command: string;
   readonly timeoutMs: number;
 }> {}
 
-// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance, functional/readonly-type
+// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance
 export class CommandParsingError extends Data.TaggedError("CommandParsingError")<{
   readonly input: string;
   readonly reason: string;
 }> {}
 
-// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance, functional/readonly-type
+// eslint-disable-next-line functional/no-classes, functional/no-class-inheritance
 export class ConfigurationError extends Data.TaggedError("ConfigurationError")<{
   readonly field: string;
   readonly value?: string;
@@ -53,7 +67,6 @@ export type WorkerOutputLine = Readonly<{
 }>;
 
 export type WorkerResult = Readonly<{
-  exitCode: number;
   output: WorkerOutputLine[];
 }>;
 
@@ -116,7 +129,6 @@ export const executeCommand = (command: Command.Command): Effect.Effect<WorkerRe
         ),
         Stream.runCollect,
         Effect.map((output) => ({
-          exitCode: 0,
           output: EffectArray.fromIterable(output),
         }))
       )
@@ -140,7 +152,6 @@ export const LiveCommandExecutor = Layer.succeed(
         Stream.mapError((error) => 
           new CommandExecutionError({
             command: commandToString(command),
-            exitCode: -1,
             stderr: String(error)
           })
         )
@@ -163,7 +174,6 @@ export const TestCommandExecutor = (
           return Stream.fail(
             new CommandExecutionError({
               command: commandToString(command),
-              exitCode: 1,
               stderr: scenario.error
             })
           );
@@ -272,7 +282,6 @@ export const GooseCommandExecutor = (config: Partial<GooseConfig> = {}) =>
               Stream.mapError((error) => 
                 new CommandExecutionError({
                   command: commandToString(command),
-                  exitCode: -1,
                   stderr: String(error)
                 })
               )
@@ -282,16 +291,99 @@ export const GooseCommandExecutor = (config: Partial<GooseConfig> = {}) =>
     )
   );
 
-export const runGooseWithLiveExecutor = (config: Partial<GooseConfig> = {}): Promise<WorkerResult> =>
+export const runGooseWithLiveExecutor = (config: Partial<GooseConfig> = {}, options?: { readonly signal?: AbortSignal } | undefined): Promise<WorkerResult> =>
   Effect.runPromise(
     Effect.provide(
       executeGoose(config), 
       GooseCommandExecutor(config)
-    )
+    ),
+    options
   );
 
-export const runGooseInDirectory = (
-  workingDirectory: string, 
-  config: Partial<GooseConfig> = {}
-): Promise<WorkerResult> =>
-  runGooseWithLiveExecutor({ ...config, workingDirectory });
+type LooperDeps = {
+  runWorker: (task: {
+    description: string;
+  }, options?: { readonly signal?: AbortSignal } | undefined) => Promise<WorkerResult>,
+  // mutable, will mark task "pulled" outside.
+  // invariant: when a task is "pulled" again but previous isn't returned back/acknowledged, should be an error.
+  pullTask: (options?: { readonly signal?: AbortSignal } | undefined) => Promise<NonEmptyString>,
+  // invariant: only a current pulled task can be acknowledged.
+  // ok "none" would put task back, ok "some" would remove the task and write an artifact
+  ackTask: (ok: Option.Option<{
+    // artifact
+    branch: string;
+  }>, options?: { readonly signal?: AbortSignal } | undefined) => Promise<void>,
+  git: {
+    // synched with remote and has no changes pending
+    isClean: () => Promise<boolean>,
+    // clean to pristine state before branch() was done
+    cleanup: (name: NonEmptyString) => Promise<void>
+    // should throw if branch isn't clean (TODO check if there's such command line args)
+    branch: (name: NonEmptyString) => Promise<NonEmptyString>,
+    // call of isClean() right after commitAndPush should return true
+    commitAndPush: () => Promise<void>,
+  },
+};
+
+
+// never throws
+/* eslint-disable functional/no-loop-statements, functional/no-let, functional/no-expression-statements */
+export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: AbortSignal } | undefined): Promise<void> => {
+    while (true) {
+      if (options?.signal?.aborted) break;
+      let previousBranch: NonEmptyString | undefined;
+      let taskAcknowledging = false;
+      const cleanupBranch = async () => {
+        if (previousBranch) await deps.git.cleanup(previousBranch);
+      }
+      try {
+        const task = await deps.pullTask(options);
+        if (!await deps.git.isClean()) {
+          console.error("FATAL: git repo isn't clean, aborting");
+          break;
+        }
+        const branch = nonEmptyStringFromNumber(cyrb53(task));
+        previousBranch = await deps.git.branch(branch);
+        const result = await deps.runWorker({ description: task }, options);
+        console.log('result log', result); // TODO probably in file
+        await deps.git.commitAndPush();
+        if (!await deps.git.isClean()) {
+          console.error("FATAL: git repo isn't clean, after commitAndPush, aborting");
+          break;
+        }
+        taskAcknowledging = true;
+        await deps.ackTask(Option.some({ branch }), options);
+        taskAcknowledging = false;
+      } catch (error) {
+        console.error('uncaight error in main loop, retrying in 1 second: ', error);
+        await cleanupBranch();
+        if (!taskAcknowledging) {
+          await deps.ackTask(none(), options);
+        } else {
+          console.error(`unidentified condition, task was in the middle of acknowledgement when error happened. trying to unacknowledge`);
+          await deps.ackTask(none(), options);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+};
+/* eslint-enable functional/no-loop-statements, functional/no-let, functional/no-expression-statements */
+
+// utils
+
+/* eslint-disable functional/no-let, functional/no-loop-statements, functional/no-expression-statements */
+const cyrb53 = (str: string, seed = 0) => {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for(let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+};
+/* eslint-enable functional/no-let, functional/no-loop-statements, functional/no-expression-statements */

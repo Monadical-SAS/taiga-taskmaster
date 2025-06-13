@@ -1,5 +1,5 @@
 {
-  "name": "worker-interface",
+  "name": "@taiga-task-master/worker-interface",
   "version": "1.0.0",
   "type": "module",
   "description": "Worker interface definitions and schemas",
@@ -19,6 +19,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@taiga-task-master/common": "workspace:*",
     "@effect/platform": "^0.84.9",
     "@effect/platform-node": "^0.85.14",
     "effect": "^3.16.5"
