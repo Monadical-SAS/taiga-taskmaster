@@ -7,7 +7,7 @@ import { tmpdir } from "os";
 import { simpleGit, type SimpleGit } from "simple-git";
 import { Option } from "effect";
 import { type LooperDeps, loop } from "../../src/index.js";
-import { castNonEmptyString, type NonEmptyString } from "@taiga-task-master/common";
+import { castNonEmptyString, cyrb53, type NonEmptyString } from "@taiga-task-master/common";
 
 // Comprehensive git debug utilities for human verification
 const createGitDebugger = (git: SimpleGit, tempDir: string) => ({
@@ -140,7 +140,7 @@ const createGitDebugger = (git: SimpleGit, tempDir: string) => ({
       }
       
       // Sort by commits ahead (creation order)
-      branchesWithOrder.sort((a, b) => a.ahead - b.ahead);
+      branchesWithOrder.sort((a, b) => (a.ahead || 0) - (b.ahead || 0));
       const sortedBranches = branchesWithOrder.map(b => b.branch);
       
       console.log(`   📅 Creation order: ${sortedBranches.join(' → ')}`);
@@ -322,22 +322,6 @@ const createGitDebugger = (git: SimpleGit, tempDir: string) => ({
   }
 });
 
-// cyrb53 hash function for consistent branch naming
-const cyrb53 = (str: string, seed = 0): number => {
-  let h1 = 0xdeadbeef ^ seed;
-  let h2 = 0x41c6ce57 ^ seed;
-  for (let i = 0, ch; i < str.length; i++) {
-    ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-  }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
-  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
-};
-
 const createBranchName = (task: NonEmptyString): NonEmptyString => {
   const hash = cyrb53(task);
   return castNonEmptyString(hash.toString());
@@ -396,6 +380,7 @@ describe("Loop Real Git Integration", () => {
     taskQueueRef = { value: [] };
     acknowledgedTasksRef = { value: [] };
     currentTaskRef = { value: null };
+    const retryCountRef = { value: new Map<string, number>() }; // Track retry attempts per task
 
     // Create real dependencies that interact with the file system and git
     realDeps = {
@@ -512,14 +497,40 @@ export default {
         if (currentTaskRef.value) {
           const success = Option.isSome(result);
           const branch = success ? result.value.branch : undefined;
+          const task = currentTaskRef.value;
           
-          console.log(`📨 [ACK] Task "${currentTaskRef.value}" ${success ? '✅ SUCCESS' : '❌ FAILED'}${branch ? ` (branch: ${branch})` : ''}`);
+          console.log(`📨 [ACK] Task "${task}" ${success ? '✅ SUCCESS' : '❌ FAILED'}${branch ? ` (branch: ${branch})` : ''}`);
           
-          acknowledgedTasksRef.value.push({
-            task: currentTaskRef.value,
-            success,
-            branch
-          });
+          if (success) {
+            // Task succeeded - remove from retry tracking
+            retryCountRef.value.delete(task);
+            acknowledgedTasksRef.value.push({
+              task,
+              success: true,
+              branch
+            });
+          } else {
+            // Task failed - check retry count and decide whether to retry
+            const currentRetries = retryCountRef.value.get(task) || 0;
+            const maxRetries = 2; // Allow 2 retries (3 total attempts)
+            
+            if (currentRetries < maxRetries) {
+              // Put task back in queue for retry
+              retryCountRef.value.set(task, currentRetries + 1);
+              taskQueueRef.value.unshift(task); // Add to front of queue for immediate retry
+              console.log(`🔄 [RETRY] Task "${task}" failed, retry ${currentRetries + 1}/${maxRetries} - added back to queue`);
+            } else {
+              // Max retries exceeded - permanently fail the task
+              console.log(`❌ [FINAL FAIL] Task "${task}" failed after ${maxRetries} retries - giving up`);
+              acknowledgedTasksRef.value.push({
+                task,
+                success: false,
+                branch
+              });
+              retryCountRef.value.delete(task);
+            }
+          }
+          
           currentTaskRef.value = null;
         }
       },
@@ -751,15 +762,22 @@ export default {
     // Initial state dump
     await debug.dumpFullState("INITIAL STATE");
 
-    // Override git.commitAndPush to simulate failure on first task
+    // Override git.commitAndPush to simulate failure on first task, success on retry
     const attemptCountRef = { value: 0 };
+    const taskOneAttempts = { value: 0 };
     realDeps.git.commitAndPush = async () => {
       attemptCountRef.value++;
       console.log(`💾 [GIT] Commit attempt #${attemptCountRef.value}`);
-      if (attemptCountRef.value === 1) {
-        console.log(`❌ [GIT] Simulating git conflict on first task`);
-        throw new Error("Simulated git conflict");
+      
+      // Fail first 2 attempts of "task one", then succeed (testing retry mechanism)
+      if (currentTaskRef.value === "task one") {
+        taskOneAttempts.value++;
+        if (taskOneAttempts.value <= 2) {
+          console.log(`❌ [GIT] Simulating git conflict on "task one" attempt ${taskOneAttempts.value}`);
+          throw new Error("Simulated git conflict");
+        }
       }
+      
       await git.add(".");
       await git.commit("Worker output");
       console.log(`✅ [GIT] Commit successful on attempt #${attemptCountRef.value}`);
@@ -834,7 +852,8 @@ export default {
 
     const controller = new AbortController();
     const checkCompletion = setInterval(() => {
-      if (taskQueueRef.value.length === 0) {
+      // Wait until all tasks are acknowledged (both failed and succeeded)
+      if (taskQueueRef.value.length === 0 && acknowledgedTasksRef.value.length === 2) {
         clearInterval(checkCompletion);
         setTimeout(() => controller.abort(), 100);
       }
@@ -855,17 +874,28 @@ export default {
     await debug.dumpFullState("FINAL STATE");
     await debug.verifyBranchChain();
 
-    console.log(`\n🔍 [TEST] Verifying failure/recovery behavior...`);
+    console.log(`\n🔍 [TEST] Verifying retry behavior...`);
     
-    // First task should have failed, second should succeed
+    // Should have exactly 2 acknowledged tasks (both eventually completed)
+    console.log(`📊 [TEST] Acknowledged tasks: ${acknowledgedTasksRef.value.length}`);
+    expect(acknowledgedTasksRef.value).toHaveLength(2);
+    
+    // Task one should eventually succeed after retries, task two should succeed normally
+    const taskOneResult = acknowledgedTasksRef.value.find(ack => ack.task === "task one");
+    const taskTwoResult = acknowledgedTasksRef.value.find(ack => ack.task === "task two");
+    
     console.log(`📊 [TEST] Task results:`);
-    console.log(`   Task 1 ("${tasks[0]}"): ${acknowledgedTasksRef.value[0]?.success ? '✅ SUCCESS' : '❌ FAILED'} (expected: FAILED)`);
-    console.log(`   Task 2 ("${tasks[1]}"): ${acknowledgedTasksRef.value[1]?.success ? '✅ SUCCESS' : '❌ FAILED'} (expected: SUCCESS)`);
+    console.log(`   Task 1 ("task one"): ${taskOneResult?.success ? '✅ SUCCESS after retries' : '❌ FAILED'} (expected: SUCCESS after retries)`);
+    console.log(`   Task 2 ("task two"): ${taskTwoResult?.success ? '✅ SUCCESS' : '❌ FAILED'} (expected: SUCCESS)`);
     
-    expect(acknowledgedTasksRef.value[0]?.success).toBe(false);
-    expect(acknowledgedTasksRef.value[1]?.success).toBe(true);
+    expect(taskOneResult?.success).toBe(true);
+    expect(taskTwoResult?.success).toBe(true);
+    
+    // Verify that we had exactly 3 commit attempts (2 failures + 1 success for task one, 1 success for task two)
+    console.log(`📊 [TEST] Total commit attempts: ${attemptCountRef.value} (expected: 4 - 2 failures + 2 successes)`);
+    expect(attemptCountRef.value).toBe(4);
 
-    // Verify cleanup worked: failed task branch should not exist
+    // Verify both task branches exist since both eventually succeeded
     const branches = await git.branchLocal();
     const firstTask = tasks[0];
     if (!firstTask) throw new Error("No first task");
@@ -874,14 +904,127 @@ export default {
     if (!secondTask) throw new Error("No second task");
     const secondTaskBranch = createBranchName(castNonEmptyString(secondTask));
     
-    console.log(`🧹 [TEST] Cleanup verification:`);
-    console.log(`   Failed branch (${firstTaskBranch}): ${branches.all.includes(firstTaskBranch) ? '❌ STILL EXISTS' : '✅ CLEANED UP'}`);
-    console.log(`   Success branch (${secondTaskBranch}): ${branches.all.includes(secondTaskBranch) ? '✅ EXISTS' : '❌ MISSING'}`);
+    console.log(`🧹 [TEST] Branch verification (both tasks should succeed after retries):`);
+    console.log(`   Task one branch (${firstTaskBranch}): ${branches.all.includes(firstTaskBranch) ? '✅ EXISTS' : '❌ MISSING'}`);
+    console.log(`   Task two branch (${secondTaskBranch}): ${branches.all.includes(secondTaskBranch) ? '✅ EXISTS' : '❌ MISSING'}`);
     
-    expect(branches.all).not.toContain(firstTaskBranch);
+    expect(branches.all).toContain(firstTaskBranch);
     expect(branches.all).toContain(secondTaskBranch);
     
-    console.log(`\n🏁 [TEST] Git conflict recovery test passed! Cleanup worked correctly.`);
+    console.log(`\n🏁 [TEST] Task retry mechanism test passed! Both tasks eventually succeeded.`);
+  });
+
+  it("handles maximum retry exhaustion", { timeout: 10000 }, async () => {
+    console.log(`\n🎯 [TEST] Starting "handles maximum retry exhaustion"`);
+    
+    // Create debug utilities
+    const debug = createGitDebugger(git, tempDir);
+    
+    const tasks = ["failing task", "success task"];
+    taskQueueRef.value = [...tasks];
+    console.log(`📝 [TEST] Task queue setup: [${tasks.map(t => `"${t}"`).join(', ')}] - first will fail permanently, second will succeed`);
+    
+    // Initial state dump
+    await debug.dumpFullState("INITIAL STATE");
+
+    // Override git.commitAndPush to always fail for "failing task", succeed for "success task"
+    const attemptCountRef = { value: 0 };
+    realDeps.git.commitAndPush = async () => {
+      attemptCountRef.value++;
+      console.log(`💾 [GIT] Commit attempt #${attemptCountRef.value} for task: "${currentTaskRef.value}"`);
+      
+      // Always fail for "failing task", succeed for others
+      if (currentTaskRef.value === "failing task") {
+        console.log(`❌ [GIT] Permanent failure simulation for "failing task"`);
+        throw new Error("Permanent simulated failure");
+      }
+      
+      // Success for all other tasks
+      await git.add(".");
+      await git.commit("Worker output");
+      console.log(`✅ [GIT] Commit successful for "${currentTaskRef.value}"`);
+    };
+    
+    // Override cleanup to ensure repo is left clean after failures
+    const originalCleanup = realDeps.git.cleanup;
+    realDeps.git.cleanup = async (name) => {
+      console.log(`\n🧽 [CLEANUP] Cleaning up failed task`);
+      await originalCleanup(name);
+      await git.reset(["--hard"]);
+      
+      try {
+        await git.clean(["-f", "-d"]);
+        console.log(`🧽 [CLEANUP] Cleanup completed`);
+      } catch (cleanError) {
+        console.log(`🧽 [CLEANUP] Manual cleanup fallback`);
+        const status = await git.status();
+        for (const file of status.not_added) {
+          try {
+            await fs.unlink(join(tempDir, file));
+          } catch {
+            // Ignore individual file removal errors
+          }
+        }
+      }
+    };
+
+    const controller = new AbortController();
+    const checkCompletion = setInterval(() => {
+      // Wait until all tasks are acknowledged 
+      if (taskQueueRef.value.length === 0 && acknowledgedTasksRef.value.length === 2) {
+        clearInterval(checkCompletion);
+        setTimeout(() => controller.abort(), 100);
+      }
+    }, 10);
+
+    try {
+      console.log(`\n🔄 [TEST] Starting loop execution...`);
+      await loop(realDeps)({ signal: controller.signal });
+    } catch (error) {
+      console.log(`\n🛑 [TEST] Loop ended with error:`, error);
+      expect((error as Error).name).toBe("AbortError");
+      console.log(`✅ [TEST] Expected abort error received`);
+    }
+    
+    clearInterval(checkCompletion);
+
+    // Final state dump and comprehensive verification
+    await debug.dumpFullState("FINAL STATE");
+
+    console.log(`\n🔍 [TEST] Verifying max retry exhaustion behavior...`);
+    
+    // Should have exactly 2 acknowledged tasks
+    console.log(`📊 [TEST] Acknowledged tasks: ${acknowledgedTasksRef.value.length}`);
+    expect(acknowledgedTasksRef.value).toHaveLength(2);
+    
+    // Failing task should permanently fail, success task should succeed
+    const failingTaskResult = acknowledgedTasksRef.value.find(ack => ack.task === "failing task");
+    const successTaskResult = acknowledgedTasksRef.value.find(ack => ack.task === "success task");
+    
+    console.log(`📊 [TEST] Task results:`);
+    console.log(`   Failing task: ${failingTaskResult?.success ? '❌ UNEXPECTED SUCCESS' : '✅ FAILED as expected'} (expected: FAILED after max retries)`);
+    console.log(`   Success task: ${successTaskResult?.success ? '✅ SUCCESS' : '❌ FAILED'} (expected: SUCCESS)`);
+    
+    expect(failingTaskResult?.success).toBe(false);
+    expect(successTaskResult?.success).toBe(true);
+    
+    // Verify that we had exactly 4 attempts (3 for failing task + 1 for success task)
+    console.log(`📊 [TEST] Total commit attempts: ${attemptCountRef.value} (expected: 4 - 3 for failing task + 1 for success task)`);
+    expect(attemptCountRef.value).toBe(4);
+
+    // Verify only success task branch exists
+    const branches = await git.branchLocal();
+    const failingTaskBranch = createBranchName(castNonEmptyString("failing task"));
+    const successTaskBranch = createBranchName(castNonEmptyString("success task"));
+    
+    console.log(`🧹 [TEST] Branch verification:`);
+    console.log(`   Failing task branch (${failingTaskBranch}): ${branches.all.includes(failingTaskBranch) ? '❌ STILL EXISTS' : '✅ CLEANED UP'}`);
+    console.log(`   Success task branch (${successTaskBranch}): ${branches.all.includes(successTaskBranch) ? '✅ EXISTS' : '❌ MISSING'}`);
+    
+    expect(branches.all).not.toContain(failingTaskBranch);
+    expect(branches.all).toContain(successTaskBranch);
+    
+    console.log(`\n🏁 [TEST] Maximum retry exhaustion test passed! Failed task was properly abandoned.`);
   });
 
   it("creates correct branch names and artifacts for complex task descriptions", { timeout: 10000 }, async () => {
@@ -932,7 +1075,7 @@ export default {
         console.log(`   Expected hash: ${expectedHash}`);
         console.log(`   Expected branch: ${expectedBranch}`);
         console.log(`   Expected artifact: artifact-${expectedHash}.txt`);
-        console.log(`   Verification result: ${verification.branchMatch && verification.artifactExists ? '✅' : '❌'}`);
+        console.log(`   Verification result: ${verification.branchMatch ? '✅' : '❌'}`);
         
         if (taskCompletionIndex > 0) {
           await debug.verifyBranchChain();

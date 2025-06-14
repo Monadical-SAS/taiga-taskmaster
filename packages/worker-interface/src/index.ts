@@ -14,7 +14,7 @@ import {
 } from 'effect';
 import { Command } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
-import { NonEmptyString, nonEmptyStringFromNumber } from '@taiga-task-master/common';
+import { cyrb53, NonEmptyString, nonEmptyStringFromNumber } from '@taiga-task-master/common';
 import { none } from 'effect/Option';
 
 // Helper function to convert Command to string for error reporting
@@ -374,21 +374,3 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
 };
 /* eslint-enable functional/no-loop-statements, functional/no-let, functional/no-expression-statements */
 
-// utils
-
-/* eslint-disable functional/no-let, functional/no-loop-statements, functional/no-expression-statements */
-const cyrb53 = (str: string, seed = 0) => {
-  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
-  for(let i = 0, ch; i < str.length; i++) {
-    ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-  }
-  h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
-  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-
-  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
-};
-/* eslint-enable functional/no-let, functional/no-loop-statements, functional/no-expression-statements */
