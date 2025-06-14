@@ -137,6 +137,18 @@ pnpm type-check # Verify TypeScript
 
 ## Testing
 
+### Unit Tests
+
+```bash
+pnpm test                                                    # Run all unit tests
+```
+
+### Integration Tests
+
+```bash
+pnpm --filter @taiga-task-master/worker-interface test:integration  # Worker interface git integration tests
+```
+
 ### Manual Testing
 
 Each package includes its own testing documentation:

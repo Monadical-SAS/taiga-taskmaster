@@ -16,16 +16,21 @@
     "dev": "tsc --watch",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:integration:watch": "vitest --config vitest.integration.config.ts",
+    "test:all": "vitest run && pnpm test:integration"
   },
   "dependencies": {
-    "@taiga-task-master/common": "workspace:*",
     "@effect/platform": "^0.84.9",
     "@effect/platform-node": "^0.85.14",
+    "@taiga-task-master/common": "workspace:*",
     "effect": "^3.16.5"
   },
   "devDependencies": {
     "@effect/vitest": "^0.23.5",
+    "@types/node": "^20.0.0",
+    "simple-git": "^3.28.0",
     "typescript": "^5.8.3",
     "vitest": "^2.0.0"
   }
