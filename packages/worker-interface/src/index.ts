@@ -17,13 +17,6 @@ import { NodeContext } from "@effect/platform-node";
 import { cyrb53, NonEmptyString, nonEmptyStringFromNumber } from '@taiga-task-master/common';
 import { none } from 'effect/Option';
 
-// Helper function to convert Command to string for error reporting
-const commandToString = (command: Command.Command): string => {
-  // Since Command.toString might not be available, we'll use a simple representation
-  return command.toString();
-};
-
-// Serialize Command to a consistent string key for testing scenarios
 const serializeCommand = (command: Command.Command): string => {
   return command.toString();
 };
@@ -31,13 +24,13 @@ const serializeCommand = (command: Command.Command): string => {
 // Error types for proper type safety
 // eslint-disable-next-line functional/no-classes, functional/no-class-inheritance
 export class CommandExecutionError extends Data.TaggedError("CommandExecutionError")<{
-  readonly command: string;
+  readonly command: Command.Command;
   readonly stderr?: string;
 }> {}
 
 // eslint-disable-next-line functional/no-classes, functional/no-class-inheritance
 export class CommandTimeoutError extends Data.TaggedError("CommandTimeoutError")<{
-  readonly command: string;
+  readonly command: Command.Command;
   readonly timeoutMs: number;
 }> {}
 
@@ -109,30 +102,38 @@ export const executeCommandWithTimeout = (
     Effect.timeout(Duration.millis(timeoutMs)),
     Effect.catchTag("TimeoutException", () =>
       Effect.fail(new CommandTimeoutError({
-        command: commandToString(command),
+        command,
         timeoutMs
       }))
     )
   );
 
-export const executeCommand = (command: Command.Command): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> =>
+export const streamCommand = (
+  command: Command.Command
+): Stream.Stream<WorkerOutputLine, WorkerError, CommandExecutor> =>
   pipe(
     CommandExecutor,
-    Effect.flatMap((executor) =>
+    Effect.map((executor) =>
       pipe(
         executor.streamLines(command),
-        Stream.mapEffect((line) => 
+        Stream.mapEffect((line) =>
           Effect.map(Clock.currentTimeMillis, (timestamp) => ({
             timestamp,
             line,
           }))
-        ),
-        Stream.runCollect,
-        Effect.map((output) => ({
-          output: EffectArray.fromIterable(output),
-        }))
+        )
       )
-    )
+    ),
+    Stream.unwrap
+  );
+
+export const executeCommand = (command: Command.Command): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> =>
+  pipe(
+    streamCommand(command),
+    Stream.runCollect,
+    Effect.map((output) => ({
+      output: EffectArray.fromIterable(output),
+    }))
   );
 
 
@@ -151,7 +152,7 @@ export const LiveCommandExecutor = Layer.succeed(
         Stream.provideLayer(NodeContext.layer),
         Stream.mapError((error) => 
           new CommandExecutionError({
-            command: commandToString(command),
+            command,
             stderr: String(error)
           })
         )
@@ -173,7 +174,7 @@ export const TestCommandExecutor = (
         if (scenario.error) {
           return Stream.fail(
             new CommandExecutionError({
-              command: commandToString(command),
+              command,
               stderr: scenario.error
             })
           );
@@ -203,6 +204,16 @@ export const runCommandWithLiveExecutorAndTimeout = (
   timeoutMs: number = DEFAULT_COMMAND_TIMEOUT_MS
 ): Promise<WorkerResult> =>
   runWithLiveExecutor(executeCommandWithTimeout(command, timeoutMs));
+
+export const streamCommandWithLiveExecutor = (command: Command.Command): Promise<Stream.Stream<WorkerOutputLine, WorkerError, never>> =>
+  runTaskAsPromise(
+    pipe(
+      streamCommand(command),
+      Stream.provideLayer(LiveCommandExecutor),
+      Effect.succeed
+    ),
+    Layer.empty
+  );
 
 
 export const OpenRouterApiKey = Config.string("OPENROUTER_API_KEY").pipe(
@@ -281,7 +292,7 @@ export const GooseCommandExecutor = (config: Partial<GooseConfig> = {}) =>
               Stream.provideLayer(NodeContext.layer),
               Stream.mapError((error) => 
                 new CommandExecutionError({
-                  command: commandToString(command),
+                  command,
                   stderr: String(error)
                 })
               )
@@ -306,7 +317,12 @@ export type LooperDeps = {
   }, options?: { readonly signal?: AbortSignal } | undefined) => Promise<WorkerResult>,
   // mutable, will mark task "pulled" outside.
   // invariant: when a task is "pulled" again but previous isn't returned back/acknowledged, should be an error.
-  pullTask: (options?: { readonly signal?: AbortSignal } | undefined) => Promise<NonEmptyString>,
+  pullTask: (options?: { readonly signal?: AbortSignal } | undefined) => Promise<{
+    type: 'task',
+    description: NonEmptyString
+  } | {
+    type: 'aborted'
+  }>,
   // invariant: only a current pulled task can be acknowledged.
   // ok "none" would put task back, ok "some" would remove the task and write an artifact
   ackTask: (ok: Option.Option<{
@@ -342,7 +358,11 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
         if (previousBranch) await deps.git.cleanup(previousBranch);
       }
       try {
-        const task = await deps.pullTask(options);
+        const taskR = await deps.pullTask(options);
+        if (taskR.type === 'aborted') {
+          break;
+        }
+        const task = taskR.description;
         if (!await deps.git.isClean()) {
           deps.log.error("FATAL: git repo isn't clean, aborting");
           break;
@@ -366,7 +386,11 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
           await deps.ackTask(none(), options);
         } else {
           deps.log.error(`unidentified condition, task was in the middle of acknowledgement when error happened. trying to unacknowledge`);
-          await deps.ackTask(none(), options);
+          try {
+            await deps.ackTask(none(), options);
+          } catch (error) {
+            deps.log.error(`unacknowledgement failed, ignoring`);
+          }
         }
         await deps.sleep(1000);
       }

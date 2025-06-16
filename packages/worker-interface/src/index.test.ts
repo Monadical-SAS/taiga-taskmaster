@@ -1,10 +1,11 @@
 // @vibe-generated: conforms to worker-interface
-import { describe, it, expect } from "vitest";
-import { Effect, Fiber, TestClock, TestContext, Layer, Option } from 'effect';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { Effect, Fiber, TestClock, TestContext, Layer, Option, Stream, pipe } from 'effect';
 import { Command } from "@effect/platform";
 import { nonEmptyStringFromNumber, castNonEmptyString } from '@taiga-task-master/common';
 import {
   executeCommand,
+  streamCommand,
   runTaskAsPromise,
   TestCommandExecutor,
   runCommandWithLiveExecutor,
@@ -75,6 +76,20 @@ const validateCommandScenario = (command: Command.Command, scenarios: Record<str
   const commandKey = command.toString();
   return commandKey in scenarios || 'default' in scenarios;
 };
+
+const waitPullTaskAbortion = async (options?: {
+  readonly signal?: AbortSignal
+}) => {
+  while (true) {
+    if (options?.signal?.aborted === true) {
+      return {
+        type: 'aborted' as const
+      }
+    }
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  throw new Error("panic! Should not reach this point");
+}
 
 describe("Test Infrastructure Validation", () => {
   it("should validate createTestScenario helper function", () => {
@@ -221,6 +236,60 @@ describe("Worker Interface - Mocked CommandExecutor", () => {
     expect(result.output).toHaveLength(1);
     expect(result.output[0]?.line).toBe("default mock output");
   });
+});
+
+describe("Worker Interface - Streaming", () => {
+  it("should stream command output line by line", async () => {
+    const command = Command.make("echo", "Hello");
+    const testLayer = TestCommandExecutor({
+      [command.toString()]: {
+        output: ["Hello", "World", "Stream"]
+      },
+      'default': {
+        output: ["default output"]
+      }
+    });
+
+    const result = await runTaskAsPromise(
+      pipe(
+        streamCommand(command),
+        Stream.runCollect,
+        Effect.map(chunks => Array.from(chunks))
+      ),
+      testLayer
+    );
+
+    expect(result).toHaveLength(3);
+    expect(result[0]?.line).toBe("Hello");
+    expect(result[1]?.line).toBe("World");
+    expect(result[2]?.line).toBe("Stream");
+    result.forEach(chunk => {
+      expect(chunk.timestamp).toBeTypeOf("number");
+    });
+  }, 1000);
+
+  it("should compose streaming with collecting", async () => {
+    const command = Command.make("echo", "test");
+    const testLayer = TestCommandExecutor({
+      [command.toString()]: {
+        output: ["line1", "line2"]
+      }
+    });
+
+    const [streamResult, executeResult] = await Promise.all([
+      runTaskAsPromise(
+        pipe(
+          streamCommand(command),
+          Stream.runCollect,
+          Effect.map(chunks => Array.from(chunks))
+        ),
+        testLayer
+      ),
+      runTaskAsPromise(executeCommand(command), testLayer)
+    ]);
+
+    expect(streamResult.map(r => r.line)).toEqual(executeResult.output.map(r => r.line));
+  }, 1000);
 });
 
 describe("Worker Interface - Live CommandExecutor", () => {
@@ -963,7 +1032,12 @@ describe("Goose Integration - Environment Variable Injection", () => {
 describe("Loop Function Tests", () => {
   const createMockDeps = (overrides: Partial<LooperDeps> = {}): LooperDeps => ({
     runWorker: async (task) => ({ output: [{ line: `Processed: ${task.description}`, timestamp: Date.now() }] }),
-    pullTask: async () => castNonEmptyString("default task"),
+    pullTask: async () => {
+      return {
+        type: 'task',
+        description: castNonEmptyString('default task')
+      };
+    },
     ackTask: async () => {},
     git: {
       isClean: async () => true,
@@ -987,11 +1061,14 @@ describe("Loop Function Tests", () => {
           mockResults.push(`Processed: ${task.description}`);
           return { output: [{ line: `Processed: ${task.description}`, timestamp: Date.now() }] };
         },
-        pullTask: async () => {
-          if (mockResults.length === 0) return castNonEmptyString("make todo mvp");
-          // Simulate no more tasks by hanging
-          return new Promise(() => {});
+        pullTask: async (options) => {
+          if (mockResults.length === 0) return {
+            type: 'task',
+            description: castNonEmptyString("make todo mvp")
+          };
+          return waitPullTaskAbortion(options);
         },
+        sleep: async (_ms) => new Promise(resolve => setTimeout(resolve, 0)),
       });
 
       const controller = new AbortController();
@@ -1013,11 +1090,14 @@ describe("Loop Function Tests", () => {
           mockResults.push(`Processed: ${task.description}`);
           return { output: [{ line: `Processed: ${task.description}`, timestamp: Date.now() }] };
         },
-        pullTask: async () => {
+        pullTask: async (options) => {
           taskCountRef.value++;
-          if (taskCountRef.value <= 3) return castNonEmptyString(`task ${taskCountRef.value}`);
+          if (taskCountRef.value <= 3) return {
+            type: 'task',
+            description: castNonEmptyString(`task ${taskCountRef.value}`)
+          };
           // Stop after 3 tasks
-          return new Promise(() => {});
+          return await waitPullTaskAbortion(options);
         },
       });
 
@@ -1104,9 +1184,12 @@ describe("Loop Function Tests", () => {
           },
           commitAndPush: async () => { gitOperations.push("commitAndPush"); },
         },
-        pullTask: async () => {
-          if (gitOperations.length === 0) return castNonEmptyString("consistent task name");
-          return new Promise(() => {});
+        pullTask: async (options) => {
+          if (gitOperations.length === 0) return {
+            type: 'task',
+            description: castNonEmptyString("consistent task name")
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
@@ -1144,16 +1227,24 @@ describe("Loop Function Tests", () => {
           });
         },
         log: {
-          info: () => {},
-          error: (msg, ...args) => logMessages.push(`${msg} ${args.join(" ")}`),
+          info: (msg, ...args) => {
+            console.log(msg, ...args);
+          },
+          error: (msg, ...args) => {
+            console.error(msg, ...args);
+            logMessages.push(`${msg} ${args.join(" ")}`)
+          },
         },
         sleep: async (ms) => {
           sleepCalls.push(ms);
           return new Promise(resolve => setTimeout(resolve, 10));
         },
-        pullTask: async () => {
-          if (attemptCountRef.value <= 2) return castNonEmptyString("retry task");
-          return new Promise(() => {});
+        pullTask: async (options) => {
+          if (attemptCountRef.value < 2) return {
+            type: 'task',
+            description: castNonEmptyString("retry task")
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
@@ -1179,12 +1270,18 @@ describe("Loop Function Tests", () => {
       const attemptCountRef2 = { value: 0 };
 
       const deps = createMockDeps({
-        pullTask: async () => {
+        pullTask: async (options) => {
           attemptCountRef2.value++;
           if (attemptCountRef2.value === 1) {
             throw new Error("Failed to pull task");
           }
-          return castNonEmptyString("after error task");
+          if (attemptCountRef2.value === 2) {
+            return {
+              type: 'task',
+              description: castNonEmptyString("after error task")
+            };
+          }
+          return waitPullTaskAbortion(options);
         },
         log: {
           info: () => {},
@@ -1231,9 +1328,12 @@ describe("Loop Function Tests", () => {
           error: (msg, ...args) => logMessages.push(`${msg} ${args.join(" ")}`),
         },
         sleep: async () => new Promise(resolve => setTimeout(resolve, 10)),
-        pullTask: async () => {
-          if (attemptCountRef3.value <= 2) return castNonEmptyString("git error task");
-          return new Promise(() => {});
+        pullTask: async (options) => {
+          if (attemptCountRef3.value < 2) return {
+            type: 'task',
+            description: castNonEmptyString("git error task")
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
@@ -1274,9 +1374,12 @@ describe("Loop Function Tests", () => {
           error: (msg, ...args) => logMessages.push(`${msg} ${args.join(" ")}`),
         },
         sleep: async () => new Promise(resolve => setTimeout(resolve, 10)),
-        pullTask: async () => {
-          if (ackTaskCalls.length < 2) return castNonEmptyString("ack error task");
-          return new Promise(() => {});
+        pullTask: async (options) => {
+          if (ackTaskCalls.length < 2) return {
+            type: 'task',
+            description: castNonEmptyString("ack error task")
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
@@ -1321,13 +1424,21 @@ describe("Loop Function Tests", () => {
           }
         },
         log: {
-          info: () => {},
-          error: (msg, ...args) => logMessages.push(`${msg} ${args.join(" ")}`),
+          info: (msg, ...args) => {
+            console.info(msg, ...args);
+          },
+          error: (msg, ...args) => {
+            console.log(msg, ...args);
+            logMessages.push(`${msg} ${args.join(" ")}`)
+          },
         },
         sleep: async () => new Promise(resolve => setTimeout(resolve, 10)),
-        pullTask: async () => {
-          if (callCountRef.value < 3) return castNonEmptyString("acknowledgment test task");
-          return new Promise(() => {});
+        pullTask: async (options) => {
+          if (callCountRef.value < 3) return {
+            type: 'task',
+            description: castNonEmptyString("acknowledgment test task")
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
@@ -1357,9 +1468,15 @@ describe("Loop Function Tests", () => {
     it("should stop gracefully when abort signal is triggered", async () => {
       const taskCount = { value: 0 };
       const deps = createMockDeps({
-        pullTask: async () => {
+        pullTask: async (options) => {
           taskCount.value++;
-          return castNonEmptyString(`task ${taskCount.value}`);
+          if (taskCount.value > 3) {
+            return waitPullTaskAbortion(options);
+          }
+          return {
+            type: 'task',
+            description: castNonEmptyString(`task ${taskCount.value}`)
+          };
         },
       });
 
@@ -1391,9 +1508,12 @@ describe("Loop Function Tests", () => {
           }
           return { output: [{ line: `Processed: ${task.description}`, timestamp: Date.now() }] };
         },
-        pullTask: async () => {
-          if (processedTasks.length === 0) return castNonEmptyString("long running task");
-          return castNonEmptyString("next task");
+        pullTask: async (options) => {
+          if (processedTasks.length === 0) return {
+            type: 'task',
+            description: castNonEmptyString("long running task")
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
@@ -1424,9 +1544,12 @@ describe("Loop Function Tests", () => {
           info: (message, ...args) => infoLogs.push({ message, args }),
           error: (message, ...args) => errorLogs.push({ message, args }),
         },
-        pullTask: async () => {
-          if (infoLogs.length === 0) return castNonEmptyString("logging test task");
-          return new Promise(() => {});
+        pullTask: async (options) => {
+          if (infoLogs.length === 0) return {
+            type: 'task',
+            description: castNonEmptyString("logging test task")
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
@@ -1454,9 +1577,12 @@ describe("Loop Function Tests", () => {
           // Use shorter sleep for testing
           return new Promise(resolve => setTimeout(resolve, 10));
         },
-        pullTask: async () => {
-          if (sleepCalls.length === 0) return castNonEmptyString("sleep test task");
-          return new Promise(() => {});
+        pullTask: async (options) => {
+          if (sleepCalls.length === 0) return {
+            type: 'task',
+            description: castNonEmptyString("sleep test task")
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
@@ -1487,9 +1613,12 @@ describe("Loop Function Tests", () => {
           },
           commitAndPush: async () => {},
         },
-        pullTask: async () => {
-          if (branchNames.length < 2) return castNonEmptyString("same task description");
-          return new Promise(() => {});
+        pullTask: async (options) => {
+          if (branchNames.length < 2) return {
+            type: 'task',
+            description: castNonEmptyString("same task description")
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
@@ -1520,10 +1649,13 @@ describe("Loop Function Tests", () => {
           },
           commitAndPush: async () => {},
         },
-        pullTask: async () => {
+        pullTask: async (options) => {
           taskNumberRef.value++;
-          if (taskNumberRef.value <= 2) return castNonEmptyString(`different task ${taskNumberRef.value}`);
-          return new Promise(() => {});
+          if (taskNumberRef.value <= 2) return {
+            type: 'task',
+            description: castNonEmptyString(`different task ${taskNumberRef.value}`)
+          };
+          return waitPullTaskAbortion(options);
         },
       });
 
