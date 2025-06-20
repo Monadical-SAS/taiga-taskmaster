@@ -15,7 +15,14 @@ import {
 import { Command } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
 import { cyrb53, NonEmptyString, nonEmptyStringFromNumber } from '@taiga-task-master/common';
-import { none } from 'effect/Option';
+import { isNone, none } from 'effect/Option';
+import { TasksMachine } from "@taiga-task-master/core";
+const endTaskExecution = TasksMachine.endTaskExecution;
+type Tasks = TasksMachine.Tasks;
+type Task = TasksMachine.Task;
+type NextTaskF = TasksMachine.NextTaskF;
+const startTaskExecution = TasksMachine.startTaskExecution;
+const appendTasks = TasksMachine.appendTasks;
 
 const serializeCommand = (command: Command.Command): string => {
   return command.toString();
@@ -343,7 +350,7 @@ export type LooperDeps = {
     info: (message: string, ...args: unknown[]) => void,
     error: (message: string, ...args: unknown[]) => void,
   },
-  sleep: (ms: number) => Promise<void>,
+  sleep: (ms: number, options?: { readonly signal?: AbortSignal } | undefined) => Promise<void>,
 };
 
 
@@ -392,9 +399,62 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
             deps.log.error(`unacknowledgement failed, ignoring`);
           }
         }
-        await deps.sleep(1000);
+        await deps.sleep(1000, options);
       }
     }
 };
 /* eslint-enable functional/no-loop-statements, functional/no-let, functional/no-expression-statements */
 
+// connect with global meta state - info about artifacts, queue. never ends
+export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
+  next: NextTaskF,/*from taskmaster source code implementation*/
+  description: (t: Task) => NonEmptyString
+}) => (state0: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>): {
+  /*task machine methods*/
+} => {
+  // eslint-disable-next-line functional/no-let
+  let state = state0;
+  // eslint-disable-next-line functional/no-let
+  let stateSavePromise: Promise<void> = Promise.resolve();
+  const pullTask: LooperDeps['pullTask'] = async (options) => {
+    // eslint-disable-next-line functional/no-loop-statements
+    while (true) {
+      if (options?.signal?.aborted) return { type: 'aborted' };
+      const next = deps.next(state.tasks);
+      if (next._tag === 'None') {
+        await deps.sleep(1000, options);
+        continue;
+      }
+      const [taskId, task] = next.value;
+      await stateSavePromise;
+      // not exactly THE point of execution started but good enough
+      state = startTaskExecution(taskId)(state);
+      stateSavePromise = save(state);
+      return {
+        type: 'task',
+        description: deps.description(task)
+      };
+    }
+  };
+  const ackTask: LooperDeps['ackTask'] = async (ok, options) => {
+    await stateSavePromise;
+    state = endTaskExecution(state);
+    stateSavePromise = save(state);
+  };
+  const abortController = new AbortController();
+  loop({
+    ...deps,
+    pullTask,
+    ackTask
+  })({
+    signal: abortController.signal
+  }).then(() => {
+    console.log('stateful loop ended');
+  });
+  return {
+    stop() {
+      abortController.abort();
+    },
+    appendTasks: (tasks: Tasks) => appendTasks(tasks)(state),
+  };
+};

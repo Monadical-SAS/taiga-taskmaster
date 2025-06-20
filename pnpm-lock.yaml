@@ -448,6 +448,9 @@ importers:
       '@taiga-task-master/common':
         specifier: workspace:*
         version: link:../common
+      '@taiga-task-master/core':
+        specifier: workspace:*
+        version: link:../core
       effect:
         specifier: ^3.16.5
         version: 3.16.5

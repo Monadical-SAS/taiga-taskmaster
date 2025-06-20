@@ -11,9 +11,9 @@ import {
   SINGLETON_PROJECT_ID,
   type TaskId,
 } from "@taiga-task-master/common";
-import { HashSet, Option, pipe } from "effect";
+import { HashSet, Option, pipe, Tuple } from 'effect';
 import { HashMap, Array } from "effect";
-import type { NonEmptyArray } from "effect/Array";
+import { isEmptyArray, isNonEmptyArray, type NonEmptyArray, tailNonEmpty } from 'effect/Array';
 import { isNone, isSome } from "effect/Option";
 import { Tuple as TupleType } from 'effect';
 
@@ -47,6 +47,7 @@ export const generateTasks =
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace TasksMachine {
   export type Task = unknown;
+  export type NextTaskF = (tx: Tasks) => Option.Option<[TaskId, Task]>;
   export type Tasks = HashMap.HashMap<TaskId, Task>;
   // artifact id could be generated branch name
   export type ArtifactId = NonEmptyString;
@@ -70,8 +71,9 @@ export namespace TasksMachine {
     // the "Tasks" is a black box. we do have a function "get next task" from them, as well as "mark completed" etc but for the concern of the machine it's a black box.
     tasks: Tasks;
     timestamp: NonNegativeInteger;
-    artifacts: Array<Artifact>;
     taskExecutionState: TaskExecution.TaskExecutionState;
+    outputTasks: [TaskId, Task][];
+    artifacts: Array<Artifact>;
   };
 
   // export const solvePrd
@@ -126,7 +128,7 @@ export namespace TasksMachine {
     if (isNone(task)) {
       throw new Error(`panic! cannot start task execution: no such task`);
     }
-    if (s.taskExecutionState.agentExecutionState.step !== "stopped") {
+    if (s.taskExecutionState.step !== "stopped") {
       throw new Error(
         `panic! cannot start task execution: task execution already in progress`
       );
@@ -136,8 +138,22 @@ export namespace TasksMachine {
       tasks: HashMap.remove(s.tasks, tid),
       taskExecutionState: {
         ...s.taskExecutionState,
-        task: task.value,
+        step: 'running' as const,
+        task: Tuple.make(tid, task.value),
       },
+    }
+  }
+
+  export const endTaskExecution = (s: State): State => {
+    const executionState = s.taskExecutionState;
+    if (executionState.step !== 'running') throw new Error(`panic! cannot end task execution: task execution not in progress`)
+    return {
+      ...s,
+      taskExecutionState: {
+        ...executionState,
+        step: 'stopped' as const,
+      },
+      outputTasks: [...s.outputTasks, executionState.task]
     }
   }
 
@@ -171,59 +187,30 @@ export namespace TasksMachine {
     };
 
   export const addArtifact =
-    (artifactId: ArtifactId, taskIds: Array<TaskId>) =>
+    (artifactId: ArtifactId) =>
     (s: State): State => {
-      // Validate that all specified tasks exist in current tasks
-      const taskIdsSet = HashSet.fromIterable(taskIds);
-      const availableTaskIds = HashMap.keySet(s.tasks);
-      const missingTasks = pipe(
-        taskIdsSet,
-        HashSet.difference(availableTaskIds)
-      );
-
-      if (HashSet.size(missingTasks) > 0) {
+      if (!isNonEmptyArray(s.outputTasks)) {
         throw new Error(
-          `panic! Cannot create artifact ${artifactId}: tasks not found in current tasks: ${pipe(
-            missingTasks,
-            HashSet.toValues,
-            (a) => a.join(", ")
-          )}`
+          `panic! cannot create artifact ${artifactId}: no tasks to add`
         );
       }
-
-      // Validate that we have at least one task (artifact invariant)
-      if (taskIds.length === 0) {
-        throw new Error(
-          `panic! Cannot create artifact ${artifactId}: artifact must contain at least one task`
-        );
+      const [taskId, task] = s.outputTasks[0];
+      if (HashMap.has(s.tasks, taskId)) {
+        throw new Error(`panic! invalid state: ${taskId} is in non-started tasks`)
       }
 
-      // Check for duplicate artifact ID
       if (s.artifacts.some((artifact) => artifact.id === artifactId)) {
         throw new Error(`panic! Artifact with id ${artifactId} already exists`);
       }
 
-      // Extract the specified tasks from current tasks
-      const artifactTasks = pipe(
-        s.tasks,
-        HashMap.filter((_, taskId) => taskIds.includes(taskId))
-      );
-
-      // Remove the specified tasks from current tasks
-      const remainingTasks = pipe(
-        s.tasks,
-        HashMap.filter((_, taskId) => !taskIds.includes(taskId))
-      );
-
       const newArtifact: Artifact = {
         id: artifactId,
-        tasks: artifactTasks,
+        tasks: HashMap.make([taskId, task]),
       };
 
-      // Return new state with artifact added and tasks moved
       return {
         ...s,
-        tasks: remainingTasks,
+        outputTasks: tailNonEmpty(s.outputTasks),
         artifacts: [...s.artifacts, newArtifact],
       };
     };
@@ -313,12 +300,7 @@ namespace TaskExecution {
   // assumption is: it goes over a Session. session is named per task and cleared before and after task execution is running
   // goose both starts and resumes a session with "goose session --name NAME".
   // to remove a session, `goose session remove -r "project-.*"` (with regex). we unlikely have good ID at this point (will require "session list" command parsing)
-  export type TaskExecutionState = {
-    task: TasksMachine.Task,
-    agentExecutionState: AgentExecution.AgentExecutionState & {step: "running"}
-  } | {
-    agentExecutionState: AgentExecution.AgentExecutionState & {step: "stopped"}
-  };
+  export type TaskExecutionState = AgentExecution.AgentExecutionState & ({step: "running", task: [TaskId, TasksMachine.Task]} |  {step: "stopped"});
   // task execution will be responsible for retries for errors, summarization retries, "business retries" when task wasn't successfully completed
 }
 
@@ -330,10 +312,6 @@ namespace AgentExecution {
   export type AgentExecutionState =
     | {
         step: "running"; // when cli is actively running a command
-        history: string; // chat history, usually it's represented as Message[] but we don't see / can't care about this level of granularity
-        process: {
-          pid: number;
-        }; // process reference, TBD
       }
     | {
         step: "stopped"; // for whatever reason. can be when the cli finished and returned success, or returned an error (e.g. token limit, billing error)

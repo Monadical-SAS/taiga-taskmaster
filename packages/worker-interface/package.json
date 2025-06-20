@@ -25,6 +25,7 @@
     "@effect/platform": "^0.84.9",
     "@effect/platform-node": "^0.85.14",
     "@taiga-task-master/common": "workspace:*",
+    "@taiga-task-master/core": "workspace:*",
     "effect": "^3.16.5"
   },
   "devDependencies": {

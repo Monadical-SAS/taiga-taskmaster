@@ -16,9 +16,27 @@ Worker interface definitions and schemas for command execution and Goose AI inte
 
 ## Usage
 
+### Unit Tests
+
 ```bash
-# Run tests with environment variables
-npx dotenv -e ./.env -- pnpm --filter worker-interface test
+# Run unit tests
+pnpm test
+```
+
+### Integration Tests
+
+```bash
+# Run all integration tests (may be flaky due to external dependencies)
+pnpm test:integration
+
+# Run git integration tests only
+pnpm test:integration tests/integration/loop-real-git.test.ts
+
+# Run goose integration tests (requires API keys, can be flaky due to AI service)
+dotenv -e ../../.env -- pnpm test:integration tests/integration/loop-real-goose.test.ts
+
+# Run goose tests and keep test directories for inspection (useful for debugging flaky runs)
+KEEP_TEST_DIRS=true dotenv -e ../../.env -- pnpm test:integration tests/integration/loop-real-goose.test.ts
 ```
 
 ## Environment Variables

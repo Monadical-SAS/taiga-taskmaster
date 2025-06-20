@@ -490,7 +490,10 @@ export default {
         const task = taskQueueRef.value.shift();
         console.log(`📋 [QUEUE] Pulled task: "${task}" (${taskQueueRef.value.length} remaining)`);
         currentTaskRef.value = task!;
-        return castNonEmptyString(task!);
+        return {
+          type: 'task' as const,
+          description: castNonEmptyString(task!)
+        };
       },
 
       ackTask: async (result) => {

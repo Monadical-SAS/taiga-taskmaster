@@ -149,6 +149,20 @@ pnpm test                                                    # Run all unit test
 pnpm --filter @taiga-task-master/worker-interface test:integration  # Worker interface git integration tests
 ```
 
+### Goose Integration Tests
+
+To run goose integration tests with real AI commands:
+
+```bash
+dotenv -e .env -- pnpm --filter @taiga-task-master/worker-interface test:integration tests/integration/loop-real-goose.test.ts
+```
+
+To keep test directories for inspection (useful for debugging):
+
+```bash
+KEEP_TEST_DIRS=true dotenv -e .env -- pnpm --filter @taiga-task-master/worker-interface test:integration tests/integration/loop-real-goose.test.ts
+```
+
 ### Manual Testing
 
 Each package includes its own testing documentation:
