@@ -5,11 +5,24 @@ import type {
   SimulationState,
   SimulationCommand,
   Tasks,
+  MockTask,
 } from "./types.js";
 import { HashMap, Array } from "effect";
-import { castNonNegativeInteger } from "@taiga-task-master/common";
+import { castNonNegativeInteger, castNonEmptyString } from "@taiga-task-master/common";
 import { generateMockArtifact, mockAgentProgressTexts } from "./mock-data.js";
 import { TasksMachine } from "@taiga-task-master/core";
+
+// Type conversion functions to safely convert between core and simulation types
+const toMockTask = (coreTask: TasksMachine.Task): MockTask => {
+  // Since TasksMachine.Task is `unknown`, we need to safely extract/cast the data
+  // In a real implementation, this would use proper schema validation
+  const task = coreTask as unknown as MockTask;
+  return task;
+};
+
+const fromMockTask = (mockTask: MockTask): TasksMachine.Task => {
+  return mockTask as unknown as TasksMachine.Task;
+};
 
 // Find next available task (first task in pending queue)
 export const findNextTask = (tasks: Tasks): TaskId | null => {
@@ -24,47 +37,56 @@ export const findNextTask = (tasks: Tasks): TaskId | null => {
 
 // Convert SimulationState to TasksMachine.State for core function compatibility
 const toTaskMachineState = (state: SimulationState): TasksMachine.State => ({
-  tasks: state.tasks as TasksMachine.Tasks, // Cast to core Tasks type (unknown vs MockTask)
+  tasks: HashMap.map(state.tasks, fromMockTask),
   timestamp: state.timestamp,
   artifacts: state.artifacts.map(artifact => ({
     id: artifact.id,
-    tasks: artifact.tasks as TasksMachine.Tasks,
+    tasks: HashMap.map(artifact.tasks, fromMockTask),
   })),
+  outputTasks: state.outputTasks.map(([taskId, task]) => [taskId, fromMockTask(task)]),
   taskExecutionState: state.taskExecutionState.agentExecutionState.step === "running" 
-    ? {
-        task: {} as TasksMachine.Task, // This will be properly set by startTaskExecution 
-        agentExecutionState: {
-          step: "running" as const,
-          history: state.taskExecutionState.agentExecutionState.history,
-          process: state.taskExecutionState.agentExecutionState.process,
+    ? (() => {
+        if (!state.taskExecutionState.executingTask) {
+          throw new Error("Invalid state: agent is running but no executingTask found");
         }
-      }
+        return {
+          step: "running" as const,
+          task: [
+            state.taskExecutionState.agentExecutionState.currentTaskId, 
+            fromMockTask(state.taskExecutionState.executingTask)
+          ],
+        };
+      })()
     : { 
-        agentExecutionState: { step: "stopped" as const }
+        step: "stopped" as const
       }
 });
 
 // Convert TasksMachine.State back to SimulationState
 const fromTaskMachineState = (tmState: TasksMachine.State): SimulationState => ({
-  tasks: tmState.tasks as Tasks, // Cast back to simulation Tasks type
+  tasks: HashMap.map(tmState.tasks, toMockTask),
   timestamp: tmState.timestamp,
   artifacts: tmState.artifacts.map(artifact => ({
     id: artifact.id,
-    tasks: artifact.tasks as Tasks,
+    tasks: HashMap.map(artifact.tasks, toMockTask),
     branchName: `branch-${artifact.id}`, // Mock branch name
     prUrl: `https://github.com/mock/repo/pull/${artifact.id}`, // Mock PR URL
     deploymentUrl: `https://deploy-${artifact.id}.example.com`, // Mock deployment URL
   })),
+  outputTasks: tmState.outputTasks.map(([taskId, task]) => [taskId, toMockTask(task)]),
   taskExecutionState: {
-    agentExecutionState: "task" in tmState.taskExecutionState
+    agentExecutionState: tmState.taskExecutionState.step === "running"
       ? {
           step: "running" as const,
-          history: tmState.taskExecutionState.agentExecutionState.history,
-          process: tmState.taskExecutionState.agentExecutionState.process,
-          currentTaskId: 1 as TaskId, // Mock task ID since task is unknown type
+          history: `Running task ${tmState.taskExecutionState.task[0]}`, // Use task ID from core
+          process: { pid: Math.floor(Math.random() * 10000) }, // Mock process
+          currentTaskId: tmState.taskExecutionState.task[0], // Get task ID from core
           progressText: "Working...", // Mock progress text
         }
-      : { step: "stopped" as const }
+      : { step: "stopped" as const },
+    executingTask: tmState.taskExecutionState.step === "running" 
+      ? toMockTask(tmState.taskExecutionState.task[1]) // Store the executing task from core
+      : undefined
   },
 });
 
@@ -154,26 +176,18 @@ export const executeCommand = (
         throw new Error("Cannot complete task: no task currently running");
       }
 
-      if (!state.taskExecutionState.executingTask) {
-        throw new Error("No task data stored for currently executing task");
+      try {
+        const tmState = toTaskMachineState(state);
+        const updatedTmState = TasksMachine.endTaskExecution(tmState);
+        const updatedState = fromTaskMachineState(updatedTmState);
+        
+        return {
+          ...updatedState,
+          timestamp: newTimestamp,
+        };
+      } catch (error) {
+        throw new Error(`Failed to complete current task: ${error instanceof Error ? error.message : String(error)}`);
       }
-
-      const executingTask = state.taskExecutionState.executingTask;
-      const currentTaskId = state.taskExecutionState.agentExecutionState.currentTaskId;
-      
-      // Create artifact with the original executing task (preserving its original title and description)
-      const completedTasks = HashMap.make([currentTaskId, executingTask]);
-      const artifact = generateMockArtifact(completedTasks);
-
-      return {
-        ...state,
-        artifacts: [...state.artifacts, artifact],
-        timestamp: newTimestamp,
-        taskExecutionState: {
-          agentExecutionState: { step: "stopped" },
-          // Remove executingTask since task is completed
-        },
-      };
     }
 
     case "commit_artifact": {
@@ -212,7 +226,7 @@ export const executeCommand = (
         
         // The core editTask function works with unknown types, so we preserve the MockTask structure
         // by ensuring it gets stored and retrieved correctly through the HashMap operations
-        const taskAsUnknown: TasksMachine.Task = command.task;
+        const taskAsUnknown = fromMockTask(command.task);
         
         const [updatedTmState, _removedArtifactIds] = TasksMachine.editTask(
           command.taskId,
@@ -233,8 +247,7 @@ export const executeCommand = (
       try {
         const tmState = toTaskMachineState(state);
         const updatedTmState = TasksMachine.addArtifact(
-          command.artifactId,
-          command.taskIds
+          command.artifactId
         )(tmState);
         const updatedState = fromTaskMachineState(updatedTmState);
         

@@ -31,6 +31,9 @@ export const generateTaskId = (): TaskId =>
 export const generateArtifactId = (): ArtifactId =>
   castNonEmptyString(`artifact-${state.artifactIdCounter++}`);
 
+export const createArtifactId = (id: string): ArtifactId =>
+  castNonEmptyString(id);
+
 const randomChoice = <T>(items: T[]): T => {
   const randomIndex = Math.floor(Math.random() * items.length);
   const item = items[randomIndex];
@@ -98,6 +101,7 @@ export const createInitialState = (taskCount: number = 5): SimulationState => {
     tasks: generateMockTasks(taskCount),
     timestamp: castNonNegativeInteger(Date.now()),
     artifacts: [],
+    outputTasks: [],
     taskExecutionState: {
       agentExecutionState: { step: "stopped" },
     },

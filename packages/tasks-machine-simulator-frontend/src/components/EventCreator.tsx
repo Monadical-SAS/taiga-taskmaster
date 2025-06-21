@@ -22,7 +22,6 @@ export function EventCreator({ onExecuteCommand, currentState }: EventCreatorPro
   const [editTaskTitle, setEditTaskTitle] = useState('')
   const [editTaskDescription, setEditTaskDescription] = useState('')
   // Removed editTaskStatus since status is now positional
-  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
   const [newArtifactId, setNewArtifactId] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -91,19 +90,9 @@ export function EventCreator({ onExecuteCommand, currentState }: EventCreatorPro
             alert('Please provide an artifact ID')
             return
           }
-          if (selectedTaskIds.length === 0) {
-            alert('Please select at least one task for the artifact')
-            return
-          }
-          const taskIdNumbers = selectedTaskIds.map(id => parseInt(id, 10))
-          if (taskIdNumbers.some(id => isNaN(id))) {
-            alert('Invalid task IDs selected')
-            return
-          }
           command = { 
             type: 'add_artifact', 
-            artifactId: newArtifactId as any,
-            taskIds: taskIdNumbers as any[]
+            artifactId: newArtifactId as any
           }
           break
         default:
@@ -124,7 +113,6 @@ export function EventCreator({ onExecuteCommand, currentState }: EventCreatorPro
     setEditTaskDescription('')
     // Removed editTaskStatus reset
     setSelectedTaskId('')
-    setSelectedTaskIds([])
     setNewArtifactId('')
   }
 
@@ -145,23 +133,7 @@ export function EventCreator({ onExecuteCommand, currentState }: EventCreatorPro
     return [...currentTasks, ...artifactTasks]
   }
   
-  // Get only current tasks for creating artifacts
-  const getCurrentTasks = () => {
-    return Array.fromIterable(HashMap.toEntries(currentState.tasks))
-      .map(([id, task]) => [String(id), task] as [string, any])
-  }
-  
   const allTasks = getAllTasks()
-  const currentTasks = getCurrentTasks()
-  
-  // Handle task selection for artifacts
-  const handleTaskSelection = (taskId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedTaskIds([...selectedTaskIds, taskId])
-    } else {
-      setSelectedTaskIds(selectedTaskIds.filter(id => id !== taskId))
-    }
-  }
 
   return (
     <div className="event-creator">
@@ -326,37 +298,9 @@ export function EventCreator({ onExecuteCommand, currentState }: EventCreatorPro
                 placeholder="e.g., feature-auth-branch"
               />
             </label>
-            
-            <div>
-              <label>Select Tasks for Artifact (from current tasks only):</label>
-              {currentTasks.length === 0 ? (
-                <p style={{ fontStyle: 'italic', color: '#666' }}>
-                  No current tasks available. Complete some artifact tasks to commit them first.
-                </p>
-              ) : (
-                <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #ccc', padding: '0.5rem' }}>
-                  {currentTasks.map(([taskId, task]) => (
-                    <div key={taskId} style={{ marginBottom: '0.5rem' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedTaskIds.includes(taskId)}
-                          onChange={(e) => handleTaskSelection(taskId, e.target.checked)}
-                        />
-                        <span>
-                          {task.title} (ID: {taskId}) - {task.status}
-                        </span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {selectedTaskIds.length > 0 && (
-                <p style={{ marginTop: '0.5rem', fontSize: '0.9em', color: '#666' }}>
-                  Selected: {selectedTaskIds.length} task(s)
-                </p>
-              )}
-            </div>
+            <p style={{ fontSize: '0.9em', color: '#666', marginTop: '0.5rem' }}>
+              This will create an artifact from the first task in the output queue.
+            </p>
           </div>
         )}
 

@@ -53,6 +53,7 @@ export type SimulationState = {
   timestamp: NonNegativeInteger;
   artifacts: Artifact[];
   taskExecutionState: TaskExecutionState;
+  outputTasks: [TaskId, MockTask][]; // Tasks that have been completed but not yet added to artifacts
 };
 
 // Commands for state transitions
@@ -62,7 +63,7 @@ export type SimulationCommand =
   | { type: "commit_artifact"; artifactId: ArtifactId }
   | { type: "append_tasks"; tasks: Tasks }
   | { type: "edit_task"; taskId: TaskId; task: MockTask }
-  | { type: "add_artifact"; artifactId: ArtifactId; taskIds: TaskId[] }
+  | { type: "add_artifact"; artifactId: ArtifactId }
   | { type: "agent_step"; progressText?: string } // SIMULATION ONLY: Not used in actual TasksMachine core
   | { type: "agent_fail"; errorMessage: string };
 

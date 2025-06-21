@@ -12,6 +12,8 @@ const createTestState = (): TasksMachine.State => ({
     [3 as TaskId, { id: 3, title: "Task 3", status: "pending" }]
   ),
   timestamp: castNonNegativeInteger(Date.now()),
+  taskExecutionState: { step: "stopped" },
+  outputTasks: [],
   artifacts: [
     {
       id: "artifact-1",
@@ -21,9 +23,6 @@ const createTestState = (): TasksMachine.State => ({
       ),
     }
   ],
-  taskExecutionState: {
-    agentExecutionState: { step: "stopped" },
-  },
 });
 
 describe("TasksMachine.editTask", () => {
@@ -162,9 +161,8 @@ describe("TasksMachine.editTask", () => {
         tasks: HashMap.empty(),
         timestamp: castNonNegativeInteger(Date.now()),
         artifacts: [],
-        taskExecutionState: {
-          agentExecutionState: { step: "stopped" },
-        },
+        taskExecutionState: { step: "stopped" },
+        outputTasks: [],
       };
       
       const editedTask = { id: 1, title: "Task", status: "pending" };
@@ -244,34 +242,61 @@ describe("TasksMachine.appendTasks", () => {
 });
 
 describe("TasksMachine.addArtifact", () => {
-  it("should create artifact from specified tasks", () => {
+  it("should create artifact from first output task", () => {
     const state = createTestState();
+    // Add a task to outputTasks and remove it from main tasks (as it would be after task execution)
+    const completedTask = { id: 1, title: "Task 1", status: "pending" };
+    state.outputTasks = [[1 as TaskId, completedTask]];
+    state.tasks = HashMap.remove(state.tasks, 1 as TaskId); // Remove from main tasks
     
-    const newState = TasksMachine.addArtifact("test-artifact", [1 as TaskId, 2 as TaskId])(state);
+    const newState = TasksMachine.addArtifact("test-artifact")(state);
     
     // Should have one more artifact
     expect(newState.artifacts.length).toBe(2);
     
-    // New artifact should contain the specified tasks
+    // New artifact should contain the first output task
     const newArtifact = newState.artifacts.find(a => a.id === "test-artifact");
     expect(newArtifact).toBeDefined();
     if (newArtifact) {
-      expect(HashMap.size(newArtifact.tasks)).toBe(2);
+      expect(HashMap.size(newArtifact.tasks)).toBe(1);
       expect(HashMap.has(newArtifact.tasks, 1 as TaskId)).toBe(true);
-      expect(HashMap.has(newArtifact.tasks, 2 as TaskId)).toBe(true);
     }
     
-    // Tasks should be removed from main tasks
-    expect(HashMap.size(newState.tasks)).toBe(1);
-    expect(HashMap.has(newState.tasks, 3 as TaskId)).toBe(true);
+    // Output task should be removed from outputTasks
+    expect(newState.outputTasks.length).toBe(0);
   });
 
-  it("should throw error for non-existent tasks", () => {
+  it("should throw error when no output tasks exist", () => {
     const state = createTestState();
+    // Ensure outputTasks is empty
+    state.outputTasks = [];
     
     expect(() => {
-      TasksMachine.addArtifact("test-artifact", [999 as TaskId])(state);
-    }).toThrow("panic! Cannot create artifact test-artifact: tasks not found in current tasks");
+      TasksMachine.addArtifact("test-artifact")(state);
+    }).toThrow("panic! cannot create artifact test-artifact: no tasks to add");
+  });
+
+  it("should throw error for duplicate artifact ID", () => {
+    const state = createTestState();
+    // Add a task to outputTasks and remove it from main tasks
+    const completedTask = { id: 1, title: "Task 1", status: "pending" };
+    state.outputTasks = [[1 as TaskId, completedTask]];
+    state.tasks = HashMap.remove(state.tasks, 1 as TaskId);
+    
+    expect(() => {
+      TasksMachine.addArtifact("artifact-1")(state); // artifact-1 already exists
+    }).toThrow("panic! Artifact with id artifact-1 already exists");
+  });
+
+  it("should throw error if task is still in main tasks", () => {
+    const state = createTestState();
+    // Add a task to outputTasks that's still in main tasks (invalid state)
+    state.outputTasks = [[1 as TaskId, { id: 1, title: "Task 1", status: "pending" }]];
+    // Keep task in main tasks to create invalid state
+    
+    expect(() => {
+      TasksMachine.addArtifact("test-artifact")(state);
+    }).toThrow("panic! invalid state: 1 is in non-started tasks");
   });
 });
 
@@ -320,13 +345,13 @@ describe("TasksMachine.startTaskExecution", () => {
     expect(HashMap.size(newState.tasks)).toBe(2); // Started with 3, removed 1
     
     // Task should be in execution state
-    expect(newState.taskExecutionState).toHaveProperty("task");
-    if ("task" in newState.taskExecutionState) {
-      expect(newState.taskExecutionState.task).toEqual({
+    expect(newState.taskExecutionState.step).toBe("running");
+    if (newState.taskExecutionState.step === "running") {
+      expect(newState.taskExecutionState.task).toEqual([1 as TaskId, {
         id: 1,
         title: "Task 1",
         status: "pending"
-      });
+      }]);
     }
     
     // Other tasks should remain unchanged
@@ -360,12 +385,8 @@ describe("TasksMachine.startTaskExecution", () => {
     const state = createTestState();
     // Set execution state to already running
     state.taskExecutionState = {
-      task: { id: 2, title: "Running Task", status: "pending" },
-      agentExecutionState: {
-        step: "running",
-        history: "some history",
-        process: { pid: 1234 }
-      }
+      step: "running",
+      task: [2 as TaskId, { id: 2, title: "Running Task", status: "pending" }]
     };
     
     expect(() => {
@@ -376,15 +397,13 @@ describe("TasksMachine.startTaskExecution", () => {
   it("should work when agent execution state is stopped", () => {
     const state = createTestState();
     // Explicitly ensure agent execution state is stopped
-    state.taskExecutionState = {
-      agentExecutionState: { step: "stopped" }
-    };
+    state.taskExecutionState = { step: "stopped" };
     
     const newState = TasksMachine.startTaskExecution(1 as TaskId)(state);
     
     // Should succeed and move task to execution
     expect(HashMap.has(newState.tasks, 1 as TaskId)).toBe(false);
-    expect("task" in newState.taskExecutionState).toBe(true);
+    expect(newState.taskExecutionState.step).toBe("running");
   });
 
   it("should not start execution of tasks that are in artifacts", () => {
@@ -403,7 +422,66 @@ describe("TasksMachine.startTaskExecution", () => {
     const newState = TasksMachine.startTaskExecution(1 as TaskId)(state);
     
     expect(HashMap.has(newState.tasks, 1 as TaskId)).toBe(false);
-    expect("task" in newState.taskExecutionState).toBe(true);
+    expect(newState.taskExecutionState.step).toBe("running");
     expect(newState.artifacts).toEqual([]);
+  });
+});
+
+describe("TasksMachine.endTaskExecution", () => {
+  it("should move running task to output tasks", () => {
+    const state = createTestState();
+    // Set up a running task
+    const runningTask = { id: 1, title: "Task 1", status: "pending" };
+    state.taskExecutionState = {
+      step: "running",
+      task: [1 as TaskId, runningTask]
+    };
+    state.tasks = HashMap.remove(state.tasks, 1 as TaskId); // Task should not be in main tasks when running
+    
+    const newState = TasksMachine.endTaskExecution(state);
+    
+    // Task execution should be stopped
+    expect(newState.taskExecutionState.step).toBe("stopped");
+    
+    // Task should be in output tasks
+    expect(newState.outputTasks.length).toBe(1);
+    expect(newState.outputTasks[0]).toEqual([1 as TaskId, runningTask]);
+    
+    // Other state should remain unchanged
+    expect(newState.tasks).toEqual(state.tasks);
+    expect(newState.artifacts).toEqual(state.artifacts);
+    expect(newState.timestamp).toBe(state.timestamp);
+  });
+
+  it("should throw error when no task is running", () => {
+    const state = createTestState();
+    // Ensure task execution is stopped
+    state.taskExecutionState = { step: "stopped" };
+    
+    expect(() => {
+      TasksMachine.endTaskExecution(state);
+    }).toThrow("panic! cannot end task execution: task execution not in progress");
+  });
+
+  it("should preserve existing output tasks", () => {
+    const state = createTestState();
+    // Set up existing output tasks
+    const existingTask = { id: 2, title: "Existing Task", status: "pending" };
+    state.outputTasks = [[2 as TaskId, existingTask]];
+    
+    // Set up a running task
+    const runningTask = { id: 1, title: "Task 1", status: "pending" };
+    state.taskExecutionState = {
+      step: "running",
+      task: [1 as TaskId, runningTask]
+    };
+    state.tasks = HashMap.remove(state.tasks, 1 as TaskId);
+    
+    const newState = TasksMachine.endTaskExecution(state);
+    
+    // Should have both existing and new output tasks
+    expect(newState.outputTasks.length).toBe(2);
+    expect(newState.outputTasks[0]).toEqual([2 as TaskId, existingTask]);
+    expect(newState.outputTasks[1]).toEqual([1 as TaskId, runningTask]);
   });
 });

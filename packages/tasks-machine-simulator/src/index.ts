@@ -42,4 +42,6 @@ export {
   createInitialState,
   mockAgentProgressTexts,
   resetCounters,
+  createArtifactId,
+  generateTaskId,
 } from "./mock-data.js";

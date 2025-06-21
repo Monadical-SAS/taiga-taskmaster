@@ -65,12 +65,14 @@ describe("Tasks Machine Simulator", () => {
       const completedSimulator = step(runningSimulator, {
         type: "complete_current_task",
       });
-      const summary = getStateSummary(getCurrentState(completedSimulator));
+      const state = getCurrentState(completedSimulator);
+      const summary = getStateSummary(state);
 
       expect(summary.taskCounts.pending).toBe(2);
       expect(summary.taskCounts["in-progress"]).toBe(0);
-      expect(summary.taskCounts.completed).toBe(0); // Moved to artifact
-      expect(summary.artifactCount).toBe(1);
+      expect(summary.taskCounts.completed).toBe(0);
+      expect(summary.artifactCount).toBe(0); // No artifacts yet, task is in outputTasks
+      expect(state.outputTasks.length).toBe(1); // Task moved to outputTasks
       expect(summary.agentStatus).toBe("stopped");
     });
 
@@ -103,17 +105,22 @@ describe("Tasks Machine Simulator", () => {
 
   describe("Artifact Management", () => {
     it("should commit artifact successfully", () => {
-      // Complete a task to create an artifact
+      // Complete a task to put it in outputTasks
       const runningSimulator = step(simulator, { type: "take_next_task" });
       const completedSimulator = step(runningSimulator, {
         type: "complete_current_task",
       });
 
+      // Create an artifact from outputTasks
+      const artifactSimulator = step(completedSimulator, {
+        type: "add_artifact",
+        artifactId: "test-artifact" as any       });
+
       // Get the artifact ID
-      const artifact = getCurrentState(completedSimulator).artifacts[0]!;
+      const artifact = getCurrentState(artifactSimulator).artifacts[0]!;
 
       // Commit the artifact
-      const committedSimulator = step(completedSimulator, {
+      const committedSimulator = step(artifactSimulator, {
         type: "commit_artifact",
         artifactId: artifact.id,
       });
@@ -126,7 +133,7 @@ describe("Tasks Machine Simulator", () => {
       expect(() => {
         step(simulator, {
           type: "commit_artifact",
-          artifactId: "non-existent" as any,
+          artifactId: "non-existent" as any as any,
         });
       }).toThrow("panic! artifact non-existent not found in pending artifacts, moreover artifacts are empty");
     });
@@ -196,6 +203,9 @@ describe("Tasks Machine Simulator", () => {
       // Create an artifact by completing a task
       let currentSimulator = step(simulator, { type: "take_next_task" });
       currentSimulator = step(currentSimulator, { type: "complete_current_task" });
+      currentSimulator = step(currentSimulator, { 
+        type: "add_artifact",
+        artifactId: "edit-test-artifact" as any       });
       
       const artifactState = getCurrentState(currentSimulator);
       const artifact = artifactState.artifacts[0]!;
@@ -241,75 +251,55 @@ describe("Tasks Machine Simulator", () => {
   });
 
   describe("Add Artifact", () => {
-    it("should create artifact from current tasks successfully", () => {
-      const currentState = getCurrentState(simulator);
-      const taskIds = Array.fromIterable(HashMap.keys(currentState.tasks)).slice(0, 2); // Take first 2 tasks
+    it("should create artifact from outputTasks successfully", () => {
+      // First need to have a completed task in outputTasks
+      const runningSimulator = step(simulator, { type: "take_next_task" });
+      const completedSimulator = step(runningSimulator, { type: "complete_current_task" });
       
-      const artifactSimulator = step(simulator, {
+      const artifactSimulator = step(completedSimulator, {
         type: "add_artifact",
-        artifactId: "test-artifact" as any,
-        taskIds
-      });
+        artifactId: "test-artifact" as any       });
 
       const newState = getCurrentState(artifactSimulator);
       
       // Should have 1 artifact
-      expect(newState.artifacts.length).toBe(1);
+      expect(newState.artifacts.length).toBe(1); // 1 from add_artifact
       expect(newState.artifacts[0]!.id).toBe("test-artifact");
       
-      // Should have 2 tasks in artifact
-      expect(HashMap.size(newState.artifacts[0]!.tasks)).toBe(2);
-      
-      // Should have 1 remaining task in current tasks
-      expect(HashMap.size(newState.tasks)).toBe(1);
-      
-      // Original tasks should not be in current tasks anymore
-      taskIds.forEach(taskId => {
-        expect(HashMap.has(newState.tasks, taskId)).toBe(false);
-        expect(HashMap.has(newState.artifacts[0]!.tasks, taskId)).toBe(true);
-      });
+      // Should have 1 task in the new artifact
+      expect(HashMap.size(newState.artifacts[0]!.tasks)).toBe(1);
     });
 
-    it("should fail to create artifact with non-existent tasks", () => {
+    it("should fail to create artifact when no tasks in outputTasks", () => {
       expect(() => {
         step(simulator, {
           type: "add_artifact",
-          artifactId: "test-artifact" as any,
-          taskIds: ["non-existent-task" as any]
-        });
-      }).toThrow("panic! Cannot create artifact test-artifact: tasks not found in current tasks: non-existent-task");
-    });
-
-    it("should fail to create artifact with empty task list", () => {
-      expect(() => {
-        step(simulator, {
-          type: "add_artifact",
-          artifactId: "test-artifact" as any,
-          taskIds: []
-        });
-      }).toThrow("Cannot create artifact test-artifact: artifact must contain at least one task");
+          artifactId: "test-artifact" as any         });
+      }).toThrow("panic! cannot create artifact test-artifact: no tasks to add");
     });
 
     it("should fail to create artifact with duplicate ID", () => {
-      const currentState = getCurrentState(simulator);
-      const taskIds = Array.fromIterable(HashMap.keys(currentState.tasks)).slice(0, 1);
+      // First complete a task to have outputTasks
+      const runningSimulator = step(simulator, { type: "take_next_task" });
+      const completedSimulator = step(runningSimulator, { type: "complete_current_task" });
       
       // Create first artifact
-      const firstArtifactSimulator = step(simulator, {
+      const firstArtifactSimulator = step(completedSimulator, {
         type: "add_artifact",
-        artifactId: "duplicate-artifact" as any,
-        taskIds
-      });
+        artifactId: "duplicate-artifact" as any       });
 
-      // Try to create second artifact with same ID
+      // Complete another task to get more outputTasks
+      const runningSimulator2 = step(firstArtifactSimulator, { type: "take_next_task" });
+      const completedSimulator2 = step(runningSimulator2, { type: "complete_current_task" });
+
+      // Try to create second artifact with same ID should fail
       expect(() => {
-        step(firstArtifactSimulator, {
+        step(completedSimulator2, {
           type: "add_artifact",
-          artifactId: "duplicate-artifact" as any,
-          taskIds: Array.fromIterable(HashMap.keys(getCurrentState(firstArtifactSimulator).tasks)).slice(0, 1)
-        });
-      }).toThrow("Artifact with id duplicate-artifact already exists");
+          artifactId: "duplicate-artifact" as any         });
+      }).toThrow("panic! Artifact with id duplicate-artifact already exists");
     });
+
   });
 
   describe("Agent Failure", () => {
@@ -361,6 +351,15 @@ describe("Tasks Machine Simulator", () => {
       currentSimulator = step(currentSimulator, {
         type: "complete_current_task",
       });
+      expect(
+        getStateSummary(getCurrentState(currentSimulator)).artifactCount
+      ).toBe(0);
+      expect(getCurrentState(currentSimulator).outputTasks.length).toBe(1);
+
+      // Create artifact
+      currentSimulator = step(currentSimulator, {
+        type: "add_artifact",
+        artifactId: "workflow-artifact" as any       });
       expect(
         getStateSummary(getCurrentState(currentSimulator)).artifactCount
       ).toBe(1);

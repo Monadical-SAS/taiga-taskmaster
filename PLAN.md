@@ -11,7 +11,7 @@ This project is building a **Task Master Machine** - an automated system that pr
 5. **Handles failures** with retry logic and cleanup
 
 The central part of the machine would be the Worker loop. The machine itself provides lifecycle and queue management for the loop etc
-Currently, the worker loop implementation exists only as **integration test code** in two test files. The goal is to extract these implementations into a reusable **"worker" package** that provides real, production-ready implementations of the worker interface.
+Currently, the worker loop implementation exists only as **integration test code** in two test files. With the introduction of `statefulLoop`, the architecture has evolved to integrate directly with the core TasksMachine state. The goal is to extract these implementations into a reusable **"worker" package** that works with the new stateful architecture.
 
 ## Current State Analysis
 
@@ -73,33 +73,45 @@ Both tests implement the same `LooperDeps` interface with similar structures:
 
 ## Technical Architecture
 
-### Core Interface: `LooperDeps`
+### Core Interface: `statefulLoop` Dependencies
+
+With the introduction of `statefulLoop`, the architecture has shifted:
 
 ```typescript
-type LooperDeps = {
+// statefulLoop takes these dependencies (no pullTask/ackTask needed)
+type StatefulLoopDeps = Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
+  next: NextTaskF, // (tasks: Tasks) => Option<[TaskId, Task]>
+  description: (task: Task) => NonEmptyString,
   runWorker: (task: { description: string }, options?: { signal?: AbortSignal }) => Promise<WorkerResult>,
-  pullTask: (options?: { signal?: AbortSignal }) => Promise<{ type: 'task', description: NonEmptyString } | { type: 'aborted' }>,
-  ackTask: (result: Option<{ branch: string }>, options?: { signal?: AbortSignal }) => Promise<void>,
   git: GitOperations,
   log: Logger,
   sleep: (ms: number) => Promise<void>,
 };
+
+// Returns control interface
+type StatefulLoopInterface = {
+  stop(): void;
+  appendTasks: (tasks: Tasks) => TasksMachine.State;
+};
 ```
 
-### Loop Execution Flow
+### StatefulLoop Execution Flow
 
 ```
-1. pullTask() → Get next task from queue
-2. git.isClean() → Verify repository state
-3. git.branch() → Create task-specific branch
-4. runWorker() → Execute task (AI or file system)
-5. git.commitAndPush() → Save work
-6. ackTask(success) → Acknowledge completion
+1. next(state.tasks) → Get next task from TasksMachine state
+2. startTaskExecution(taskId) → Move task to execution state
+3. description(task) → Convert task to string description
+4. git.isClean() → Verify repository state
+5. git.branch() → Create task-specific branch
+6. runWorker() → Execute task with Goose AI
+7. git.commitAndPush() → Save work
+8. endTaskExecution() → Move task to outputTasks
+9. save(state) → Persist state changes
    
    On Error:
    - git.cleanup() → Clean failed branch
-   - ackTask(failure) → Mark task as failed
-   - Retry logic decides next action
+   - endTaskExecution() → Mark task as failed
+   - save(state) → Persist failure state
 ```
 
 ### Error Handling Strategy
@@ -113,32 +125,42 @@ type LooperDeps = {
 
 ### Phase 1: Extract Core Components
 
-#### 1. **TaskQueue Management**
+#### 1. **NextTask Strategy Functions**
 ```typescript
-// From both tests: taskQueueRef, acknowledgedTasksRef, currentTaskRef
-// in implementation, add a note that the queue is going to be persisted soon: it'll initialize from a database/redis/whatever and persist its state into it during its steps
-export const createTaskQueue = (): {
-  pullTask: (options?: { signal?: AbortSignal }) => Promise<TaskPullResult>;
-  ackTask: (result: Option<{ branch: string }>) => Promise<void>;
-  addTasks: (tasks: string[]) => void;
-  getRemainingCount: () => number;
-} => {
-  const state = {
-    tasks: [] as string[],
-    acknowledged: [] as Array<{ task: string; success: boolean; branch?: string }>,
-    current: null as string | null,
-  };
+// Extract task selection logic from tests 
+// These determine which task to execute next from TasksMachine.State
+export const createNextTaskStrategies = () => ({
+  // Simple FIFO strategy for testing
+  fifo: (tasks: Tasks): Option<[TaskId, Task]> => {
+    const entries = HashMap.toEntries(tasks);
+    return entries.length > 0 ? Option.some(entries[0]) : Option.none();
+  },
   
-  return {
-    async pullTask(options) { /* implementation */ },
-    async ackTask(result) { /* implementation */ },
-    addTasks(tasks) { state.tasks.push(...tasks); },
-    getRemainingCount() { return state.tasks.length; },
-  };
-};
+  // Priority-based strategy (for production)
+  priority: (tasks: Tasks): Option<[TaskId, Task]> => {
+    // Implementation would consider task priority, dependencies, etc.
+  },
+});
 ```
 
-#### 2. **Git Operations**
+#### 2. **Task Description Functions**
+```typescript  
+// Convert opaque Task objects to descriptions for workers
+export const createTaskDescriptionFunctions = () => ({
+  // Simple string extraction for testing
+  simple: (task: Task): NonEmptyString => {
+    // Extract description from task object
+    return castNonEmptyString(String(task));
+  },
+  
+  // Rich description extraction (for production)
+  detailed: (task: Task): NonEmptyString => {
+    // Extract title, context, requirements from task
+  },
+});
+```
+
+#### 3. **Git Operations**
 ```typescript
 // From both tests: comprehensive git operations
 // this, at some point, will become a separate package
@@ -158,7 +180,7 @@ export const createGitDeps = (gitConfig: GitConfig, workingDirectory: string) =>
 };
 ```
 
-#### 3. **Worker Factory Function**
+#### 4. **Worker Factory Function**
 
 There is only ONE real worker:
 
@@ -175,26 +197,45 @@ export const makeGooseWorker = (config: GooseConfig) =>
 
 ### Phase 2: Create Configurable Implementations
 
-#### 1. **BaseWorkerDeps Factory**
+#### 1. **Base StatefulLoop Dependencies Factory**
 ```typescript
-export const createBaseWorkerDeps = (config: BaseWorkerConfig): Partial<LooperDeps> => ({
+export const createBaseStatefulLoopDeps = (config: BaseWorkerConfig) => ({
   log: createStructuredLogger(config.logLevel),
-  sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
+  sleep: (ms, options) => new Promise(resolve => {
+    const timeout = setTimeout(resolve, ms);
+    options?.signal?.addEventListener('abort', () => clearTimeout(timeout));
+  }),
   git: createGitDeps(config.git, config.workingDirectory),
 });
 ```
 
-#### 2. **GooseWorkerDeps Factory** (The Only Production Factory)
+#### 2. **Goose StatefulLoop Factory** (The Only Production Factory)
 ```typescript
-export const createGooseWorkerDeps = (config: GooseWorkerConfig): LooperDeps => {
-  const queue = createTaskQueue(); // Single queue instance
-  
-  return {
-    ...createBaseWorkerDeps(config),
+export const createGooseStatefulLoop = (config: GooseWorkerConfig) => {
+  const deps = {
+    ...createBaseStatefulLoopDeps(config),
     runWorker: makeGooseWorker(config.goose),
-    pullTask: queue.pullTask,
-    ackTask: queue.ackTask,
+    next: createNextTaskStrategies().priority, // Or FIFO for testing
+    description: createTaskDescriptionFunctions().detailed, // Or simple for testing
   };
+  
+  return (initialState: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>) => 
+    statefulLoop(deps)(initialState, save);
+};
+```
+
+#### 3. **Testing Factory** (For Git Testing Without Expensive Goose Calls)
+```typescript
+export const createTestingStatefulLoop = (config: TestingWorkerConfig) => {
+  const deps = {
+    ...createBaseStatefulLoopDeps(config),
+    runWorker: makeFileSystemWorker(config.workingDirectory), // Test mock
+    next: createNextTaskStrategies().fifo, // Simple FIFO for testing
+    description: createTaskDescriptionFunctions().simple,
+  };
+  
+  return (initialState: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>) => 
+    statefulLoop(deps)(initialState, save);
 };
 ```
 
@@ -205,16 +246,18 @@ packages/worker/
 ├── src/
 │   ├── index.ts                 # Main exports
 │   ├── core/                    # Core functional components
-│   │   ├── task-queue.ts        # createTaskQueue() factory
 │   │   ├── git-operations.ts    # createGitDeps() factory
 │   │   ├── logging.ts           # createStructuredLogger() factory
+│   │   ├── next-task.ts         # createNextTaskStrategies() factory
+│   │   ├── task-description.ts  # createTaskDescriptionFunctions() factory
 │   │   └── types.ts             # Common types and interfaces
 │   ├── workers/                 # Worker factory functions
 │   │   ├── goose.ts             # makeGooseWorker() factory (ONLY production worker)
 │   │   └── utils.ts             # Common worker utilities
-│   ├── deps/                    # LooperDeps factory functions
-│   │   ├── goose-deps.ts        # createGooseWorkerDeps() (ONLY production deps)
-│   │   └── base-deps.ts         # createBaseWorkerDeps()
+│   ├── stateful/                # StatefulLoop factory functions
+│   │   ├── goose-stateful.ts    # createGooseStatefulLoop() (ONLY production)
+│   │   ├── testing-stateful.ts  # createTestingStatefulLoop() (for git tests)
+│   │   └── base-stateful.ts     # createBaseStatefulLoopDeps()
 │   ├── testing/                 # Test utilities only
 │   │   └── filesystem-mock.ts   # makeFileSystemWorker() for mocking expensive Goose calls
 │   └── debugging/               # Debug utilities (from tests)
@@ -224,7 +267,7 @@ packages/worker/
 ├── tests/
 │   ├── unit/                    # Unit tests for functions
 │   └── integration/             # Integration tests
-│       ├── goose-worker.test.ts # Test goose worker with real integration
+│       ├── goose-stateful.test.ts # Test real goose with statefulLoop
 │       └── git-mock.test.ts     # Test git functionality with filesystem mock
 ├── package.json
 ├── tsconfig.json
@@ -240,23 +283,38 @@ packages/worker/
 - Test command-level retry for transient failures (within workers)
 
 ### 2. **Integration Tests**
-The extracted implementation must pass the same test scenarios as the original integration tests:
+The extracted implementation must integrate with the new statefulLoop architecture:
 
 **Git Functionality Test** (using filesystem mock to avoid expensive Goose calls):
 ```typescript
-it("processes chain of 2 tasks with real git workflow", async () => {
-  const queue = createTaskQueue();
-  queue.addTasks(["implement login", "add validation"]);
+it("processes chain of 2 tasks with real git workflow using statefulLoop", async () => {
+  // Create initial state with 2 tasks
+  const initialState: TasksMachine.State = {
+    tasks: HashMap.fromIterable([
+      ["task1", { description: "implement login" }],
+      ["task2", { description: "add validation" }]
+    ]),
+    taskExecutionState: { step: "stopped" },
+    outputTasks: [],
+    artifacts: [],
+    timestamp: 0
+  };
   
-  // Use filesystem mock for testing git without expensive Goose calls
-  const deps = createGooseWorkerDeps({
+  // Use testing factory with filesystem mock
+  const createLoop = createTestingStatefulLoop({
     workingDirectory: tempDir,
-    logLevel: "debug",
-    queue: queue,
-    worker: makeFileSystemWorker(tempDir) // Test-only mock
+    logLevel: "debug"
   });
   
-  // Run the loop and verify:
+  const machine = createLoop(initialState, async (state) => {
+    // Mock save function for testing
+    console.log("State saved:", state);
+  });
+  
+  // Run for some time, then stop
+  setTimeout(() => machine.stop(), 10000);
+  
+  // Verify:
   // 1. Both tasks complete successfully
   // 2. Proper branch creation and chaining  
   // 3. File artifacts are created
@@ -266,19 +324,31 @@ it("processes chain of 2 tasks with real git workflow", async () => {
 
 **Real Goose Integration Test**:
 ```typescript
-it("runs sequential tasks with real Goose AI", async () => {
-  const queue = createTaskQueue();
-  queue.addTasks([
-    "create a simple hello.txt file with greeting",
-    "read hello.txt and create a response.txt file"
-  ]);
+it("runs sequential tasks with real Goose AI using statefulLoop", async () => {
+  const initialState: TasksMachine.State = {
+    tasks: HashMap.fromIterable([
+      ["task1", { description: "create a simple hello.txt file with greeting" }],
+      ["task2", { description: "read hello.txt and create a response.txt file" }]
+    ]),
+    taskExecutionState: { step: "stopped" },
+    outputTasks: [],
+    artifacts: [],
+    timestamp: 0
+  };
   
-  const deps = createGooseWorkerDeps({
+  const createLoop = createGooseStatefulLoop({
     workingDirectory: tempDir,
     goose: { model: "anthropic/claude-sonnet-4", provider: "openrouter" },
-    timeouts: { process: 30000, hard: 35000 },
-    queue: queue
+    timeouts: { process: 30000, hard: 35000 }
   });
+  
+  const machine = createLoop(initialState, async (state) => {
+    // Real state persistence would go here
+    await fs.writeFile(join(tempDir, "state.json"), JSON.stringify(state));
+  });
+  
+  // Test with timeout
+  setTimeout(() => machine.stop(), 120000);
   
   // Verify real Goose execution and proper branch management
 });
@@ -290,25 +360,31 @@ Ensure the extracted worker implementations can be used as drop-in replacements 
 ## Integration Points
 
 ### 1. **Connection to Application Layer**
-The worker package implementations will be used by **application code**, not directly by the core task machine. The core machine (`packages/core/src/core.ts`) is technology-agnostic and only manages task state:
+The worker package now integrates directly with the `statefulLoop` and `TasksMachine.State`:
 
 ```typescript
-// In application code (not core machine)
-import { createGooseWorkerDeps } from '@taiga-task-master/worker';
-import { loop } from '@taiga-task-master/worker-interface';
+// In application code
+import { createGooseStatefulLoop } from '@taiga-task-master/worker';
+import { TasksMachine } from '@taiga-task-master/core';
 
-// Core machine provides task management through abstract interfaces
-const taskManager = new TaskMachine();
+// Load or create initial state
+const initialState: TasksMachine.State = await loadStateFromDatabase();
 
-// Worker package provides execution implementation  
-const workerDeps = createGooseWorkerDeps({
-  pullTask: () => taskManager.pullNext(),
-  ackTask: (result) => taskManager.acknowledge(result),
-  // Git and worker implementations from worker package
+// Create the stateful loop machine
+const createLoop = createGooseStatefulLoop({
+  workingDirectory: "/path/to/work",
+  goose: { model: "anthropic/claude-sonnet-4", provider: "openrouter" },
+  logLevel: "info"
 });
 
-// Worker interface coordinates everything
-await loop(workerDeps)({ signal: abortController.signal });
+// Start the machine with state persistence
+const machine = createLoop(initialState, async (state) => {
+  await saveStateToDatabase(state);
+});
+
+// Control the machine
+machine.appendTasks(newTasks); // Add tasks dynamically
+machine.stop(); // Graceful shutdown
 ```
 
 ### 2. **Configuration Integration**
@@ -406,7 +482,8 @@ export interface GooseWorkerConfig extends WorkerConfig {
 - Set up testing framework (Vitest)
 
 ### Step 2: Extract Core Components
-- Extract TaskQueue from both tests (for testing/simple applications)
+- Extract NextTask strategy functions from tests
+- Extract Task description functions for converting Task objects to strings
 - Extract GitManager from git operations
 - Extract common utilities (logging, sleep, etc.)
 - Extract command-level retry utilities (for transient failures)
@@ -416,15 +493,18 @@ export interface GooseWorkerConfig extends WorkerConfig {
 - Create FileSystemWorker mock (for testing git without expensive Goose calls)
 - Implement worker utilities and command-level retry
 
-### Step 4: Create Factory Functions
-- Implement createGooseWorkerDeps() (the only production factory)
+### Step 4: Create StatefulLoop Factory Functions
+- Implement createGooseStatefulLoop() (the only production factory)
+- Implement createTestingStatefulLoop() (for git testing with FileSystemWorker mock)
 - Add configuration management
-- Create testing utilities and mocks
+- Create base factory for common dependencies
 
 ### Step 5: Write Tests
 - Unit tests for all extracted components
-- Git functionality tests (using FileSystemWorker mock)
-- Real Goose integration tests (2-task sequences)
+- NextTask strategy and task description function tests
+- Git functionality tests (using createTestingStatefulLoop with FileSystemWorker mock)
+- Real Goose integration tests (using createGooseStatefulLoop with 2-task sequences)
+- StatefulLoop state management and persistence tests
 - Performance and compatibility tests
 - Verify worker-level retry for transient failures
 
@@ -435,16 +515,28 @@ export interface GooseWorkerConfig extends WorkerConfig {
 
 ## Summary
 
-This plan provides a complete roadmap for extracting the integration test implementations into a production-ready worker package. Key architectural clarifications:
+This plan provides a complete roadmap for extracting the integration test implementations into a production-ready worker package that integrates with the new `statefulLoop` architecture. Key architectural changes:
 
-**Scope**: Worker package provides execution components (GitDeps, GooseWorker) and utility implementations, **not** task lifecycle management. FileSystemWorker is a test-only mock.
+**StatefulLoop Integration**: The worker package now works directly with `TasksMachine.State` and `statefulLoop` instead of external task queues, providing true state persistence and sophisticated task management.
 
-**Responsibilities**:
-- **Core Machine**: Task state management, business-level retry policies, task lifecycle
-- **Worker Interface**: Coordination layer providing `LooperDeps` interface and `loop()` function  
-- **Worker Package**: Concrete GooseWorker execution implementation with command-level retry for transient failures
-- **Application Layer**: Composes core machine + worker implementations via worker interface
+**Scope**: Worker package provides:
+- **Execution components** (GitDeps, GooseWorker) with command-level retry
+- **NextTask strategies** for determining task execution order
+- **Task description functions** for converting Task objects to worker-friendly strings
+- **StatefulLoop factories** that integrate everything with core machine state
+- **FileSystemWorker mock** for testing git functionality without expensive Goose calls
 
-**No Task-Level Retry**: The "retry logic" from integration tests was simulating core machine behavior. Real production systems will have the core machine manage task retry policies.
+**Architecture**:
+- **Core Machine**: Task state management, business-level retry policies, task lifecycle via `TasksMachine.State`
+- **Worker Interface**: Provides `statefulLoop` function that bridges core state with execution
+- **Worker Package**: Concrete factories for creating production-ready stateful loops
+- **Application Layer**: Uses stateful loop factories with real state persistence
 
-The package maintains full compatibility with the existing `LooperDeps` interface while providing enhanced functionality and maintainability for execution-level concerns.
+**Key Benefits**:
+- **State Persistence**: Tasks and execution state survive crashes and restarts
+- **Real Task Management**: Integration with sophisticated task scheduling via `NextTaskF`
+- **Control Interface**: `stop()` and `appendTasks()` methods for runtime control
+- **Flexible Strategies**: Pluggable task selection and description extraction
+- **Production Ready**: Real state persistence, proper error handling, comprehensive monitoring
+
+The package provides factories that create stateful loops integrating core machine state with worker execution, enabling robust production task automation systems.
