@@ -409,9 +409,8 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
 export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
   next: NextTaskF,/*from taskmaster source code implementation*/
   description: (t: Task) => NonEmptyString
-}) => (state0: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>): {
+}) => (state0: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>): object => {
   /*task machine methods*/
-} => {
   // eslint-disable-next-line functional/no-let
   let state = state0;
   // eslint-disable-next-line functional/no-let

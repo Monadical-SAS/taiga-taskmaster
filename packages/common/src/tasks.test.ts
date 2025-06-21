@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Schema } from "effect";
-import { TasksFileContent } from "./tasks.js";
+import { TasksFileContent, castTaskId } from "./tasks.js";
 
 const example = {
   tasks: [
@@ -1183,5 +1183,29 @@ describe("TasksFileContent", () => {
     const invalidData = { wrongProperty: [] };
     const result = Schema.decodeUnknownEither(TasksFileContent)(invalidData);
     expect(result._tag).toBe("Left");
+  });
+});
+
+describe("castTaskId", () => {
+  it("should cast string to TaskId", () => {
+    const result = castTaskId("5");
+    expect(result).toBe(5);
+  });
+
+  it("should cast number to TaskId", () => {
+    const result = castTaskId(10);
+    expect(result).toBe(10);
+  });
+
+  it("should throw error for invalid string", () => {
+    expect(() => castTaskId("invalid")).toThrow();
+  });
+
+  it("should throw error for non-positive number", () => {
+    expect(() => castTaskId(0)).toThrow();
+  });
+
+  it("should throw error for negative number", () => {
+    expect(() => castTaskId(-5)).toThrow();
   });
 });

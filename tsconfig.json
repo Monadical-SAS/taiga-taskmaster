@@ -33,6 +33,7 @@
     { "path": "./packages/webhook-interface" },
     { "path": "./packages/webhook" },
     { "path": "./packages/worker-interface" },
+    { "path": "./packages/worker" },
     { "path": "./packages/taiga-api-test" },
     { "path": "./packages/taskmaster-test" },
     { "path": "./packages/tasktracker-test" },

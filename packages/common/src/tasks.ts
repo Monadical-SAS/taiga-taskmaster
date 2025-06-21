@@ -11,6 +11,13 @@ export const TaskIdFromString = Schema.compose(
 
 export type TaskId = typeof TaskId.Type;
 
+export const castTaskId = (id: string | number): TaskId => {
+  if (typeof id === "string") {
+    return Schema.decodeSync(TaskIdFromString)(id);
+  }
+  return Schema.decodeSync(TaskId)(id);
+};
+
 // note that project id in Taskmaster (this one) doesn't have to do anything with ProjectId in Taiga
 export const ProjectId = NonEmptyString.pipe(Schema.brand("ProjectId"));
 

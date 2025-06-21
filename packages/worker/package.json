@@ -1,8 +1,8 @@
 {
-  "name": "@taiga-task-master/worker-interface",
+  "name": "@taiga-task-master/worker",
   "version": "1.0.0",
   "type": "module",
-  "description": "Worker interface definitions and schemas",
+  "description": "Worker implementation for executing tasks using various worker strategies",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -16,22 +16,17 @@
     "dev": "tsc --watch",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:integration:watch": "vitest --config vitest.integration.config.ts",
-    "test:all": "vitest run && pnpm test:integration"
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "@effect/platform": "^0.84.9",
-    "@effect/platform-node": "^0.85.14",
-    "@taiga-task-master/common": "workspace:*",
+    "@taiga-task-master/worker-interface": "workspace:*",
     "@taiga-task-master/core": "workspace:*",
+    "@taiga-task-master/common": "workspace:*",
+    "simple-git": "^3.28.0",
     "effect": "^3.15.4"
   },
   "devDependencies": {
-    "@effect/vitest": "^0.23.5",
     "@types/node": "^20.0.0",
-    "simple-git": "^3.28.0",
     "typescript": "^5.8.3",
     "vitest": "^2.0.0"
   }
