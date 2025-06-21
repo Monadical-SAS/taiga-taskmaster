@@ -1,0 +1,77 @@
+# Task ID: 9
+# Title: Implement StatefulLoop Factory Functions
+# Status: pending
+# Dependencies: 2, 3, 4, 5, 6, 7, 8
+# Priority: high
+# Description: Create factory functions that integrate all components with the statefulLoop architecture.
+# Details:
+First, create `src/stateful/base-stateful.ts` with common dependencies:
+
+```typescript
+import { BaseWorkerConfig } from '../core/types';
+import { createStructuredLogger } from '../core/logging';
+import { createGitDeps } from '../core/git-operations';
+import { sleep } from '../utils/sleep';
+
+export const createBaseStatefulLoopDeps = (config: BaseWorkerConfig) => ({
+  log: createStructuredLogger(config.logLevel || 'info'),
+  sleep: (ms: number, options?: { signal?: AbortSignal }) => sleep(ms, options),
+  git: createGitDeps(config.git || {}, config.workingDirectory)
+});
+```
+
+Then create `src/stateful/goose-stateful.ts` for production use:
+
+```typescript
+import { TasksMachine } from '@taiga-task-master/core';
+import { statefulLoop } from '@taiga-task-master/worker-interface';
+import { GooseWorkerConfig } from '../core/types';
+import { createBaseStatefulLoopDeps } from './base-stateful';
+import { makeGooseWorker } from '../workers/goose';
+import { createNextTaskStrategies } from '../core/next-task';
+import { createTaskDescriptionFunctions } from '../core/task-description';
+
+export const createGooseStatefulLoop = (config: GooseWorkerConfig) => {
+  const deps = {
+    ...createBaseStatefulLoopDeps(config),
+    runWorker: makeGooseWorker(config),
+    next: createNextTaskStrategies().priority,
+    description: createTaskDescriptionFunctions().instructions
+  };
+  
+  return (initialState: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>) => 
+    statefulLoop(deps)(initialState, save);
+};
+```
+
+Finally, create `src/stateful/testing-stateful.ts` for testing:
+
+```typescript
+import { TasksMachine } from '@taiga-task-master/core';
+import { statefulLoop } from '@taiga-task-master/worker-interface';
+import { TestingWorkerConfig } from '../core/types';
+import { createBaseStatefulLoopDeps } from './base-stateful';
+import { makeFileSystemWorker } from '../testing/filesystem-mock';
+import { createNextTaskStrategies } from '../core/next-task';
+import { createTaskDescriptionFunctions } from '../core/task-description';
+
+export const createTestingStatefulLoop = (config: TestingWorkerConfig) => {
+  const deps = {
+    ...createBaseStatefulLoopDeps(config),
+    runWorker: makeFileSystemWorker(config),
+    next: createNextTaskStrategies().fifo,
+    description: createTaskDescriptionFunctions().simple
+  };
+  
+  return (initialState: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>) => 
+    statefulLoop(deps)(initialState, save);
+};
+```
+
+# Test Strategy:
+Write integration tests for the StatefulLoop factories:
+1. Test Goose StatefulLoop with mock worker and state persistence
+2. Test Testing StatefulLoop with filesystem worker
+3. Test task execution flow from initial state to completion
+4. Test error handling and recovery mechanisms
+5. Verify state transitions during task execution

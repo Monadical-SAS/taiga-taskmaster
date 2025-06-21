@@ -1,0 +1,189 @@
+# Task ID: 10
+# Title: Create Package Entry Point and Documentation
+# Status: pending
+# Dependencies: 1, 2, 3, 4, 5, 6, 7, 8, 9
+# Priority: medium
+# Description: Implement the main package exports and create comprehensive documentation.
+# Details:
+Create `src/index.ts` with the main exports:
+
+```typescript
+// Core types and interfaces
+export * from './core/types';
+
+// Core utilities
+export { createGitDeps } from './core/git-operations';
+export { createStructuredLogger } from './core/logging';
+export { createNextTaskStrategies } from './core/next-task';
+export { createTaskDescriptionFunctions } from './core/task-description';
+
+// Workers
+export { makeGooseWorker } from './workers/goose';
+
+// StatefulLoop factories
+export { createBaseStatefulLoopDeps } from './stateful/base-stateful';
+export { createGooseStatefulLoop } from './stateful/goose-stateful';
+
+// Testing utilities (exported for testing only)
+export { makeFileSystemWorker } from './testing/filesystem-mock';
+export { createTestingStatefulLoop } from './stateful/testing-stateful';
+```
+
+Create comprehensive README.md:
+
+```markdown
+# Worker Package
+
+A reusable worker implementation for the Task Master Machine that processes tasks using AI agents (Goose AI) and Git workflows.
+
+## Installation
+
+```bash
+npm install @taiga-task-master/worker
+```
+
+## Usage
+
+### Creating a Goose AI Worker Loop
+
+```typescript
+import { createGooseStatefulLoop } from '@taiga-task-master/worker';
+import { TasksMachine } from '@taiga-task-master/core';
+
+// Create initial state
+const initialState: TasksMachine.State = {
+  tasks: TasksMachine.Tasks.empty,
+  taskExecutionState: { step: 'stopped' },
+  outputTasks: [],
+  artifacts: [],
+  timestamp: Date.now()
+};
+
+// Configure the worker
+const createLoop = createGooseStatefulLoop({
+  workingDirectory: '/path/to/work',
+  goose: {
+    model: 'anthropic/claude-sonnet-4',
+    provider: 'openrouter'
+  },
+  apiKeys: {
+    openrouter: process.env.OPENROUTER_API_KEY
+  },
+  logLevel: 'info',
+  timeouts: {
+    process: 30000,
+    hard: 35000
+  }
+});
+
+// Create the stateful loop with state persistence
+const machine = createLoop(initialState, async (state) => {
+  // Save state to database or file
+  await saveStateToDatabase(state);
+});
+
+// Add tasks dynamically
+const newTasks = TasksMachine.Tasks.fromIterable([
+  ['task1', { description: 'Implement login form' }],
+  ['task2', { description: 'Add form validation' }]
+]);
+
+machine.appendTasks(newTasks);
+
+// Stop the machine when done
+setTimeout(() => machine.stop(), 60000);
+```
+
+## API Reference
+
+### StatefulLoop Factories
+
+#### `createGooseStatefulLoop(config: GooseWorkerConfig)`
+
+Creates a stateful loop that uses Goose AI to process tasks.
+
+**Parameters:**
+- `config`: Configuration object for the Goose worker
+
+**Returns:**
+A function that takes initial state and save function and returns a stateful loop interface.
+
+### Worker Implementations
+
+#### `makeGooseWorker(config: GooseWorkerConfig)`
+
+Creates a worker function that executes tasks using Goose AI.
+
+**Parameters:**
+- `config`: Configuration object for the Goose worker
+
+**Returns:**
+A worker function that takes a task and returns a promise of WorkerResult.
+
+### Core Utilities
+
+#### `createGitDeps(config: GitConfig, workingDirectory: string)`
+
+Creates Git operations dependencies for the worker.
+
+#### `createStructuredLogger(level: 'debug' | 'info' | 'warn' | 'error')`
+
+Creates a structured logger with the specified log level.
+
+#### `createNextTaskStrategies()`
+
+Creates task selection strategies (fifo, priority, dependencies).
+
+#### `createTaskDescriptionFunctions()`
+
+Creates functions to convert tasks to string descriptions.
+
+## Testing Utilities
+
+### `createTestingStatefulLoop(config: TestingWorkerConfig)`
+
+Creates a stateful loop for testing with a filesystem-based worker mock.
+
+### `makeFileSystemWorker(config: TestingWorkerConfig)`
+
+Creates a filesystem-based worker mock for testing.
+
+## Configuration
+
+### GooseWorkerConfig
+
+```typescript
+interface GooseWorkerConfig {
+  workingDirectory: string;
+  logLevel?: 'debug' | 'info' | 'warn' | 'error';
+  goose: {
+    model: string;
+    provider: string;
+    instructionsFile?: string;
+  };
+  apiKeys?: {
+    openrouter?: string;
+  };
+  timeouts?: {
+    process?: number;
+    hard?: number;
+  };
+  git?: {
+    userConfig?: { name: string; email: string };
+    isolation?: boolean;
+  };
+}
+```
+
+## License
+
+MIT
+```
+
+# Test Strategy:
+Verify package exports work correctly:
+1. Test importing all exported components
+2. Verify TypeScript types are correctly exported
+3. Test README examples for correctness
+4. Ensure documentation matches actual implementation
+5. Verify package can be installed and used in a test project

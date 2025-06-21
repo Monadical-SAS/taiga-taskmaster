@@ -1,0 +1,132 @@
+# Task ID: 8
+# Title: Implement FileSystem Worker Mock for Testing
+# Status: pending
+# Dependencies: 2, 4
+# Priority: medium
+# Description: Create a filesystem-based worker mock for testing Git functionality without expensive Goose calls.
+# Details:
+Create `src/testing/filesystem-mock.ts` with the following implementation:
+
+```typescript
+import { WorkerResult, TestingWorkerConfig } from '../core/types';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { sleep } from '../utils/sleep';
+
+export const makeFileSystemWorker = (config: TestingWorkerConfig) => {
+  const {
+    workingDirectory,
+    mockFailures = false,
+    mockDelay = 100
+  } = config;
+  
+  return async (task: { description: string }, options?: { signal?: AbortSignal }): Promise<WorkerResult> => {
+    // Simulate processing delay
+    if (mockDelay > 0) {
+      await sleep(mockDelay, { signal: options?.signal });
+    }
+    
+    // Simulate random failures if configured
+    if (mockFailures && Math.random() < 0.2) {
+      await fs.writeFile(
+        path.join(workingDirectory, 'mock-failure.md'),
+        `# Mock Failure\n\nSimulated failure for testing purposes.\n\nTask: ${task.description}`,
+        'utf-8'
+      );
+      
+      return {
+        success: false,
+        artifacts: ['mock-failure.md'],
+        error: new Error('Simulated worker failure')
+      };
+    }
+    
+    try {
+      // Parse task description to determine what files to create
+      const description = task.description.toLowerCase();
+      const artifacts: string[] = [];
+      
+      // Create README.md with task description
+      const readmePath = path.join(workingDirectory, 'README.md');
+      await fs.writeFile(
+        readmePath,
+        `# Task Execution\n\n${task.description}\n\nCompleted at: ${new Date().toISOString()}`,
+        'utf-8'
+      );
+      artifacts.push('README.md');
+      
+      // Create additional files based on task description keywords
+      if (description.includes('javascript') || description.includes('js')) {
+        const jsPath = path.join(workingDirectory, 'index.js');
+        await fs.writeFile(
+          jsPath,
+          `// Generated for task: ${task.description}\n\nconsole.log('Task completed');`,
+          'utf-8'
+        );
+        artifacts.push('index.js');
+      }
+      
+      if (description.includes('typescript') || description.includes('ts')) {
+        const tsPath = path.join(workingDirectory, 'index.ts');
+        await fs.writeFile(
+          tsPath,
+          `// Generated for task: ${task.description}\n\nconst message: string = 'Task completed';\nconsole.log(message);`,
+          'utf-8'
+        );
+        artifacts.push('index.ts');
+      }
+      
+      if (description.includes('html')) {
+        const htmlPath = path.join(workingDirectory, 'index.html');
+        await fs.writeFile(
+          htmlPath,
+          `<!DOCTYPE html>\n<html>\n<head>\n  <title>Task Result</title>\n</head>\n<body>\n  <h1>Task Completed</h1>\n  <p>${task.description}</p>\n</body>\n</html>`,
+          'utf-8'
+        );
+        artifacts.push('index.html');
+      }
+      
+      // Always create a completion marker file
+      const completionPath = path.join(workingDirectory, 'task-completed.json');
+      await fs.writeFile(
+        completionPath,
+        JSON.stringify({
+          task: task.description,
+          completedAt: new Date().toISOString(),
+          artifacts
+        }, null, 2),
+        'utf-8'
+      );
+      artifacts.push('task-completed.json');
+      
+      return {
+        success: true,
+        artifacts
+      };
+    } catch (error: any) {
+      console.error('FileSystem worker failed:', error);
+      
+      // Create error file
+      await fs.writeFile(
+        path.join(workingDirectory, 'fs-error.md'),
+        `# Task Execution Failed\n\nError: ${error.message}\n\nTask: ${task.description}`,
+        'utf-8'
+      );
+      
+      return {
+        success: false,
+        artifacts: ['fs-error.md'],
+        error
+      };
+    }
+  };
+};
+```
+
+# Test Strategy:
+Write unit tests for the FileSystem worker mock:
+1. Test successful task execution with various task descriptions
+2. Test simulated failures with mockFailures=true
+3. Test file creation based on task description keywords
+4. Test abort signal handling during execution
+5. Verify artifact collection matches created files

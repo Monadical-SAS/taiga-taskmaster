@@ -1,0 +1,125 @@
+# Task ID: 6
+# Title: Implement Task Description Functions
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Create functions that convert Task objects to string descriptions for workers to process.
+# Details:
+Create `src/core/task-description.ts` with the following implementation:
+
+```typescript
+import { TasksMachine } from '@taiga-task-master/core';
+import { NonEmptyString, castNonEmptyString } from '@taiga-task-master/worker-interface';
+
+export const createTaskDescriptionFunctions = () => ({
+  /**
+   * Simple string extraction for basic task descriptions
+   * Used primarily for testing
+   */
+  simple: (task: TasksMachine.Task): NonEmptyString => {
+    // Extract description directly if available
+    if (typeof task.description === 'string' && task.description.trim() !== '') {
+      return castNonEmptyString(task.description);
+    }
+    
+    // Fallback to stringifying the task
+    return castNonEmptyString(JSON.stringify(task));
+  },
+  
+  /**
+   * Detailed description extraction for production use
+   * Formats task with title, context, and requirements
+   */
+  detailed: (task: TasksMachine.Task): NonEmptyString => {
+    let description = '';
+    
+    // Add title if available
+    if (task.title) {
+      description += `# ${task.title}\n\n`;
+    }
+    
+    // Add description
+    if (task.description) {
+      description += `${task.description}\n\n`;
+    }
+    
+    // Add context if available
+    if (task.context) {
+      description += `## Context\n${task.context}\n\n`;
+    }
+    
+    // Add requirements if available
+    if (task.requirements) {
+      description += `## Requirements\n${task.requirements}\n\n`;
+    }
+    
+    // Add metadata if available
+    if (task.metadata && Object.keys(task.metadata).length > 0) {
+      description += `## Metadata\n`;
+      for (const [key, value] of Object.entries(task.metadata)) {
+        if (key !== 'dependencies') { // Skip dependencies in description
+          description += `- ${key}: ${JSON.stringify(value)}\n`;
+        }
+      }
+    }
+    
+    // Ensure description is not empty
+    if (description.trim() === '') {
+      description = JSON.stringify(task);
+    }
+    
+    return castNonEmptyString(description);
+  },
+  
+  /**
+   * Instruction-focused description for AI workers
+   * Formats task as clear instructions with context
+   */
+  instructions: (task: TasksMachine.Task): NonEmptyString => {
+    let description = '';
+    
+    // Add clear instruction header
+    description += `# Task Instructions\n\n`;
+    
+    // Add title as main instruction
+    if (task.title) {
+      description += `## Objective\n${task.title}\n\n`;
+    }
+    
+    // Add detailed description
+    if (task.description) {
+      description += `## Description\n${task.description}\n\n`;
+    }
+    
+    // Add context if available
+    if (task.context) {
+      description += `## Context\n${task.context}\n\n`;
+    }
+    
+    // Add specific requirements
+    if (task.requirements) {
+      description += `## Requirements\n${task.requirements}\n\n`;
+    } else {
+      description += `## Requirements\n- Complete the task as described\n- Create or modify files as needed\n- Ensure code is well-formatted and documented\n\n`;
+    }
+    
+    // Add expected deliverables
+    description += `## Deliverables\n- Modified or created files that fulfill the requirements\n- Brief explanation of changes made\n\n`;
+    
+    // Ensure description is not empty
+    if (description.trim() === '') {
+      description = `# Task Instructions\n\nComplete the following task:\n\n${JSON.stringify(task)}`;
+    }
+    
+    return castNonEmptyString(description);
+  }
+});
+```
+
+# Test Strategy:
+Write unit tests for task description functions:
+1. Test simple description extraction with various task objects
+2. Test detailed description formatting with complete task metadata
+3. Test instruction formatting for AI workers
+4. Test edge cases like minimal task objects
+5. Verify non-empty string casting works correctly

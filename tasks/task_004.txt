@@ -1,0 +1,85 @@
+# Task ID: 4
+# Title: Implement Logging and Utilities
+# Status: pending
+# Dependencies: 2
+# Priority: medium
+# Description: Create structured logging and common utility functions needed by the worker implementation.
+# Details:
+Create `src/core/logging.ts` with structured logger implementation:
+
+```typescript
+import { Logger } from './types';
+
+export const createStructuredLogger = (level: 'debug' | 'info' | 'warn' | 'error' = 'info'): Logger => {
+  const levels = {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    error: 3
+  };
+  
+  const shouldLog = (messageLevel: keyof typeof levels) => {
+    return levels[messageLevel] >= levels[level];
+  };
+  
+  return {
+    debug(message: string, ...args: any[]) {
+      if (shouldLog('debug')) {
+        console.debug(`[DEBUG] ${message}`, ...args);
+      }
+    },
+    
+    info(message: string, ...args: any[]) {
+      if (shouldLog('info')) {
+        console.info(`[INFO] ${message}`, ...args);
+      }
+    },
+    
+    warn(message: string, ...args: any[]) {
+      if (shouldLog('warn')) {
+        console.warn(`[WARN] ${message}`, ...args);
+      }
+    },
+    
+    error(message: string, ...args: any[]) {
+      if (shouldLog('error')) {
+        console.error(`[ERROR] ${message}`, ...args);
+      }
+    }
+  };
+};
+```
+
+Create `src/utils/sleep.ts` for timeout utilities:
+
+```typescript
+export const sleep = (ms: number, options?: { signal?: AbortSignal }): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(resolve, ms);
+    
+    if (options?.signal) {
+      // Handle abort signal
+      if (options.signal.aborted) {
+        clearTimeout(timeout);
+        reject(new Error('Sleep aborted'));
+      }
+      
+      options.signal.addEventListener('abort', () => {
+        clearTimeout(timeout);
+        reject(new Error('Sleep aborted'));
+      }, { once: true });
+    }
+  });
+};
+```
+
+# Test Strategy:
+Write unit tests for the logging module:
+1. Test each log level with various message types
+2. Verify log filtering based on configured level
+3. Test structured output format
+
+Write unit tests for sleep utility:
+1. Test basic sleep functionality with timing verification
+2. Test abort signal handling during sleep
+3. Test immediate abort behavior

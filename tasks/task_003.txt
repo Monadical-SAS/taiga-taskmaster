@@ -1,0 +1,162 @@
+# Task ID: 3
+# Title: Implement Git Operations Module
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Extract and implement the Git operations module from the integration tests, providing repository management functionality.
+# Details:
+Create `src/core/git-operations.ts` with the following implementation:
+
+```typescript
+import { NonEmptyString, castNonEmptyString } from '@taiga-task-master/worker-interface';
+import { GitOperations } from './types';
+import simpleGit, { SimpleGit } from 'simple-git';
+import { cyrb53 } from '../utils/hash';
+
+export interface GitConfig {
+  userConfig?: { name: string; email: string };
+  isolation?: boolean;
+}
+
+export const createBranchName = (task: NonEmptyString): NonEmptyString => {
+  const hash = cyrb53(task);
+  return castNonEmptyString(`task-${hash.toString()}`);
+};
+
+export const createGitDeps = (config: GitConfig = {}, workingDirectory: string): GitOperations => {
+  const git: SimpleGit = simpleGit({
+    baseDir: workingDirectory,
+    config: [
+      ...(config.userConfig ? [
+        `user.name=${config.userConfig.name}`,
+        `user.email=${config.userConfig.email}`
+      ] : [])
+    ]
+  });
+  
+  let currentBranch: NonEmptyString | null = null;
+  
+  return {
+    async isClean(): Promise<boolean> {
+      const status = await git.status();
+      return status.isClean();
+    },
+    
+    async branch(name: NonEmptyString): Promise<NonEmptyString> {
+      // Store current branch for potential cleanup
+      const status = await git.status();
+      currentBranch = castNonEmptyString(status.current);
+      
+      // Create and checkout new branch
+      const branchName = createBranchName(name);
+      await git.checkoutLocalBranch(branchName);
+      
+      return branchName;
+    },
+    
+    async commitAndPush(): Promise<void> {
+      const status = await git.status();
+      
+      if (status.files.length === 0) {
+        // No changes to commit
+        return;
+      }
+      
+      // Add all changes
+      await git.add('.');
+      
+      // Commit changes
+      await git.commit('Task completed');
+      
+      // Push if not in isolation mode
+      if (!config.isolation) {
+        try {
+          await git.push('origin', status.current, ['--set-upstream']);
+        } catch (error) {
+          // Handle push errors
+          console.error('Failed to push changes:', error);
+          throw error;
+        }
+      }
+    },
+    
+    async cleanup(previousBranch: NonEmptyString): Promise<void> {
+      try {
+        // Discard any uncommitted changes
+        await git.reset(['--hard']);
+        
+        // Checkout previous branch
+        await git.checkout(previousBranch);
+        
+        // Delete the task branch if it exists and we're not in the branch
+        const status = await git.status();
+        if (status.current !== currentBranch) {
+          const branches = await git.branchLocal();
+          if (branches.all.includes(String(currentBranch))) {
+            await git.deleteLocalBranch(String(currentBranch), true);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to cleanup git state:', error);
+        // Still attempt to checkout previous branch even if other cleanup fails
+        await git.checkout(previousBranch);
+      }
+    },
+    
+    async verifyBranchChain(): Promise<any> {
+      const branches = await git.branchLocal();
+      const logs = await git.log();
+      
+      return {
+        branches: branches.all,
+        currentBranch: branches.current,
+        latestCommit: logs.latest,
+        totalCommits: logs.total
+      };
+    },
+    
+    async dumpFullState(label: string): Promise<void> {
+      const status = await git.status();
+      const branches = await git.branchLocal();
+      
+      console.log(`=== GIT STATE [${label}] ===`);
+      console.log('Current branch:', status.current);
+      console.log('Is clean:', status.isClean());
+      console.log('Modified files:', status.modified);
+      console.log('Created files:', status.created);
+      console.log('Deleted files:', status.deleted);
+      console.log('All branches:', branches.all);
+      console.log('========================');
+    }
+  };
+};
+
+// Also create a utility hash function in src/utils/hash.ts
+export const cyrb53 = (str: string, seed = 0): number => {
+  let h1 = 0xdeadbeef ^ seed;
+  let h2 = 0x41c6ce57 ^ seed;
+  
+  for (let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+};
+```
+
+# Test Strategy:
+Write unit tests for the Git operations module:
+1. Test branch creation with valid task descriptions
+2. Test isClean detection with mock repository states
+3. Test commitAndPush with simulated file changes
+4. Test cleanup functionality with various branch states
+5. Test error handling during Git operations
+
+Use a temporary directory with an initialized Git repository for integration tests.

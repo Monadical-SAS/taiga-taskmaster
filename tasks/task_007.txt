@@ -1,0 +1,126 @@
+# Task ID: 7
+# Title: Implement Goose AI Worker
+# Status: pending
+# Dependencies: 2, 4
+# Priority: high
+# Description: Create the Goose AI worker implementation that executes tasks using the Goose CLI.
+# Details:
+Create `src/workers/goose.ts` with the following implementation:
+
+```typescript
+import { WorkerResult, GooseWorkerConfig } from '../core/types';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { sleep } from '../utils/sleep';
+
+const execAsync = promisify(exec);
+
+export const makeGooseWorker = (config: GooseWorkerConfig) => {
+  const {
+    workingDirectory,
+    goose,
+    timeouts = { process: 30000, hard: 35000 },
+    apiKeys = {}
+  } = config;
+  
+  return async (task: { description: string }, options?: { signal?: AbortSignal }): Promise<WorkerResult> => {
+    // Create instructions file
+    const instructionsFile = goose.instructionsFile || path.join(workingDirectory, 'instructions.md');
+    await fs.writeFile(instructionsFile, task.description, 'utf-8');
+    
+    // Prepare environment variables for API keys
+    const env = { ...process.env };
+    if (apiKeys.openrouter) {
+      env.OPENROUTER_API_KEY = apiKeys.openrouter;
+    }
+    
+    // Prepare Goose command
+    const gooseCommand = `goose run --model ${goose.model} --provider ${goose.provider} ${instructionsFile}`;
+    
+    try {
+      // Create abort controller for timeout
+      const abortController = new AbortController();
+      const { signal } = abortController;
+      
+      // Set timeout
+      const timeout = setTimeout(() => {
+        abortController.abort('Goose execution timed out');
+      }, timeouts.hard || 35000);
+      
+      // Execute Goose command with timeout
+      const { stdout, stderr } = await execAsync(gooseCommand, {
+        cwd: workingDirectory,
+        env,
+        signal,
+        timeout: timeouts.process || 30000
+      });
+      
+      // Clear timeout
+      clearTimeout(timeout);
+      
+      // Check for execution errors
+      if (stderr && stderr.includes('Error')) {
+        throw new Error(`Goose execution failed: ${stderr}`);
+      }
+      
+      // Get list of modified files
+      const status = await execAsync('git status --porcelain', { cwd: workingDirectory });
+      const modifiedFiles = status.stdout
+        .split('\n')
+        .filter(line => line.trim() !== '')
+        .map(line => line.substring(3).trim());
+      
+      return {
+        success: true,
+        artifacts: modifiedFiles
+      };
+    } catch (error: any) {
+      // Handle timeout errors
+      if (error.name === 'AbortError' || (error.signal === 'SIGTERM' && error.killed)) {
+        console.error('Goose execution timed out');
+        
+        // Create fallback file to indicate timeout
+        await fs.writeFile(
+          path.join(workingDirectory, 'timeout-error.md'),
+          `# Task Execution Timed Out\n\nThe Goose AI worker timed out while processing the following task:\n\n${task.description}`,
+          'utf-8'
+        );
+        
+        return {
+          success: false,
+          artifacts: ['timeout-error.md'],
+          error: new Error('Goose execution timed out')
+        };
+      }
+      
+      // Handle other execution errors
+      console.error('Goose execution failed:', error);
+      
+      // Create error file
+      await fs.writeFile(
+        path.join(workingDirectory, 'execution-error.md'),
+        `# Task Execution Failed\n\nError: ${error.message}\n\nTask: ${task.description}`,
+        'utf-8'
+      );
+      
+      return {
+        success: false,
+        artifacts: ['execution-error.md'],
+        error
+      };
+    }
+  };
+};
+```
+
+# Test Strategy:
+Write integration tests for the Goose worker:
+1. Test successful task execution with mock Goose CLI
+2. Test timeout handling with deliberately slow tasks
+3. Test error handling with failing Goose commands
+4. Test artifact collection from modified files
+5. Verify proper cleanup after execution
+
+Use mocked Goose CLI for unit tests to avoid actual API calls.

@@ -1,0 +1,35 @@
+# Task ID: 1
+# Title: Create Package Structure and Configuration
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Set up the initial worker package structure with proper dependencies, TypeScript configuration, and testing framework.
+# Details:
+1. Create a new package directory `packages/worker/`
+2. Initialize package.json with dependencies:
+   - @taiga-task-master/worker-interface
+   - @taiga-task-master/core
+   - simple-git
+   - effect
+   - vitest (dev dependency)
+3. Configure TypeScript:
+```typescript
+// tsconfig.json
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../worker-interface" },
+    { "path": "../core" }
+  ]
+}
+```
+4. Set up directory structure as specified in the PRD
+5. Create initial README.md with package description
+
+# Test Strategy:
+Verify package structure is correct with all required directories. Ensure package.json has correct dependencies. Validate TypeScript configuration by running a test build.

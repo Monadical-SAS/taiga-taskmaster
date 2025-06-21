@@ -1,0 +1,100 @@
+# Task ID: 5
+# Title: Implement NextTask Strategy Functions
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Create the NextTask strategy functions that determine which task to execute next from the TasksMachine state.
+# Details:
+Create `src/core/next-task.ts` with the following implementation:
+
+```typescript
+import { TasksMachine } from '@taiga-task-master/core';
+import { Option } from 'effect';
+import { NextTaskF } from './types';
+
+export const createNextTaskStrategies = () => ({
+  /**
+   * Simple FIFO (First-In-First-Out) strategy for task selection
+   * Selects the first available task from the task map
+   */
+  fifo: ((tasks: TasksMachine.Tasks) => {
+    const entries = TasksMachine.Tasks.toEntries(tasks);
+    return entries.length > 0 ? Option.some(entries[0]) : Option.none();
+  }) as NextTaskF,
+  
+  /**
+   * Priority-based task selection strategy
+   * Selects tasks based on priority metadata if available
+   */
+  priority: ((tasks: TasksMachine.Tasks) => {
+    const entries = TasksMachine.Tasks.toEntries(tasks);
+    if (entries.length === 0) return Option.none();
+    
+    // Sort entries by priority if available
+    const sortedEntries = [...entries].sort((a, b) => {
+      const aPriority = a[1].metadata?.priority;
+      const bPriority = b[1].metadata?.priority;
+      
+      // Priority mapping (higher number = higher priority)
+      const priorityMap: Record<string, number> = {
+        high: 3,
+        medium: 2,
+        low: 1
+      };
+      
+      // Default to medium priority if not specified
+      const aPriorityValue = aPriority ? priorityMap[aPriority] || 2 : 2;
+      const bPriorityValue = bPriority ? priorityMap[bPriority] || 2 : 2;
+      
+      // Sort by priority (descending)
+      return bPriorityValue - aPriorityValue;
+    });
+    
+    return Option.some(sortedEntries[0]);
+  }) as NextTaskF,
+  
+  /**
+   * Dependency-aware task selection strategy
+   * Selects tasks with no unresolved dependencies first
+   */
+  dependencies: ((tasks: TasksMachine.Tasks, completedTaskIds: Set<string> = new Set()) => {
+    const entries = TasksMachine.Tasks.toEntries(tasks);
+    if (entries.length === 0) return Option.none();
+    
+    // Find tasks with no unresolved dependencies
+    const availableTasks = entries.filter(([_, task]) => {
+      const dependencies = task.metadata?.dependencies || [];
+      return dependencies.every(depId => completedTaskIds.has(depId));
+    });
+    
+    if (availableTasks.length === 0) return Option.none();
+    
+    // Sort available tasks by priority
+    const sortedTasks = [...availableTasks].sort((a, b) => {
+      const aPriority = a[1].metadata?.priority;
+      const bPriority = b[1].metadata?.priority;
+      
+      const priorityMap: Record<string, number> = {
+        high: 3,
+        medium: 2,
+        low: 1
+      };
+      
+      const aPriorityValue = aPriority ? priorityMap[aPriority] || 2 : 2;
+      const bPriorityValue = bPriority ? priorityMap[bPriority] || 2 : 2;
+      
+      return bPriorityValue - aPriorityValue;
+    });
+    
+    return Option.some(sortedTasks[0]);
+  }) as NextTaskF
+});
+```
+
+# Test Strategy:
+Write unit tests for NextTask strategies:
+1. Test FIFO strategy with various task collections
+2. Test priority strategy with mixed priority tasks
+3. Test dependency strategy with complex dependency chains
+4. Test edge cases like empty task collections
+5. Verify correct task selection order for each strategy
