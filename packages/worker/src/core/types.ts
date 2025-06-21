@@ -12,6 +12,7 @@ export type WorkerResult = {
   success: boolean;
   artifacts?: string[];
   error?: Error;
+  branchName?: string;
 };
 
 // Next task function type

@@ -16,18 +16,40 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
   } = config;
   
   return async (task: { description: string }, _options?: { signal?: AbortSignal }): Promise<WorkerResult> => {
+    // Initialize git repository if it doesn't exist
+    try {
+      await execAsync('git rev-parse --git-dir', { cwd: workingDirectory });
+    } catch {
+      // Not a git repository, initialize one
+      await execAsync('git init', { cwd: workingDirectory });
+      await execAsync('git config user.name "Goose Worker"', { cwd: workingDirectory });
+      await execAsync('git config user.email "worker@goose.ai"', { cwd: workingDirectory });
+      
+      // Disable GPG signing to avoid issues
+      await execAsync('git config commit.gpgsign false', { cwd: workingDirectory });
+      
+      // Create initial commit to establish HEAD
+      await fs.writeFile(path.join(workingDirectory, '.gitkeep'), '', 'utf-8');
+      await execAsync('git add .gitkeep', { cwd: workingDirectory });
+      await execAsync('git commit -m "Initial commit"', { cwd: workingDirectory });
+    }
+
     // Create instructions file
     const instructionsFile = goose.instructionsFile || path.join(workingDirectory, 'instructions.md');
     await fs.writeFile(instructionsFile, task.description, 'utf-8');
+    console.log(`📝 Created instructions file: ${instructionsFile}`);
+    console.log(`📋 Instructions content: ${task.description}`);
     
-    // Prepare environment variables for API keys
+    // Prepare environment variables for API keys and goose configuration
     const env = { 
       ...process.env,
-      ...(apiKeys.openrouter ? { OPENROUTER_API_KEY: apiKeys.openrouter } : {})
+      ...(apiKeys.openrouter ? { OPENROUTER_API_KEY: apiKeys.openrouter } : {}),
+      GOOSE_MODEL: goose.model,
+      GOOSE_PROVIDER: goose.provider
     };
     
-    // Prepare Goose command
-    const gooseCommand = `goose run --model ${goose.model} --provider ${goose.provider} ${instructionsFile}`;
+    // Prepare Goose command (model and provider are set via environment variables)
+    const gooseCommand = `goose run -i "${instructionsFile}" --with-builtin developer`;
     
     try {
       // Create abort controller for timeout
@@ -40,7 +62,11 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
       }, timeouts.hard || 35000);
       
       // Execute Goose command with timeout
-      const { stdout: _stdout, stderr } = await execAsync(gooseCommand, {
+      console.log(`🔧 Executing goose command: ${gooseCommand}`);
+      console.log(`📂 Working directory: ${workingDirectory}`);
+      console.log(`🌍 Environment: GOOSE_MODEL=${env.GOOSE_MODEL}, GOOSE_PROVIDER=${env.GOOSE_PROVIDER}`);
+      
+      const { stdout, stderr } = await execAsync(gooseCommand, {
         cwd: workingDirectory,
         env,
         signal,
@@ -50,21 +76,33 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
       // Clear timeout
       clearTimeout(timeout);
       
+      console.log(`📤 Goose stdout:`, stdout);
+      if (stderr) {
+        console.log(`📤 Goose stderr:`, stderr);
+      }
+      
       // Check for execution errors
       if (stderr && stderr.includes('Error')) {
         throw new Error(`Goose execution failed: ${stderr}`);
       }
       
-      // Get list of modified files
+      // Get current branch name
+      const branchResult = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: workingDirectory });
+      const branchName = branchResult.stdout.trim();
+      
+      // Get list of modified files, excluding the instructions file
       const status = await execAsync('git status --porcelain', { cwd: workingDirectory });
+      const instructionsFileName = path.basename(instructionsFile);
       const modifiedFiles = status.stdout
         .split('\n')
         .filter(line => line.trim() !== '')
-        .map(line => line.substring(3).trim());
+        .map(line => line.substring(3).trim())
+        .filter(file => file !== instructionsFileName);
       
       return {
         success: true,
-        artifacts: modifiedFiles
+        artifacts: modifiedFiles,
+        branchName
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -79,6 +117,16 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
       if (isAbortError) {
         console.error('Goose execution timed out');
         
+        // Get branch name for timeout error
+        // eslint-disable-next-line functional/no-let
+        let branchName: string | undefined;
+        try {
+          const branchResult = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: workingDirectory });
+          branchName = branchResult.stdout.trim();
+        } catch {
+          // Ignore branch name error
+        }
+        
         // Create fallback file to indicate timeout
         await fs.writeFile(
           path.join(workingDirectory, 'timeout-error.md'),
@@ -89,12 +137,23 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
         return {
           success: false,
           artifacts: ['timeout-error.md'],
-          error: new Error('Goose execution timed out')
+          error: new Error('Goose execution timed out'),
+          branchName
         };
       }
       
       // Handle other execution errors
       console.error('Goose execution failed:', errorMessage);
+      
+      // Get branch name for error
+      // eslint-disable-next-line functional/no-let
+      let branchName: string | undefined;
+      try {
+        const branchResult = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: workingDirectory });
+        branchName = branchResult.stdout.trim();
+      } catch {
+        // Ignore branch name error
+      }
       
       // Create error file
       await fs.writeFile(
@@ -106,7 +165,8 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
       return {
         success: false,
         artifacts: ['execution-error.md'],
-        error: errorObject
+        error: errorObject,
+        branchName
       };
     }
   };

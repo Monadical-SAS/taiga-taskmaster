@@ -27,6 +27,41 @@ The worker package implements the interfaces defined in `@taiga-task-master/work
 
 ## Usage
 
+### CLI Task Runner
+
+The worker package includes an interactive CLI for processing user tasks through the git + goose pipeline:
+
+```bash
+# Build the package first
+pnpm build
+
+# Run the interactive task runner (from monorepo root)
+npx dotenv -e ./.env -- pnpm --filter @taiga-task-master/worker run cli
+```
+
+The CLI provides:
+- **Interactive task input**: Enter task descriptions one by one
+- **Queue management**: Tasks are collected and processed sequentially 
+- **Git integration**: Each task runs in isolated git branches
+- **Goose AI processing**: Uses Goose CLI for task execution
+- **Temporary workspace**: Creates temporary directory for safe execution
+- **Progress tracking**: Real-time feedback on task completion
+
+**Required Environment Variables:**
+```bash
+# Goose AI Configuration
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+GOOSE_MODEL=anthropic/claude-sonnet-4  # Optional, defaults to this
+GOOSE_PROVIDER=openrouter               # Optional, defaults to this
+```
+
+**CLI Commands:**
+- Enter task descriptions to add to queue
+- `status` - Show current queue status
+- `quit` or `exit` - Exit the CLI
+
+### Programmatic Usage
+
 ```typescript
 import { createGooseWorker, createFilesystemWorker } from '@taiga-task-master/worker';
 

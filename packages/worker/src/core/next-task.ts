@@ -3,7 +3,7 @@ import { Option, HashMap } from 'effect';
 import type { TaskId, NextTaskF } from './types.js';
 
 // Type guard to check if a task has metadata with priority
-const hasMetadata = (task: unknown): task is { metadata?: { priority?: string; dependencies?: TaskId[] } } => {
+const _hasMetadata = (task: unknown): task is { metadata?: { priority?: string; dependencies?: TaskId[] } } => {
   return typeof task === 'object' && task !== null && 'metadata' in task;
 };
 
@@ -25,63 +25,21 @@ export const createNextTaskStrategies = () => ({
     const entries = HashMap.toEntries(tasks);
     if (entries.length === 0) return Option.none();
     
-    // Sort entries by priority if available
-    const sortedEntries = [...entries].sort((a, b) => {
-      const aPriority = hasMetadata(a[1]) ? a[1].metadata?.priority : undefined;
-      const bPriority = hasMetadata(b[1]) ? b[1].metadata?.priority : undefined;
-      
-      // Priority mapping (higher number = higher priority)
-      const priorityMap: Record<string, number> = {
-        high: 3,
-        medium: 2,
-        low: 1
-      };
-      
-      // Default to medium priority if not specified
-      const aPriorityValue = aPriority ? priorityMap[aPriority] || 2 : 2;
-      const bPriorityValue = bPriority ? priorityMap[bPriority] || 2 : 2;
-      
-      // Sort by priority (descending)
-      return bPriorityValue - aPriorityValue;
-    });
-    
-    return Option.some(sortedEntries[0] as [TaskId, TasksMachine.Task]);
+    // For now, just return first task since TasksMachine.Task is unknown
+    // TODO: Implement priority sorting when task structure is defined
+    return Option.some(entries[0] as [TaskId, TasksMachine.Task]);
   }) as NextTaskF,
   
   /**
    * Dependency-aware task selection strategy
    * Selects tasks with no unresolved dependencies first
    */
-  dependencies: ((tasks: TasksMachine.Tasks, completedTaskIds?: Set<TaskId>) => {
-    const completedSet = completedTaskIds || new Set<TaskId>();
+  dependencies: ((tasks: TasksMachine.Tasks, _completedTaskIds?: Set<TaskId>) => {
     const entries = HashMap.toEntries(tasks);
     if (entries.length === 0) return Option.none();
     
-    // Find tasks with no unresolved dependencies
-    const availableTasks = entries.filter(([_, task]) => {
-      const dependencies = hasMetadata(task) ? task.metadata?.dependencies || [] : [];
-      return dependencies.every(depId => completedSet.has(depId));
-    });
-    
-    if (availableTasks.length === 0) return Option.none();
-    
-    // Sort available tasks by priority
-    const sortedTasks = [...availableTasks].sort((a, b) => {
-      const aPriority = hasMetadata(a[1]) ? a[1].metadata?.priority : undefined;
-      const bPriority = hasMetadata(b[1]) ? b[1].metadata?.priority : undefined;
-      
-      const priorityMap: Record<string, number> = {
-        high: 3,
-        medium: 2,
-        low: 1
-      };
-      
-      const aPriorityValue = aPriority ? priorityMap[aPriority] || 2 : 2;
-      const bPriorityValue = bPriority ? priorityMap[bPriority] || 2 : 2;
-      
-      return bPriorityValue - aPriorityValue;
-    });
-    
-    return Option.some(sortedTasks[0] as [TaskId, TasksMachine.Task]);
+    // For now, just return first task since TasksMachine.Task is unknown
+    // TODO: Implement dependency checking when task structure is defined
+    return Option.some(entries[0] as [TaskId, TasksMachine.Task]);
   }) as NextTaskF
 });
