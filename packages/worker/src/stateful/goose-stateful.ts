@@ -1,6 +1,6 @@
 import { TasksMachine } from '@taiga-task-master/core';
 import { statefulLoop } from '@taiga-task-master/worker-interface';
-import type { GooseWorkerConfig, NextTaskF } from '../core/types.js';
+import type { GooseWorkerConfig } from '../core/types.js';
 import { createBaseStatefulLoopDeps } from './base-stateful.js';
 import { makeGooseWorker } from '../workers/goose.js';
 import { createNextTaskStrategies } from '../core/next-task.js';
@@ -14,32 +14,30 @@ export const createGooseStatefulLoop = (config: GooseWorkerConfig) => {
     runWorker: async (task: { description: string }, options?: { signal?: AbortSignal }) => {
       const result = await gooseWorker(task, options);
       
-      // Convert WorkerResult to expected format
-      const outputLines: Array<{ timestamp: number; line: string }> = [];
       if (result.success && result.artifacts) {
         return {
-          output: [...outputLines, {
+          output: [{
             timestamp: Date.now(),
             line: `Task completed successfully. Created artifacts: ${result.artifacts.join(', ')}`
           }]
         };
       } else if (result.error) {
         return {
-          output: [...outputLines, {
+          output: [{
             timestamp: Date.now(),
             line: `Task failed: ${result.error.message}`
           }]
         };
       } else {
         return {
-          output: [...outputLines, {
+          output: [{
             timestamp: Date.now(),
             line: 'Task completed'
           }]
         };
       }
     },
-    next: createNextTaskStrategies().priority satisfies NextTaskF,
+    next: createNextTaskStrategies().fifo,
     description: (task: unknown) => {
       if (typeof task === 'string') {
         return castNonEmptyString(task);

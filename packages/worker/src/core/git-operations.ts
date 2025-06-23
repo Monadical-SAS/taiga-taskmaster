@@ -22,7 +22,7 @@ export const createGitDeps = (config: GitConfig = {}, workingDirectory: string):
         `user.name=${config.userConfig.name}`,
         `user.email=${config.userConfig.email}`
       ] : []),
-      'commit.gpgsign=false', // Disable GPG signing for tests
+      'commit.gpgsign=false',
       'core.sshCommand=ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
     ]
   });

@@ -1,7 +1,7 @@
 // @vibe-generated: conforms to worker-interface
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createTempDir } from "../../src/utils/temp-utils";
-import { processTaskQueue, TaskQueue } from "../../src/cli/task-runner";
+import { processTaskQueue, TasksMachineMemoryPersistence } from "../../src/cli/task-runner";
 import { simpleGit } from "simple-git";
 
 describe("Stateful Loop Simple Integration", () => {
@@ -23,7 +23,7 @@ describe("Stateful Loop Simple Integration", () => {
   });
 
   it("should initialize git repository and use statefulLoop", async () => {
-    const queue = new (TaskQueue)();
+    const queue = new (TasksMachineMemoryPersistence)();
     
     // Add a simple task
     queue.addTask('Test task for git initialization');
@@ -62,7 +62,7 @@ describe("Stateful Loop Simple Integration", () => {
   }, 30000);
 
   it("should handle empty task queue gracefully", async () => {
-    const queue = new (TaskQueue)();
+    const queue = new (TasksMachineMemoryPersistence)();
     
     // No tasks added - queue should be empty
     expect(queue.hasPendingTasks()).toBe(false);

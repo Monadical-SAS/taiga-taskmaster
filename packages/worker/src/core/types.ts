@@ -36,7 +36,6 @@ export interface Logger {
   readonly error: (message: string, ...args: unknown[]) => void;
 }
 
-// Configuration interfaces
 export interface BaseWorkerConfig {
   workingDirectory: string;
   logLevel?: 'debug' | 'info' | 'warn' | 'error';

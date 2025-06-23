@@ -305,8 +305,7 @@ export const createGitDebugger = (workingDir: string): GitDebugger => {
         try {
           const allFiles = await fs.readdir(workingDir, { recursive: true });
           const workFiles = allFiles.filter(f => 
-            typeof f === 'string' && 
-            !f.includes('.git/') && 
+            !f.includes('.git/') &&
             !f.startsWith('.git') &&
             !f.includes('node_modules/')
           );

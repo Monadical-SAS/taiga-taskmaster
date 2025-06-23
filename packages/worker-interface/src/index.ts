@@ -252,7 +252,8 @@ export const createGooseCommand = (config: Partial<GooseConfig> = {}): Command.C
     "-i", 
     instructionsFile,
     "--with-builtin",
-    "developer"
+    "developer",
+    "--no-session"
   );
 };
 
@@ -407,9 +408,9 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
 
 // connect with global meta state - info about artifacts, queue. never ends
 export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
-  next: NextTaskF,/*from taskmaster source code implementation*/
+  next: NextTaskF,/*to take from taskmaster source code implementation*/
   description: (t: Task) => NonEmptyString
-}) => (state0: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>): object => {
+}) => (state0: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>) => {
   /*task machine methods*/
   // eslint-disable-next-line functional/no-let
   let state = state0;
@@ -454,6 +455,10 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
     stop() {
       abortController.abort();
     },
-    appendTasks: (tasks: Tasks) => appendTasks(tasks)(state),
+    appendTasks: async (tasks: Tasks) => {
+      await stateSavePromise;
+      state = appendTasks(tasks)(state);
+      stateSavePromise = save(state);
+    },
   };
 };

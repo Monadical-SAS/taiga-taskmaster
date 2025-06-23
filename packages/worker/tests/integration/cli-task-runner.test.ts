@@ -1,9 +1,10 @@
 // @vibe-generated: conforms to worker-interface
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createTempDir } from "../../src/utils/temp-utils";
+import { createTempDir } from "../../src/utils/temp-utils.js";
 import { spawn } from "child_process";
 import * as fs from "fs/promises";
 import * as path from "path";
+import { createNextTaskStrategies } from '../../src/index.js';
 
 describe("CLI Task Runner Integration", () => {
   const state = {
@@ -21,19 +22,21 @@ describe("CLI Task Runner Integration", () => {
     state.cleanup();
   });
 
+
+
   it("should process tasks through programmatic interface", async () => {
     // Import the main function and TaskQueue class directly
-    const { TaskQueue, createNextTaskStrategy } = await import("../../src/cli/task-runner");
-    const { makeGooseWorker } = await import("../../src/workers/goose");
+    const { TasksMachineMemoryPersistence } = await import("../../src/cli/task-runner.js");
+    const { makeGooseWorker } = await import("../../src/workers/goose.js");
 
     // Create a task queue
-    const queue = new TaskQueue();
+    const queue = new TasksMachineMemoryPersistence();
     
     // Add a simple test task
     const taskId = queue.addTask("Create a file called test.txt with content 'Hello World'");
     
     expect(queue.hasPendingTasks()).toBe(true);
-    expect(queue.getPendingCount()).toBe(1);
+    expect(queue.getQueueSize()).toBe(1);
 
     // Create a mock goose worker for testing
     const mockGooseWorker = makeGooseWorker({
@@ -49,8 +52,7 @@ describe("CLI Task Runner Integration", () => {
       }
     });
 
-    // Get the task using next task strategy
-    const nextTask = createNextTaskStrategy();
+    const nextTask = createNextTaskStrategies().fifo;
     const taskMap = queue.getTaskMap();
     const nextTaskResult = nextTask(taskMap);
     
@@ -60,7 +62,7 @@ describe("CLI Task Runner Integration", () => {
       const [retrievedTaskId, task] = nextTaskResult.value;
       expect(retrievedTaskId).toBe(taskId);
       
-      const description = queue.getTaskDescription(taskId);
+      const description = queue.fetchTaskDescription(taskId);
       expect(description).toBe("Create a file called test.txt with content 'Hello World'");
 
       // Try to run the task (this will likely fail since we don't have real goose setup)
@@ -87,31 +89,31 @@ describe("CLI Task Runner Integration", () => {
   });
 
   it("should handle multiple tasks in queue", async () => {
-    const { TaskQueue } = await import("../../src/cli/task-runner");
+    const { TasksMachineMemoryPersistence } = await import("../../src/cli/task-runner.js");
     
-    const queue = new TaskQueue();
+    const queue = new TasksMachineMemoryPersistence();
     
     // Add multiple tasks
     const task1 = queue.addTask("First task");
     const task2 = queue.addTask("Second task");
     const task3 = queue.addTask("Third task");
     
-    expect(queue.getPendingCount()).toBe(3);
+    expect(queue.getQueueSize()).toBe(3);
     
     // Process tasks one by one
     queue.markCompleted(task1);
-    expect(queue.getPendingCount()).toBe(2);
+    expect(queue.getQueueSize()).toBe(2);
     
     queue.markCompleted(task2);
-    expect(queue.getPendingCount()).toBe(1);
+    expect(queue.getQueueSize()).toBe(1);
     
     queue.markCompleted(task3);
-    expect(queue.getPendingCount()).toBe(0);
+    expect(queue.getQueueSize()).toBe(0);
     expect(queue.hasPendingTasks()).toBe(false);
   });
 
   it("should create proper instructions file", async () => {
-    const { makeGooseWorker } = await import("../../src/workers/goose");
+    const { makeGooseWorker } = await import("../../src/workers/goose.js");
     
     const instructionsPath = path.join(state.tempDir, "test-instructions.md");
     
@@ -144,9 +146,9 @@ describe("CLI Task Runner Integration", () => {
   });
 
   it("should handle task queue state correctly", async () => {
-    const { TaskQueue, createNextTaskStrategy } = await import("../../src/cli/task-runner");
+    const { TasksMachineMemoryPersistence, createNextTaskStrategy } = await import("../../src/cli/task-runner");
     
-    const queue = new TaskQueue();
+    const queue = new TasksMachineMemoryPersistence();
     const nextTask = createNextTaskStrategy();
     
     // Empty queue should return None

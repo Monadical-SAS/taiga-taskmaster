@@ -16,25 +16,6 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
   } = config;
   
   return async (task: { description: string }, _options?: { signal?: AbortSignal }): Promise<WorkerResult> => {
-    // Initialize git repository if it doesn't exist
-    try {
-      await execAsync('git rev-parse --git-dir', { cwd: workingDirectory });
-    } catch {
-      // Not a git repository, initialize one
-      await execAsync('git init', { cwd: workingDirectory });
-      await execAsync('git config user.name "Goose Worker"', { cwd: workingDirectory });
-      await execAsync('git config user.email "worker@goose.ai"', { cwd: workingDirectory });
-      
-      // Disable GPG signing to avoid issues
-      await execAsync('git config commit.gpgsign false', { cwd: workingDirectory });
-      
-      // Create initial commit to establish HEAD
-      await fs.writeFile(path.join(workingDirectory, '.gitkeep'), '', 'utf-8');
-      await execAsync('git add .gitkeep', { cwd: workingDirectory });
-      await execAsync('git commit -m "Initial commit"', { cwd: workingDirectory });
-    }
-
-    // Create instructions file
     const instructionsFile = goose.instructionsFile || path.join(workingDirectory, 'instructions.md');
     await fs.writeFile(instructionsFile, task.description, 'utf-8');
     console.log(`📝 Created instructions file: ${instructionsFile}`);
@@ -47,9 +28,11 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
       GOOSE_MODEL: goose.model,
       GOOSE_PROVIDER: goose.provider
     };
+
+    // runGooseWithLiveExecutor
     
     // Prepare Goose command (model and provider are set via environment variables)
-    const gooseCommand = `goose run -i "${instructionsFile}" --with-builtin developer`;
+    const gooseCommand = `goose run -i "${instructionsFile}" --with-builtin developer --no-session`;
     
     try {
       // Create abort controller for timeout
@@ -61,7 +44,6 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
         abortController.abort('Goose execution timed out');
       }, timeouts.hard || 35000);
       
-      // Execute Goose command with timeout
       console.log(`🔧 Executing goose command: ${gooseCommand}`);
       console.log(`📂 Working directory: ${workingDirectory}`);
       console.log(`🌍 Environment: GOOSE_MODEL=${env.GOOSE_MODEL}, GOOSE_PROVIDER=${env.GOOSE_PROVIDER}`);
@@ -73,7 +55,6 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
         timeout: timeouts.process || 30000
       });
       
-      // Clear timeout
       clearTimeout(timeout);
       
       console.log(`📤 Goose stdout:`, stdout);
@@ -82,7 +63,7 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
       }
       
       // Check for execution errors
-      if (stderr && stderr.includes('Error')) {
+      if (stderr) {
         throw new Error(`Goose execution failed: ${stderr}`);
       }
       
@@ -155,16 +136,9 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
         // Ignore branch name error
       }
       
-      // Create error file
-      await fs.writeFile(
-        path.join(workingDirectory, 'execution-error.md'),
-        `# Task Execution Failed\n\nError: ${errorMessage}\n\nTask: ${task.description}`,
-        'utf-8'
-      );
-      
       return {
         success: false,
-        artifacts: ['execution-error.md'],
+        artifacts: [],
         error: errorObject,
         branchName
       };

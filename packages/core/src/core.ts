@@ -42,8 +42,6 @@ export const generateTasks =
     return castNonNegativeInteger(tasks.tasks.length);
   };
 
-// FOLLOWING IS DATA MODELING WIP
-
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace TasksMachine {
   export type Task = unknown;
@@ -58,6 +56,14 @@ export namespace TasksMachine {
     // invariant: always at least 1 (MVP: normally just 1)
     tasks: Tasks;
   };
+  export const state0: State = {
+    tasks: HashMap.empty(),
+    taskExecutionState: {
+      step: 'stopped'
+    },
+    outputTasks: [],
+    artifacts: [],
+  }
   // invariant: task ids are uniq
   export type State = {
     // task id is the same as taskid of taskmaster; both within the scope of 1 project of course
@@ -70,7 +76,6 @@ export namespace TasksMachine {
     // those are not ALL the tasks; we have "done" tasks but not merged yet; we can have a "done" non-merged task edited - that's a command to redo/cleanup
     // the "Tasks" is a black box. we do have a function "get next task" from them, as well as "mark completed" etc but for the concern of the machine it's a black box.
     tasks: Tasks;
-    timestamp: NonNegativeInteger;
     taskExecutionState: TaskExecution.TaskExecutionState;
     outputTasks: [TaskId, Task][];
     artifacts: Array<Artifact>;
@@ -293,6 +298,19 @@ export namespace TasksMachine {
       );
     };
 
+  // anything non-crucial
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  export namespace Utils {
+    export const liftTasks = (id: TaskId, t: Task): Tasks => {
+      return HashMap.make(Tuple.make(id, t))
+    }
+    export const appendTask = (id: TaskId, t: Task) => (s: State): State => {
+      return appendTasks(liftTasks(id, t))(s);
+    }
+    export const getTask = (id: TaskId) => (s: State): Option.Option<Task> => {
+      return HashMap.get(s.tasks, id);
+    }
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -329,3 +347,4 @@ namespace AgentExecution {
     return s;
   };
 }
+
