@@ -10,7 +10,7 @@ import {
   Data,
   Clock,
   Duration,
-  Option
+  Option, Tuple, Console
 } from 'effect';
 import { Command } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
@@ -71,7 +71,7 @@ export type WorkerResult = Readonly<{
 }>;
 
 export interface CommandExecutor {
-  readonly streamLines: (command: Command.Command) => Stream.Stream<string, WorkerError>;
+  readonly streamLines: (command: Command.Command) => Stream.Stream<string, Exclude<WorkerError, CommandTimeoutError>>;
 }
 
 export const CommandExecutor = Context.GenericTag<CommandExecutor>("CommandExecutor");
@@ -88,6 +88,7 @@ export type GooseConfig = Readonly<{
   processTimeout?: number;
   workingDirectory?: string;
   instructionsFile?: string;
+
 }>;
 
 export const DEFAULT_GOOSE_CONFIG: GooseConfig = {
@@ -102,10 +103,14 @@ export const DEFAULT_COMMAND_TIMEOUT_MS = 30000;
 
 export const executeCommandWithTimeout = (
   command: Command.Command,
-  timeoutMs: number = DEFAULT_COMMAND_TIMEOUT_MS
+  timeoutMs: number = DEFAULT_COMMAND_TIMEOUT_MS,
+  onLine?: (s: {
+    timestamp: number;
+    line: string;
+  }) => void
 ): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> =>
   pipe(
-    executeCommand(command),
+    executeCommand(command, onLine),
     Effect.timeout(Duration.millis(timeoutMs)),
     Effect.catchTag("TimeoutException", () =>
       Effect.fail(new CommandTimeoutError({
@@ -117,7 +122,7 @@ export const executeCommandWithTimeout = (
 
 export const streamCommand = (
   command: Command.Command
-): Stream.Stream<WorkerOutputLine, WorkerError, CommandExecutor> =>
+): Stream.Stream<WorkerOutputLine, Exclude<WorkerError, CommandTimeoutError>, CommandExecutor> =>
   pipe(
     CommandExecutor,
     Effect.map((executor) =>
@@ -134,9 +139,20 @@ export const streamCommand = (
     Stream.unwrap
   );
 
-export const executeCommand = (command: Command.Command): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> =>
+export const executeCommand = (command: Command.Command, onLine?: (s: Readonly<{
+  timestamp: number;
+  line: string;
+}>) => void): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> =>
   pipe(
     streamCommand(command),
+    Stream.tap((line) => {
+      try {
+        if (onLine) onLine(line);
+      } catch (error) {
+        console.error(error);
+      }
+      return Effect.succeed(undefined);
+    }),
     Stream.runCollect,
     Effect.map((output) => ({
       output: EffectArray.fromIterable(output),
@@ -276,14 +292,26 @@ export const createGooseEnvironment = (config: Partial<GooseConfig> = {}) =>
     })
   );
 
-export const executeGoose = (config: Partial<GooseConfig> = {}): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
-  const finalConfig = { ...DEFAULT_GOOSE_CONFIG, ...config };
+const prepareExecution = (config: Partial<GooseConfig> = {}) => {
+  const finalConfig: GooseConfig = { ...DEFAULT_GOOSE_CONFIG, ...config };
   const command = createGooseCommand(finalConfig);
   const workingDir = finalConfig.workingDirectory;
   const timeoutMs = finalConfig.processTimeout ?? DEFAULT_COMMAND_TIMEOUT_MS;
   const commandWithWorkingDir = workingDir ? Command.workingDirectory(command, workingDir) : command;
-  return executeCommandWithTimeout(commandWithWorkingDir, timeoutMs);
+  return Tuple.make(commandWithWorkingDir, timeoutMs);
+}
+
+export const executeGoose = (config: Partial<GooseConfig> = {}, onLine?: (s: Readonly<{
+  timestamp: number;
+  line: string;
+}>) => void): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
+  return executeCommandWithTimeout(...prepareExecution(config), onLine);
 };
+
+export const streamGoose = (config: Partial<GooseConfig> = {}): Stream.Stream<WorkerOutputLine, Exclude<WorkerError, CommandTimeoutError>, CommandExecutor> => {
+  return streamCommand(prepareExecution(config)[0]);
+};
+
 
 export const GooseCommandExecutor = (config: Partial<GooseConfig> = {}) =>
   Layer.effect(
@@ -298,7 +326,7 @@ export const GooseCommandExecutor = (config: Partial<GooseConfig> = {}) =>
               Command.env(gooseEnv),
               Command.streamLines,
               Stream.provideLayer(NodeContext.layer),
-              Stream.mapError((error) => 
+              Stream.mapError((error) =>
                 new CommandExecutionError({
                   command,
                   stderr: String(error)
@@ -310,10 +338,13 @@ export const GooseCommandExecutor = (config: Partial<GooseConfig> = {}) =>
     )
   );
 
-export const runGooseWithLiveExecutor = (config: Partial<GooseConfig> = {}, options?: { readonly signal?: AbortSignal } | undefined): Promise<WorkerResult> =>
+export const runGooseWithLiveExecutor = (config: Partial<GooseConfig> = {}, options?: { readonly signal?: AbortSignal, onLine?: (s: Readonly<{
+    timestamp: number;
+    line: string;
+  }>) => void } | undefined): Promise<WorkerResult> =>
   Effect.runPromise(
     Effect.provide(
-      executeGoose(config), 
+      executeGoose(config, options?.onLine),
       GooseCommandExecutor(config)
     ),
     options

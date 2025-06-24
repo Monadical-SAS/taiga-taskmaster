@@ -5,6 +5,7 @@ import type { TestingWorkerConfig } from '../core/types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
+import { isNonEmptyArray } from 'effect/Array';
 
 describe('makeFileSystemWorker', () => {
   const testState = {
@@ -150,7 +151,7 @@ describe('makeFileSystemWorker', () => {
       expect(successes.length).toBeGreaterThan(0);
       
       // Check failure structure if any failures occurred
-      if (failures.length > 0) {
+      if (isNonEmptyArray(failures)) {
         const failure = failures[0];
         expect(failure.success).toBe(false);
         expect(failure.artifacts).toEqual(['mock-failure.md']);

@@ -153,14 +153,8 @@ async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir
     runWorker: async (task: { description: string }, options?: { signal?: AbortSignal }) => {
       console.log(`🔄 Running goose for: "${task.description}"`);
       const result = await gooseWorker(task, options);
-      // Convert WorkerResult to the expected format
       return {
-        output: [
-          {
-            timestamp: Date.now(),
-            line: `Task completed with result: ${JSON.stringify({ success: result.success, artifacts: result.artifacts, branchName: result.branchName })}`
-          }
-        ]
+        output: result.output
       };
     },
     

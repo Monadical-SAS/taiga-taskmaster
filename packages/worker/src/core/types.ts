@@ -13,6 +13,7 @@ export type WorkerResult = {
   artifacts?: string[];
   error?: Error;
   branchName?: string;
+  output: Array<{ timestamp: number; line: string }>;
 };
 
 // Next task function type
@@ -54,9 +55,6 @@ export interface GooseWorkerConfig extends BaseWorkerConfig {
     model: string;
     provider: string;
     instructionsFile?: string;
-  };
-  apiKeys?: {
-    openrouter?: string;
   };
 }
 

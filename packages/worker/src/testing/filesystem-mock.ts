@@ -28,7 +28,8 @@ export const makeFileSystemWorker = (config: TestingWorkerConfig) => {
       return {
         success: false,
         artifacts: ['mock-failure.md'],
-        error: new Error('Simulated worker failure')
+        error: new Error('Simulated worker failure'),
+        output: []
       };
     }
     
@@ -91,7 +92,8 @@ export const makeFileSystemWorker = (config: TestingWorkerConfig) => {
       
       return {
         success: true,
-        artifacts: finalArtifacts
+        artifacts: finalArtifacts,
+        output: []
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -109,14 +111,16 @@ export const makeFileSystemWorker = (config: TestingWorkerConfig) => {
         return {
           success: false,
           artifacts: ['fs-error.md'],
-          error: errorObject
+          error: errorObject,
+          output: []
         };
       } catch {
         // If we can't even write error file, return without artifacts
         return {
           success: false,
           artifacts: [],
-          error: errorObject
+          error: errorObject,
+          output: []
         };
       }
     }
