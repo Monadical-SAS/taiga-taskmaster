@@ -14,6 +14,10 @@ export type WorkerResult = {
   error?: Error;
   branchName?: string;
   output: Array<{ timestamp: number; line: string }>;
+  metadataDirectory?: string;
+  logFiles?: {
+    gooseOutput?: string;
+  };
 };
 
 // Next task function type
@@ -56,6 +60,7 @@ export interface GooseWorkerConfig extends BaseWorkerConfig {
     provider: string;
     instructionsFile?: string;
   };
+  metadataDirectory?: string;
 }
 
 export interface TestingWorkerConfig extends BaseWorkerConfig {

@@ -419,7 +419,16 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
         await deps.ackTask(Option.some({ branch }), options);
         taskAcknowledging = false;
       } catch (error) {
-        deps.log.error('uncaught error in main loop, retrying in 1 second: ', error);
+        // Enhanced error logging with specific handling for timeout errors
+        if (error instanceof CommandTimeoutError) {
+          deps.log.error(
+            `Command timed out after ${error.timeoutMs}ms in main loop, retrying in 1 second.`,
+            `Command: ${JSON.stringify(error.command)}`,
+            error
+          );
+        } else {
+          deps.log.error('uncaught error in main loop, retrying in 1 second: ', error);
+        }
         await cleanupBranch();
         if (!taskAcknowledging) {
           await deps.ackTask(none(), options);

@@ -1,6 +1,17 @@
 import type { Logger } from './types.js';
 
-export const createStructuredLogger = (level: 'debug' | 'info' | 'warn' | 'error' = 'info'): Logger => {
+// Console interface for dependency injection
+export interface ConsoleInterface {
+  readonly debug: (message?: unknown, ...optionalParams: unknown[]) => void;
+  readonly info: (message?: unknown, ...optionalParams: unknown[]) => void;
+  readonly warn: (message?: unknown, ...optionalParams: unknown[]) => void;
+  readonly error: (message?: unknown, ...optionalParams: unknown[]) => void;
+}
+
+export const createStructuredLogger = (
+  level: 'debug' | 'info' | 'warn' | 'error' = 'info',
+  consoleInterface: ConsoleInterface = console
+): Logger => {
   const levels = {
     debug: 0,
     info: 1,
@@ -15,25 +26,25 @@ export const createStructuredLogger = (level: 'debug' | 'info' | 'warn' | 'error
   return {
     debug(message: string, ...args: unknown[]) {
       if (shouldLog('debug')) {
-        console.debug(`[DEBUG] ${message}`, ...args);
+        consoleInterface.debug(`[DEBUG] ${message}`, ...args);
       }
     },
     
     info(message: string, ...args: unknown[]) {
       if (shouldLog('info')) {
-        console.info(`[INFO] ${message}`, ...args);
+        consoleInterface.info(`[INFO] ${message}`, ...args);
       }
     },
     
     warn(message: string, ...args: unknown[]) {
       if (shouldLog('warn')) {
-        console.warn(`[WARN] ${message}`, ...args);
+        consoleInterface.warn(`[WARN] ${message}`, ...args);
       }
     },
     
     error(message: string, ...args: unknown[]) {
       if (shouldLog('error')) {
-        console.error(`[ERROR] ${message}`, ...args);
+        consoleInterface.error(`[ERROR] ${message}`, ...args);
       }
     }
   };

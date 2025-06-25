@@ -3,6 +3,7 @@
 /* eslint-disable functional/no-classes, functional/immutable-data, functional/no-expression-statements */
 import * as readline from "readline";
 import { createTempDir } from "../utils/temp-utils.js";
+import { createMetadataDirectories } from "../utils/metadata-dirs.js";
 import { TasksMachine } from "@taiga-task-master/core";
 import { HashMap, Option, pipe } from 'effect';
 import {
@@ -71,17 +72,19 @@ const assumeTaskDescription = (t: unknown): NonEmptyString => {
   throw new Error(`Task description must be a string, got task ${JSON.stringify(t)}`);
 }
 
-async function createUserInterface(queue: TasksMachineMemoryPersistence, addTask: (t: string) => Promise<void>, workingDir: string) {
+async function createUserInterface(queue: TasksMachineMemoryPersistence, addTask: (t: string) => Promise<void>, workingDir: string, logger?: { info: (msg: string, ...args: unknown[]) => void; error: (msg: string, ...args: unknown[]) => void }) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
     prompt: "\n📝 Enter task (or 'quit' to exit, 'status' for info): "
   });
 
-  console.log(`\n🚀 Task Runner Started`);
-  console.log(`📁 Working directory: ${workingDir}`);
-  console.log(`💡 Enter task descriptions to add them to the queue`);
-  console.log(`⚡ Tasks will be processed automatically through git + goose`);
+  const log = logger || { info: console.log, error: console.error };
+  
+  log.info(`\n🚀 Task Runner Started`);
+  log.info(`📁 Working directory: ${workingDir}`);
+  log.info(`💡 Enter task descriptions to add them to the queue`);
+  log.info(`⚡ Tasks will be processed automatically through git + goose`);
 
   return new Promise<void>((resolve) => {
     rl.prompt();
@@ -96,7 +99,7 @@ async function createUserInterface(queue: TasksMachineMemoryPersistence, addTask
       }
       
       if (input === "status") {
-        console.log(`📊 Queue status: ${queue.getQueueSize()} pending tasks`);
+        log.info(`📊 Queue status: ${queue.getQueueSize()} pending tasks`);
         rl.prompt();
         return;
       }
@@ -107,7 +110,7 @@ async function createUserInterface(queue: TasksMachineMemoryPersistence, addTask
       }
 
       addTask(input);
-      console.log(`✅ Added task: "${input}"`);
+      log.info(`✅ Added task: "${input}"`);
       rl.prompt();
     });
 
@@ -117,7 +120,7 @@ async function createUserInterface(queue: TasksMachineMemoryPersistence, addTask
   });
 }
 
-async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir: string) {
+async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir: string, logger?: { info: (msg: string, ...args: unknown[]) => void; error: (msg: string, ...args: unknown[]) => void }) {
   const { makeGooseWorker } = await import("../workers/goose.js");
   const { simpleGit } = await import("simple-git");
   
@@ -136,13 +139,23 @@ async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir
     await git.commit('Initial commit');
   }
 
+  const log = logger || { info: console.log, error: console.error };
+  
+  // Create metadata directories for execution metadata (separate from git repo)
+  const metadataDirs = await createMetadataDirectories(`task-session-${Date.now()}-`);
+  
+  log.info(`📁 Working directory (git): ${workingDir}`);
+  log.info(`📊 Metadata directory: ${metadataDirs.metadataDir}`);
+  log.info(`📋 Logs will be written to: ${metadataDirs.logsDir}`);
+
   const gooseWorker = makeGooseWorker({
     workingDirectory: workingDir,
     goose: {
       model: "anthropic/claude-sonnet-4",
-      provider: "openrouter",
-      instructionsFile: path.join(workingDir, "instructions.md")
+      provider: "openrouter"
+      // No instructionsFile specified - will use metadata directory
     },
+    metadataDirectory: metadataDirs.metadataDir,
     timeouts: {
       process: 300000, // 5 minutes per task
     }
@@ -151,8 +164,14 @@ async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir
   // Set up the statefulLoop dependencies 
   const deps = {
     runWorker: async (task: { description: string }, options?: { signal?: AbortSignal }) => {
-      console.log(`🔄 Running goose for: "${task.description}"`);
+      log.info(`🔄 Running goose for: "${task.description}"`);
       const result = await gooseWorker(task, options);
+      
+      // Show the goose output log for tail -f
+      if (result.logFiles?.gooseOutput) {
+        log.info(`📋 Goose output log (tail -f): ${result.logFiles.gooseOutput}`);
+      }
+      
       return {
         output: result.output
       };
@@ -169,39 +188,61 @@ async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir
       },
       
       branch: async (name: string) => {
+        // Capture current branch before switching
+        const currentBranch = await git.branchLocal();
+        const previousBranch = currentBranch.current;
+        
         const branchName = `task-${name}`;
-        console.log(`🌿 Creating branch: ${branchName}`);
+        log.info(`🌿 Creating branch: ${branchName}`);
         await git.checkoutLocalBranch(branchName);
-        return castNonEmptyString(branchName);
+        
+        // Return the previous branch name for cleanup
+        return castNonEmptyString(previousBranch);
       },
       
       commitAndPush: async () => {
-        console.log(`📝 Committing and pushing changes...`);
+        log.info(`📝 Committing and pushing changes...`);
         const status = await git.status();
         if (status.files.length > 0) {
           await git.add('.');
           await git.commit(`Task execution completed at ${new Date().toISOString()}`);
-          console.log(`   ✅ Committed ${status.files.length} files`);
+          log.info(`   ✅ Committed ${status.files.length} files`);
         } else {
-          console.log(`   ℹ️  No changes to commit`);
+          log.info(`   ℹ️  No changes to commit`);
         }
       },
 
       cleanup: async (previousBranch: NonEmptyString) => {
-        console.log(`🧹 Resetting to branch: ${previousBranch}`);
+        log.info(`🧹 Resetting to branch: ${previousBranch}`);
         try {
           const currentBranch = await git.branchLocal();
+          const branchToDelete = currentBranch.current;
+          log.info(`   🔄 Switching from '${branchToDelete}' to '${previousBranch}'`);
+          
+          // Discard uncommitted changes from failed task execution
+          log.info(`   🧽 Discarding uncommitted changes with git reset --hard`);
+          await git.reset(['--hard']);
+          
           await git.checkout(previousBranch);
-          await git.deleteLocalBranch(currentBranch.current);
+          log.info(`   🗑️  Attempting to delete branch '${branchToDelete}'`);
+          await git.deleteLocalBranch(branchToDelete);
+          log.info(`   ✅ Successfully deleted branch '${branchToDelete}'`);
         } catch (error) {
-          console.log(`   ⚠️  Cleanup warning: ${error}`);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          log.error(`   ⚠️  Cleanup warning: Failed to delete branch`);
+          log.error(`   📝 Error details: ${errorMessage}`);
+          
+          // If branch deletion fails due to worktree usage, provide helpful info
+          if (errorMessage.includes('used by worktree')) {
+            log.info(`   💡 This may be due to active worktree usage. The branch will remain but is no longer checked out.`);
+          }
         }
       }
     },
     
     log: {
-      info: (message: string, ...args: unknown[]) => console.log(message, ...args),
-      error: (message: string, ...args: unknown[]) => console.error(message, ...args)
+      info: (message: string, ...args: unknown[]) => log.info(message, ...args),
+      error: (message: string, ...args: unknown[]) => log.error(message, ...args)
     },
     
     sleep: (ms: number, _options?: { signal?: AbortSignal }) => 
@@ -212,17 +253,19 @@ async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir
 
 }
 
-async function main(options?: { workingDir?: string }) {
+async function main(options?: { workingDir?: string; logger?: { info: (msg: string, ...args: unknown[]) => void; error: (msg: string, ...args: unknown[]) => void } }) {
   try {
+    const logger = options?.logger || { info: console.log, error: console.error };
+    
     // Create or use provided working directory
     const workingDir = options?.workingDir || (await createTempDir("task-runner-")).path;
     
-    console.log(`🌟 Task Runner CLI`);
-    console.log(`📁 Working directory: ${workingDir}`);
+    logger.info(`🌟 Task Runner CLI`);
+    logger.info(`📁 Working directory: ${workingDir}`);
     
     const queue = new TasksMachineMemoryPersistence();
 
-    const { stop, appendTasks } = await processTaskQueue(queue, workingDir);
+    const { stop, appendTasks } = await processTaskQueue(queue, workingDir, logger);
 
     // Start user interface
     await createUserInterface(queue, async (desc) => {
@@ -230,7 +273,7 @@ async function main(options?: { workingDir?: string }) {
       await appendTasks(TasksMachine.Utils.liftTasks(nextId, {
         description: desc
       } satisfies UserTask))
-    }, workingDir);
+    }, workingDir, logger);
     
   } catch (error) {
     console.error(`\n🚨 Error: ${error}`);

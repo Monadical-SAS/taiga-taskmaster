@@ -174,6 +174,7 @@ describe('makeFileSystemWorker', () => {
       
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(Error);
+      expect(result.error?.message).toContain('ENOENT');
       expect(result.artifacts).toEqual([]); // No artifacts since directory doesn't exist
     });
   });

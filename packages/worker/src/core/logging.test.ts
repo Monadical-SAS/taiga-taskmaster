@@ -1,100 +1,93 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createStructuredLogger } from './logging.js';
+import { describe, it, expect, vi } from 'vitest';
+import { createStructuredLogger, type ConsoleInterface } from './logging.js';
 
 describe('createStructuredLogger', () => {
-  // Mock console methods
-  const originalConsole = {
-    debug: console.debug,
-    info: console.info,
-    warn: console.warn,
-    error: console.error
-  };
-
-  beforeEach(() => {
-    console.debug = vi.fn();
-    console.info = vi.fn();
-    console.warn = vi.fn();
-    console.error = vi.fn();
-  });
-
-  afterEach(() => {
-    console.debug = originalConsole.debug;
-    console.info = originalConsole.info;
-    console.warn = originalConsole.warn;
-    console.error = originalConsole.error;
+  // Create mock console interface - dependency injection approach
+  const createMockConsole = (): ConsoleInterface => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn()
   });
 
   it('should create a logger with default info level', () => {
-    const logger = createStructuredLogger();
+    const mockConsole = createMockConsole();
+    const logger = createStructuredLogger('info', mockConsole);
     
     logger.debug('debug message');
     logger.info('info message');
     logger.warn('warn message');
     logger.error('error message');
 
-    expect(console.debug).not.toHaveBeenCalled();
-    expect(console.info).toHaveBeenCalledWith('[INFO] info message');
-    expect(console.warn).toHaveBeenCalledWith('[WARN] warn message');
-    expect(console.error).toHaveBeenCalledWith('[ERROR] error message');
+    expect(mockConsole.debug).not.toHaveBeenCalled();
+    expect(mockConsole.info).toHaveBeenCalledWith('[INFO] info message');
+    expect(mockConsole.warn).toHaveBeenCalledWith('[WARN] warn message');
+    expect(mockConsole.error).toHaveBeenCalledWith('[ERROR] error message');
   });
 
   it('should respect debug level', () => {
-    const logger = createStructuredLogger('debug');
+    const mockConsole = createMockConsole();
+    const logger = createStructuredLogger('debug', mockConsole);
     
     logger.debug('debug message');
     logger.info('info message');
     logger.warn('warn message');
     logger.error('error message');
 
-    expect(console.debug).toHaveBeenCalledWith('[DEBUG] debug message');
-    expect(console.info).toHaveBeenCalledWith('[INFO] info message');
-    expect(console.warn).toHaveBeenCalledWith('[WARN] warn message');
-    expect(console.error).toHaveBeenCalledWith('[ERROR] error message');
+    expect(mockConsole.debug).toHaveBeenCalledWith('[DEBUG] debug message');
+    expect(mockConsole.info).toHaveBeenCalledWith('[INFO] info message');
+    expect(mockConsole.warn).toHaveBeenCalledWith('[WARN] warn message');
+    expect(mockConsole.error).toHaveBeenCalledWith('[ERROR] error message');
   });
 
   it('should respect warn level', () => {
-    const logger = createStructuredLogger('warn');
+    const mockConsole = createMockConsole();
+    const logger = createStructuredLogger('warn', mockConsole);
     
     logger.debug('debug message');
     logger.info('info message');
     logger.warn('warn message');
     logger.error('error message');
 
-    expect(console.debug).not.toHaveBeenCalled();
-    expect(console.info).not.toHaveBeenCalled();
-    expect(console.warn).toHaveBeenCalledWith('[WARN] warn message');
-    expect(console.error).toHaveBeenCalledWith('[ERROR] error message');
+    expect(mockConsole.debug).not.toHaveBeenCalled();
+    expect(mockConsole.info).not.toHaveBeenCalled();
+    expect(mockConsole.warn).toHaveBeenCalledWith('[WARN] warn message');
+    expect(mockConsole.error).toHaveBeenCalledWith('[ERROR] error message');
   });
 
   it('should respect error level', () => {
-    const logger = createStructuredLogger('error');
+    const mockConsole = createMockConsole();
+    const logger = createStructuredLogger('error', mockConsole);
     
     logger.debug('debug message');
     logger.info('info message');
     logger.warn('warn message');
     logger.error('error message');
 
-    expect(console.debug).not.toHaveBeenCalled();
-    expect(console.info).not.toHaveBeenCalled();
-    expect(console.warn).not.toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalledWith('[ERROR] error message');
+    expect(mockConsole.debug).not.toHaveBeenCalled();
+    expect(mockConsole.info).not.toHaveBeenCalled();
+    expect(mockConsole.warn).not.toHaveBeenCalled();
+    expect(mockConsole.error).toHaveBeenCalledWith('[ERROR] error message');
   });
 
   it('should handle additional arguments', () => {
-    const logger = createStructuredLogger('debug');
+    const mockConsole = createMockConsole();
+    const logger = createStructuredLogger('debug', mockConsole);
     const obj = { key: 'value' };
     const num = 42;
     
     logger.info('message with args', obj, num);
 
-    expect(console.info).toHaveBeenCalledWith('[INFO] message with args', obj, num);
+    expect(mockConsole.info).toHaveBeenCalledWith('[INFO] message with args', obj, num);
   });
 
   it('should handle empty additional arguments', () => {
-    const logger = createStructuredLogger('info');
+    const mockConsole = createMockConsole();
+    const logger = createStructuredLogger('info', mockConsole);
     
     logger.info('simple message');
 
-    expect(console.info).toHaveBeenCalledWith('[INFO] simple message');
+    expect(mockConsole.info).toHaveBeenCalledWith('[INFO] simple message');
   });
+
 });

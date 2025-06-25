@@ -17,6 +17,24 @@ describe('StatefulLoop Factories', () => {
 
   beforeEach(async () => {
     testState.tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'stateful-test-'));
+    
+    // Initialize as git repository for tests that require it
+    const { simpleGit } = await import('simple-git');
+    const git = simpleGit(testState.tempDir);
+    
+    try {
+      await git.init();
+      await git.addConfig('user.name', 'Test User');
+      await git.addConfig('user.email', 'test@example.com');
+      await git.addConfig('commit.gpgsign', 'false');
+      
+      // Create initial commit
+      await fs.writeFile(path.join(testState.tempDir, '.gitkeep'), '', 'utf-8');
+      await git.add('.gitkeep');
+      await git.commit('Initial commit');
+    } catch (error) {
+      console.warn('Failed to initialize git repo in test:', error);
+    }
   });
 
   afterEach(async () => {
@@ -260,7 +278,7 @@ describe('StatefulLoop Factories', () => {
         mockDelay: 0
       };
       
-      // Git validation happens when deps are created, so this may throw
+      // Should throw when trying to access invalid git directory
       expect(() => createTestingStatefulLoop(invalidConfig)).toThrow();
     });
 

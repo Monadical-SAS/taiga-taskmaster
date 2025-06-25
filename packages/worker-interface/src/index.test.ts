@@ -1042,7 +1042,7 @@ describe("Loop Function Tests", () => {
     git: {
       isClean: async () => true,
       cleanup: async () => {},
-      branch: async (name) => name,
+      branch: async (name) => castNonEmptyString("main"), // Returns previous branch name
       commitAndPush: async () => {},
     },
     log: {
@@ -1124,7 +1124,7 @@ describe("Loop Function Tests", () => {
         git: {
           isClean: async () => false,
           cleanup: async () => {},
-          branch: async (name) => name,
+          branch: async (name) => castNonEmptyString("main"), // Returns previous branch name
           commitAndPush: async () => {},
         },
         log: {
@@ -1153,7 +1153,7 @@ describe("Loop Function Tests", () => {
             return isCleanCallCountRef.value === 1; // Clean initially, dirty after commit
           },
           cleanup: async () => {},
-          branch: async (name) => name,
+          branch: async (name) => castNonEmptyString("main"), // Returns previous branch name
           commitAndPush: async () => {},
         },
         log: {
@@ -1180,7 +1180,7 @@ describe("Loop Function Tests", () => {
           cleanup: async (branch) => { gitOperations.push(`cleanup: ${branch}`); },
           branch: async (name) => {
             gitOperations.push(`branch: ${name}`);
-            return name;
+            return castNonEmptyString("main"); // Returns previous branch name
           },
           commitAndPush: async () => { gitOperations.push("commitAndPush"); },
         },
@@ -1260,7 +1260,7 @@ describe("Loop Function Tests", () => {
       expect(sleepCalls).toContain(1000);
       expect(ackTaskCalls).toEqual([
         { ok: false }, // Failed task
-        { ok: true, branch: "3004853278509851" }, // Successful retry
+        { ok: true, branch: "main" }, // Successful retry
       ]);
     });
 
@@ -1395,7 +1395,7 @@ describe("Loop Function Tests", () => {
         msg.includes("unidentified condition, task was in the middle of acknowledgement")
       )).toBe(true);
       expect(ackTaskCalls).toEqual([
-        { ok: true, branch: "5598032483945536" }, // Failed acknowledgment
+        { ok: true, branch: "main" }, // Failed acknowledgment
         { ok: false }, // Retry as failed
       ]);
     });
@@ -1609,7 +1609,7 @@ describe("Loop Function Tests", () => {
           cleanup: async () => {},
           branch: async (name) => {
             branchNames.push(name);
-            return name;
+            return castNonEmptyString("main"); // Returns previous branch name
           },
           commitAndPush: async () => {},
         },
@@ -1645,7 +1645,7 @@ describe("Loop Function Tests", () => {
           cleanup: async () => {},
           branch: async (name) => {
             branchNames.push(name);
-            return name;
+            return castNonEmptyString("main"); // Returns previous branch name
           },
           commitAndPush: async () => {},
         },

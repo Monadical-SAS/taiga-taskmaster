@@ -1,62 +1,141 @@
 # Worker Package Implementation Review
 
-## Overall Assessment: 7.5/10 
+## Task Execution Flow Analysis - Updated Review
 
-**Strong foundation with critical integration issues**
+Based on recent commits and code analysis, here's my research on the six critical points:
 
-### ✅ **EXCELLENT WORK**
+### 1. **"Continuing" Behavior Research**
 
-**Architectural Adherence**: The implementation follows PLAN.md structure nearly perfectly. All planned components exist, factory pattern is correct, and scope separation is clean.
+**Location**: The continuing behavior is encoded in `/packages/worker-interface/src/index.ts` in the `loop` function (lines 391-437).
 
-**Code Organization**: Package structure matches plan exactly. Clear separation between core components, workers, stateful factories, and testing utilities.
-
-**Factory Pattern**: Correctly implements single production factory (`createGooseStatefulLoop`) with FileSystem worker properly positioned as testing utility only.
-
-### 🚨 **CRITICAL ISSUES**
-
-**Type System Mismatches**: 
-- Task description functions expect `TaskFileContent` but receive `unknown` from statefulLoop
-- WorkerResult format doesn't align with statefulLoop expectations
-- Rich task metadata functionality unusable due to type incompatibilities
+**Key Finding**: The system has an **extremely resilient "never stop" philosophy**:
 
 ```typescript
-// Problem: Type mismatch prevents using sophisticated task descriptions
-description: (task: unknown) => castNonEmptyString(JSON.stringify(task))
-// Should be: description: (task: TasksMachine.Task) => convert to meaningful string
+} catch (error) {
+  deps.log.error('uncaught error in main loop, retrying in 1 second: ', error);
+  await cleanupBranch();
+  // ... cleanup logic ...
+  await deps.sleep(1000, options);
+  // Loop continues infinitely
+}
 ```
 
-**Missing Integration Tests**: PLAN.md explicitly required integration tests for git functionality and real Goose execution. Only unit tests present - **no validation of end-to-end stateful loop functionality**.
+**Analysis**: 
+- **ALL errors trigger continuation logic** - timeouts, command failures, worker errors
+- **Tasks are "un-acknowledged"** and put back in queue when errors occur
+- **Only explicit abort signals** or fatal git states can stop the loop
+- **This explains the "skipping" behavior** - failed tasks get retried indefinitely
 
-**NextTask Strategy Disconnect**: Priority and dependency strategies implemented but can't function - TasksMachine.Task type lacks required metadata fields for priority/dependency logic.
+**Issue**: For sequential dependent tasks, this creates a **critical problem** - if Task A times out, Task B shouldn't start until Task A is properly resolved.
 
-### ⚠️ **SIGNIFICANT GAPS**
+### 2. **"timeout-error.md" Return Behavior**
 
-**Debugging Utilities**: Missing sophisticated debugging tools from original integration tests (git debugger, work verifier, branch chain validation).
+**Location**: Previously in `/packages/worker/src/workers/goose.ts` (lines 130-142 in old version).
 
-**Error Handling**: Basic error handling only - sophisticated retry patterns from integration tests not extracted.
+**Current Status**: **REMOVED** in recent commits. The new implementation in `goose.ts` uses `runGooseWithLiveExecutor` and returns structured output instead of creating error files.
 
-**State Persistence Integration**: While structurally correct, actual integration with TasksMachine.State not validated through integration tests.
+**Previous Behavior**:
+```typescript
+// OLD CODE (removed)
+await fs.writeFile(
+  path.join(workingDirectory, 'timeout-error.md'),
+  `# Task Execution Timed Out\n\nThe Goose AI worker timed out...`,
+  'utf-8'
+);
+```
 
-### 💡 **NO CORNERS CUT** 
+**Analysis**: The timeout-error.md approach was a **file-based error reporting mechanism** that's now replaced with structured error handling through the `WorkerResult.output` array.
 
-The implementation shows careful attention to:
-- ESModule configuration
-- TypeScript strictness
-- Effect library integration  
-- Comprehensive unit testing
-- Clean factory patterns
+### 3. **Better User Notification Strategy**
 
-**This is quality engineering work with integration oversights, not rushed implementation.**
+**Current State**: Recent changes show movement toward **structured logging** via `WorkerResult.output` field.
 
-### 🔧 **IMMEDIATE ACTIONS REQUIRED**
+**Observations**:
+- **Console logging** is primary user interface (`console.log` statements throughout CLI)
+- **No persistent error tracking** or user notification system
+- **Missing failure accumulation** - users can't see failed task history
+- **No task dependency awareness** - users aren't notified when dependent tasks are blocked
 
-1. **Fix type mismatches** between task description functions and stateful loop interface
-2. **Add integration tests** for git functionality and Goose execution
-3. **Align NextTask strategies** with actual TasksMachine.Task structure
-4. **Extract missing debugging utilities** from original integration tests
+**Recommendation**: Implement **task execution dashboard** with:
+- Failed task history with retry counts
+- Dependency blocking notifications  
+- Real-time execution status
+- Error categorization (timeout vs failure vs dependency block)
 
-### 🎯 **VERDICT**
+### 4. **Task Execution Visibility - Logging Infrastructure**
 
-**Architecturally sound implementation that requires integration fixes before production readiness.** The structure and patterns are excellent, but type system issues and missing integration validation prevent it from meeting PLAN.md's "drop-in compatibility" requirement.
+**Current Implementation**: Recent commit added structured logging in `goose.ts`:
 
-**No critical architectural flaws** - issues are integration-level and fixable without structural changes.
+```typescript
+onLine: (l => {
+  // wherever we want to log
+  console.log(`${l.timestamp}: ${l.line}`);
+})
+```
+
+**Analysis**:
+- **Real-time console output** from goose execution is now captured
+- **No file-based logging** - all output goes to console only
+- **Missing tail -f capability** - no persistent log files
+- **No log rotation** or historical analysis
+
+**Infrastructure Gap**: The logging system lacks:
+- File-based persistence for `tail -f` functionality
+- Structured log levels (debug, info, warn, error)
+- Session-based log files per task execution
+- Log aggregation across multiple task runs
+
+### 5. **Instructions.md Storage Location Issue**
+
+**Current Problem**: Instructions files are created **directly in the working directory** (git repo):
+
+```typescript
+// From goose.ts line 18
+const instructionsFile = goose.instructionsFile || path.join(workingDirectory, 'instructions.md');
+```
+
+**Analysis**:
+- **Metadata pollution**: Execution metadata mixed with git artifacts
+- **Cleanup complexity**: Special filtering required to exclude instructions.md from commits
+- **Git history pollution**: Temporary files could accidentally be committed
+
+**File Classification**:
+- **Execution Metadata** (should be separate): instructions.md, process logs, error reports
+- **Task Artifacts** (should stay in git): code files, documentation, project outputs
+
+### 6. **Separate Temp Directory for Execution Metadata**
+
+**Current Temp Utils**: `/packages/worker/src/utils/temp-utils.ts` provides `createTempDir()` but only used for testing.
+
+**Proposed Solution**:
+```
+Working Directory (Git Repo)
+├── src/               # Task artifacts (git tracked)
+├── docs/             # Task artifacts (git tracked)  
+└── ...
+
+Execution Metadata Directory (Temp)
+├── instructions.md   # Task descriptions
+├── goose-output.log  # Execution logs (for tail -f)
+├── error-reports/    # Structured error data
+└── process-metadata/ # Runtime information
+```
+
+**Benefits**:
+- **Clean git history** - no metadata pollution
+- **Simplified artifact detection** - no special filtering needed
+- **Better debugging** - metadata preserved in predictable locations
+- **Tail -f capability** - persistent log files for monitoring
+
+### 🎯 **CRITICAL RECOMMENDATIONS**
+
+1. **Implement task dependency awareness** - don't continue to next task if previous task failed
+2. **Add file-based logging** with tail -f capability for real-time monitoring
+3. **Separate execution metadata** from git artifacts using dedicated temp directories
+4. **Implement failure tracking** and user notification for blocked tasks
+5. **Add retry limits** to prevent infinite retry loops on consistently failing tasks
+6. **Create task execution dashboard** for better visibility into the execution pipeline
+
+### 🔧 **IMMEDIATE PRIORITY**
+
+The **continuing behavior** (Point 1) is the most critical issue - the system's "never stop" philosophy breaks task sequencing for dependent workflows. This needs immediate attention before other improvements.
