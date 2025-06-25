@@ -162,6 +162,21 @@ export namespace TasksMachine {
     }
   }
 
+  export const cancelTaskExecution = (s: State): State => {
+    const executionState = s.taskExecutionState;
+    if (executionState.step !== 'running') throw new Error(`panic! cannot stop task execution: task execution not in progress`)
+    const task = executionState.task;
+    if (HashMap.has(s.tasks, task[0])) throw new Error(`panic! cannot stop task execution: task ${task[0]} is already in non-started tasks`);
+    return {
+      ...s,
+      tasks: HashMap.set(s.tasks, ...task),
+      taskExecutionState: {
+        ...executionState,
+        step: 'stopped' as const,
+      },
+    }
+  }
+
   // only the first task in queue can be committed
   export const commitArtifact =
     (aid: ArtifactId) =>

@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Effect, Fiber, TestClock, TestContext, Layer, Option, Stream, pipe } from 'effect';
 import { Command } from "@effect/platform";
-import { nonEmptyStringFromNumber, castNonEmptyString } from '@taiga-task-master/common';
+import { nonEmptyStringFromNumber, castNonEmptyString, castNonNegativeInteger } from '@taiga-task-master/common';
 import {
   executeCommand,
   streamCommand,
@@ -384,7 +384,7 @@ describe("Goose Integration - Environment and Command Building", () => {
     const command = createGooseCommand();
     
     // Test that it's a proper Command object with expected structure
-    expect(command).toEqual(Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer"));
+    expect(command).toEqual(Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer", "--no-session"));
   });
 
   it("should create goose command with custom instructions file", () => {
@@ -393,7 +393,7 @@ describe("Goose Integration - Environment and Command Building", () => {
     };
     const command = createGooseCommand(config);
     
-    expect(command).toEqual(Command.make("goose", "run", "-i", "custom-instructions.md", "--with-builtin", "developer"));
+    expect(command).toEqual(Command.make("goose", "run", "-i", "custom-instructions.md", "--with-builtin", "developer", "--no-session"));
   });
 
   it("should create goose environment variables using Effect", async () => {
@@ -450,13 +450,13 @@ describe("Goose Integration - Mocked Execution", () => {
       "What would you like to work on today?"
     ];
 
-    const gooseCommand = Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer");
+    const gooseCommand = Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer", "--no-session");
     const testLayer = TestCommandExecutor(createTestScenario(gooseCommand, {
       output: mockGooseOutput,
       delay: 50, // Simulate real-time processing
     }));
 
-    const execution = Effect.provide(executeGoose(), testLayer)
+    const execution = Effect.provide(executeGoose({ maxRetries: castNonNegativeInteger(0) }), testLayer)
     const test = Effect.gen(function* () {
       const fork = yield* Effect.fork(execution);
       yield* TestClock.adjust("5 second");
@@ -476,7 +476,7 @@ describe("Goose Integration - Mocked Execution", () => {
 
   it("should execute goose with working directory", async () => {
     const workingDir = "/path/to/project";
-    const baseCommand = Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer");
+    const baseCommand = Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer", "--no-session");
     const commandWithWorkingDir = Command.workingDirectory(baseCommand, workingDir);
 
     const testLayer = TestCommandExecutor(createTestScenario(commandWithWorkingDir, {
@@ -485,6 +485,7 @@ describe("Goose Integration - Mocked Execution", () => {
 
     const config: Partial<GooseConfig> = {
       workingDirectory: workingDir,
+      maxRetries: castNonNegativeInteger(0),
     };
 
     const result = await runTaskAsPromise(executeGoose(config), testLayer);
@@ -494,14 +495,14 @@ describe("Goose Integration - Mocked Execution", () => {
   });
 
   it("should handle goose errors gracefully", async () => {
-    const gooseCommand = Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer");
+    const gooseCommand = Command.make("goose", "run", "-i", "goose-instructions.md", "--with-builtin", "developer", "--no-session");
     const testLayer = TestCommandExecutor(createTestScenario(gooseCommand, {
       error: "Goose command not found",
     }));
 
     const result = await Effect.runPromise(
       Effect.provide(
-        executeGoose().pipe(
+        executeGoose({ maxRetries: castNonNegativeInteger(0) }).pipe(
           Effect.either
         ),
         testLayer
@@ -543,13 +544,13 @@ describe("Goose Integration - Mocked Execution", () => {
       "**Task completed successfully!** ✅"
     ];
 
-    const customGooseCommand = Command.make("goose", "run", "-i", "custom.md", "--with-builtin", "developer");
+    const customGooseCommand = Command.make("goose", "run", "-i", "custom.md", "--with-builtin", "developer", "--no-session");
     const testLayer = TestCommandExecutor(createTestScenario(customGooseCommand, {
       output: mockOutput,
       delay: 150, // 150ms between lines
     }));
 
-    const execution = Effect.provide(executeGoose({ instructionsFile: "custom.md" }), testLayer)
+    const execution = Effect.provide(executeGoose({ instructionsFile: "custom.md", maxRetries: castNonNegativeInteger(0) }), testLayer)
     const test = Effect.gen(function* () {
       const fork = yield* Effect.fork(execution);
       yield* TestClock.adjust("1 second");
@@ -929,8 +930,9 @@ describe("Goose Integration - Environment Variable Injection", () => {
       const config: Partial<GooseConfig> = {
         processTimeout: 2000, // 2 second timeout
         instructionsFile: "test-timeout.md",
+        maxRetries: castNonNegativeInteger(0),
       };
-      const gooseCommand = Command.make("goose", "run", "-i", "test-timeout.md", "--with-builtin", "developer");
+      const gooseCommand = Command.make("goose", "run", "-i", "test-timeout.md", "--with-builtin", "developer", "--no-session");
       const testLayer = TestCommandExecutor(createTestScenario(gooseCommand, {
         output: ["goose starting..."],
         delay: 5000, // 5 second delay
@@ -981,8 +983,9 @@ describe("Goose Integration - Environment Variable Injection", () => {
       const config: Partial<GooseConfig> = {
         processTimeout: customTimeout,
         instructionsFile: "test-custom-timeout.md",
+        maxRetries: castNonNegativeInteger(0),
       };
-      const gooseCommand = Command.make("goose", "run", "-i", "test-custom-timeout.md", "--with-builtin", "developer");
+      const gooseCommand = Command.make("goose", "run", "-i", "test-custom-timeout.md", "--with-builtin", "developer", "--no-session");
       const testLayer = TestCommandExecutor(createTestScenario(gooseCommand, {
         output: ["goose with custom timeout"],
         delay: 2000, // 2 second delay (longer than custom timeout)
@@ -1258,10 +1261,10 @@ describe("Loop Function Tests", () => {
       
       expect(logMessages.some(msg => msg.includes("uncaught error in main loop"))).toBe(true);
       expect(sleepCalls).toContain(1000);
-      expect(ackTaskCalls).toEqual([
-        { ok: false }, // Failed task
-        { ok: true, branch: "main" }, // Successful retry
-      ]);
+      expect(ackTaskCalls).toHaveLength(2);
+      expect(ackTaskCalls[0]).toEqual({ ok: false }); // Failed task
+      expect(ackTaskCalls[1]).toMatchObject({ ok: true }); // Successful retry
+      expect(typeof ackTaskCalls[1]?.branch).toBe("string"); // Branch is a hash string
     });
 
     it("should handle pullTask errors gracefully", async () => {
@@ -1394,10 +1397,10 @@ describe("Loop Function Tests", () => {
       expect(logMessages.some(msg => 
         msg.includes("unidentified condition, task was in the middle of acknowledgement")
       )).toBe(true);
-      expect(ackTaskCalls).toEqual([
-        { ok: true, branch: "main" }, // Failed acknowledgment
-        { ok: false }, // Retry as failed
-      ]);
+      expect(ackTaskCalls).toHaveLength(2);
+      expect(ackTaskCalls[0]).toMatchObject({ ok: true }); // Failed acknowledgment
+      expect(typeof ackTaskCalls[0]?.branch).toBe("string"); // Branch is a hash string
+      expect(ackTaskCalls[1]).toEqual({ ok: false }); // Retry as failed
     });
 
     it("should differentiate between acknowledgment states correctly", async () => {

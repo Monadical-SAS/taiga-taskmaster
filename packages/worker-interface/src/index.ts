@@ -14,10 +14,11 @@ import {
 } from 'effect';
 import { Command } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
-import { cyrb53, NonEmptyString, nonEmptyStringFromNumber } from '@taiga-task-master/common';
+import { cyrb53, NonEmptyString, nonEmptyStringFromNumber, type NonNegativeInteger, castNonNegativeInteger } from '@taiga-task-master/common';
 import { isNone, none } from 'effect/Option';
 import { TasksMachine } from "@taiga-task-master/core";
 const endTaskExecution = TasksMachine.endTaskExecution;
+const cancelTaskExecution = TasksMachine.cancelTaskExecution;
 type Tasks = TasksMachine.Tasks;
 type Task = TasksMachine.Task;
 type NextTaskF = TasksMachine.NextTaskF;
@@ -88,6 +89,7 @@ export type GooseConfig = Readonly<{
   processTimeout?: number;
   workingDirectory?: string;
   instructionsFile?: string;
+  maxRetries?: NonNegativeInteger;
 
 }>;
 
@@ -96,6 +98,7 @@ export const DEFAULT_GOOSE_CONFIG: GooseConfig = {
   provider: "openrouter",
   processTimeout: 300000, // 300s in milliseconds
   instructionsFile: "goose-instructions.md",
+  maxRetries: castNonNegativeInteger(3),
 };
 
 // Default timeout for command execution (30 seconds)
@@ -301,11 +304,30 @@ const prepareExecution = (config: Partial<GooseConfig> = {}) => {
   return Tuple.make(commandWithWorkingDir, timeoutMs);
 }
 
-export const executeGoose = (config: Partial<GooseConfig> = {}, onLine?: (s: Readonly<{
+export const executeGoose = (config0: Partial<GooseConfig> = {}, onLine?: (s: Readonly<{
   timestamp: number;
   line: string;
 }>) => void): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
-  return executeCommandWithTimeout(...prepareExecution(config), onLine);
+  const config = { ...DEFAULT_GOOSE_CONFIG, ...config0 };
+  const baseExecution = executeCommandWithTimeout(...prepareExecution(config), onLine);
+  
+  // If maxRetries is 0, don't retry at all
+  if ((config.maxRetries ?? castNonNegativeInteger(3)) === 0) {
+    return baseExecution;
+  }
+  
+  return pipe(
+    baseExecution,
+    Effect.retry(
+      Schedule.exponential("100 millis", 2.0).pipe(
+        Schedule.whileInput((error: WorkerError) => {
+          // Allow retries for all error types (simplified)
+          return true;
+        }),
+        Schedule.intersect(Schedule.recurs(config.maxRetries ?? castNonNegativeInteger(3)))
+      )
+    )
+  );
 };
 
 export const streamGoose = (config: Partial<GooseConfig> = {}): Stream.Stream<WorkerOutputLine, Exclude<WorkerError, CommandTimeoutError>, CommandExecutor> => {
@@ -419,16 +441,7 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
         await deps.ackTask(Option.some({ branch }), options);
         taskAcknowledging = false;
       } catch (error) {
-        // Enhanced error logging with specific handling for timeout errors
-        if (error instanceof CommandTimeoutError) {
-          deps.log.error(
-            `Command timed out after ${error.timeoutMs}ms in main loop, retrying in 1 second.`,
-            `Command: ${JSON.stringify(error.command)}`,
-            error
-          );
-        } else {
-          deps.log.error('uncaught error in main loop, retrying in 1 second: ', error);
-        }
+        deps.log.error('uncaught error in main loop: ', error);
         await cleanupBranch();
         if (!taskAcknowledging) {
           await deps.ackTask(none(), options);
@@ -456,6 +469,10 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
   let state = state0;
   // eslint-disable-next-line functional/no-let
   let stateSavePromise: Promise<void> = Promise.resolve();
+  // Track task failures to stop worker after repeated failures
+  // eslint-disable-next-line functional/no-let
+  let taskFailureCount = new Map<string, number>();
+  const MAX_TASK_FAILURES = 5; // Stop worker if same task fails 5 times
   const pullTask: LooperDeps['pullTask'] = async (options) => {
     // eslint-disable-next-line functional/no-loop-statements
     while (true) {
@@ -466,6 +483,16 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
         continue;
       }
       const [taskId, task] = next.value;
+      
+      // Check if this task has failed too many times
+      const taskIdStr = String(taskId);
+      const failureCount = taskFailureCount.get(taskIdStr) || 0;
+      if (failureCount >= MAX_TASK_FAILURES) {
+        deps.log.error(`Task ${taskIdStr} has failed ${failureCount} times. Stopping worker for manual review.`);
+        deps.log.error('Current task queue preserved. Restart worker after manual intervention.');
+        return { type: 'aborted' };
+      }
+      
       await stateSavePromise;
       // not exactly THE point of execution started but good enough
       state = startTaskExecution(taskId)(state);
@@ -478,7 +505,25 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
   };
   const ackTask: LooperDeps['ackTask'] = async (ok, options) => {
     await stateSavePromise;
-    state = endTaskExecution(state);
+    if (Option.isSome(ok)) {
+      // Success: mark task as completed and reset failure count
+      if (state.taskExecutionState.step === 'running') {
+        const [taskId] = state.taskExecutionState.task;
+        const taskIdStr = String(taskId);
+        taskFailureCount.delete(taskIdStr); // Reset failure count on success
+      }
+      state = endTaskExecution(state);
+    } else {
+      // Failure: put task back in queue for retry and track failure
+      if (state.taskExecutionState.step === 'running') {
+        const [taskId] = state.taskExecutionState.task;
+        const taskIdStr = String(taskId);
+        const currentCount = taskFailureCount.get(taskIdStr) || 0;
+        taskFailureCount.set(taskIdStr, currentCount + 1);
+        deps.log.error(`Task ${taskIdStr} failed (attempt ${currentCount + 1}/${MAX_TASK_FAILURES}). Putting back in queue.`);
+      }
+      state = cancelTaskExecution(state);
+    }
     stateSavePromise = save(state);
   };
   const abortController = new AbortController();
