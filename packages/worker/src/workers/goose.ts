@@ -46,7 +46,6 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
     const r = await runGooseWithLiveExecutor({
       model: goose.model,
       provider: goose.provider,
-      processTimeout: 30000,
       workingDirectory,
       instructionsFile,
     }, {
