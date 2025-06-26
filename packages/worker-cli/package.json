@@ -1,0 +1,46 @@
+{
+  "name": "@taiga-task-master/worker-cli",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Command line interface for the Taiga Task Master worker system",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "taiga-task-runner": "./dist/cli/task-runner.js",
+    "taiga-tui": "./dist/cli/tui.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:integration:watch": "vitest --config vitest.integration.config.ts",
+    "cli": "node dist/cli/task-runner.js",
+    "tui": "node dist/cli/tui.js"
+  },
+  "dependencies": {
+    "@taiga-task-master/common": "workspace:*",
+    "@taiga-task-master/core": "workspace:*",
+    "@taiga-task-master/worker": "workspace:*",
+    "@taiga-task-master/worker-interface": "workspace:*",
+    "effect": "^3.15.4",
+    "ink": "^6.0.1",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.1.0",
+    "simple-git": "^3.28.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.1.8",
+    "typescript": "^5.8.3",
+    "vitest": "^2.0.0"
+  }
+}
