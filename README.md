@@ -118,6 +118,7 @@ docker-compose up --build -d
 - **PRD Webhook Receiver** - Handles incoming PRD notifications
 - **Task Generation** - Converts PRDs to structured tasks using claude-task-master CLI
 - **Taiga Synchronizer** - Syncs tasks to Taiga with tag-based identification
+- **Interactive CLI Tools** - Command line and TUI interfaces for manual task management
 
 ## Architecture
 
@@ -126,6 +127,26 @@ The system uses interface/implementation separation with three main modules:
 - Module 1: PRD webhook handling with JWT validation
 - Module 2: Task generation with atomic file operations
 - Module 3: Taiga API integration with tag management
+
+## CLI Tools
+
+For interactive task management, use the worker-cli package:
+
+```bash
+# Traditional CLI interface
+npx dotenv -e ./.env -- pnpm --filter @taiga-task-master/worker-cli run cli
+
+# Modern TUI interface (recommended)
+npx dotenv -e ./.env -- pnpm --filter @taiga-task-master/worker-cli run tui
+```
+
+Both interfaces provide:
+- Interactive task queue management
+- Real-time Goose AI task execution
+- Git branch isolation for each task
+- Live progress tracking and logs
+
+See [worker-cli package README](packages/worker-cli/README.md) for detailed usage instructions.
 
 ## Development
 

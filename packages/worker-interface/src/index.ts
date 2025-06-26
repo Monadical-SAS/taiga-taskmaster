@@ -10,13 +10,23 @@ import {
   Data,
   Clock,
   Duration,
-  Option, Tuple, Console
+  Option, Tuple, Console, HashMap
 } from 'effect';
 import { Command } from "@effect/platform";
 import { NodeContext } from "@effect/platform-node";
-import { cyrb53, NonEmptyString, nonEmptyStringFromNumber, type NonNegativeInteger, castNonNegativeInteger } from '@taiga-task-master/common';
-import { isNone, none } from 'effect/Option';
+import {
+  cyrb53,
+  NonEmptyString,
+  nonEmptyStringFromNumber,
+  type NonNegativeInteger,
+  castNonNegativeInteger,
+  castNonEmptyString,
+  type TaskId, castNonEmptyArray
+} from '@taiga-task-master/common';
+import { isNone, isSome, none, some } from 'effect/Option';
 import { TasksMachine } from "@taiga-task-master/core";
+import editTask = TasksMachine.editTask;
+import { NonEmptyArray } from 'effect/Schema';
 const endTaskExecution = TasksMachine.endTaskExecution;
 const cancelTaskExecution = TasksMachine.cancelTaskExecution;
 type Tasks = TasksMachine.Tasks;
@@ -55,10 +65,10 @@ export class ConfigurationError extends Data.TaggedError("ConfigurationError")<{
   readonly reason: string;
 }> {}
 
-export type WorkerError = 
-  | CommandExecutionError 
-  | CommandTimeoutError 
-  | CommandParsingError 
+export type WorkerError =
+  | CommandExecutionError
+  | CommandTimeoutError
+  | CommandParsingError
   | ConfigurationError;
 
 
@@ -176,7 +186,7 @@ export const LiveCommandExecutor = Layer.succeed(
         command,
         Command.streamLines,
         Stream.provideLayer(NodeContext.layer),
-        Stream.mapError((error) => 
+        Stream.mapError((error) =>
           new CommandExecutionError({
             command,
             stderr: String(error)
@@ -264,11 +274,11 @@ export const loadProjectEnv = () =>
 export const createGooseCommand = (config: Partial<GooseConfig> = {}): Command.Command => {
   const finalConfig = { ...DEFAULT_GOOSE_CONFIG, ...config };
   const instructionsFile = finalConfig.instructionsFile ?? "goose-instructions.md";
-  
+
   return Command.make(
     "goose",
-    "run", 
-    "-i", 
+    "run",
+    "-i",
     instructionsFile,
     "--with-builtin",
     "developer",
@@ -281,12 +291,12 @@ export const createGooseEnvironment = (config: Partial<GooseConfig> = {}) =>
     loadProjectEnv(),
     Effect.map((projectEnv) => {
       const finalConfig = { ...DEFAULT_GOOSE_CONFIG, ...config };
-      
+
       const gooseEnv = {
         GOOSE_MODEL: finalConfig.model,
         GOOSE_PROVIDER: finalConfig.provider,
       };
-      
+
       // Always include OPENROUTER_API_KEY from project env (even if empty string)
       return {
         ...gooseEnv,
@@ -310,12 +320,12 @@ export const executeGoose = (config0: Partial<GooseConfig> = {}, onLine?: (s: Re
 }>) => void): Effect.Effect<WorkerResult, WorkerError, CommandExecutor> => {
   const config = { ...DEFAULT_GOOSE_CONFIG, ...config0 };
   const baseExecution = executeCommandWithTimeout(...prepareExecution(config), onLine);
-  
+
   // If maxRetries is 0, don't retry at all
   if ((config.maxRetries ?? castNonNegativeInteger(3)) === 0) {
     return baseExecution;
   }
-  
+
   return pipe(
     baseExecution,
     Effect.retry(
@@ -396,7 +406,7 @@ export type LooperDeps = {
     // clean to pristine state before branch() was done
     cleanup: (name: NonEmptyString) => Promise<void>
     // should throw if branch isn't clean (TODO check if there's such command line args)
-    branch: (name: NonEmptyString) => Promise<NonEmptyString>,
+    branch: (name: Option.Option<NonEmptyString>) => Promise<NonEmptyString>,
     // call of isClean() right after commitAndPush should return true
     commitAndPush: () => Promise<void>,
   },
@@ -407,6 +417,14 @@ export type LooperDeps = {
   sleep: (ms: number, options?: { readonly signal?: AbortSignal } | undefined) => Promise<void>,
 };
 
+export const createBranchName = (task: NonEmptyString): NonEmptyString => {
+  const hash = cyrb53(task);
+  return castNonEmptyString(`task-${hash.toString()}`);
+};
+
+const taskToBranchName = (task: Task): NonEmptyString => {
+  return createBranchName(task.description);
+};
 
 // never throws
 /* eslint-disable functional/no-loop-statements, functional/no-let, functional/no-expression-statements */
@@ -428,10 +446,9 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
           deps.log.error("FATAL: git repo isn't clean, aborting");
           break;
         }
-        const branch = nonEmptyStringFromNumber(cyrb53(task));
-        previousBranch = await deps.git.branch(branch);
-        const result = await deps.runWorker({ description: task }, options);
-        deps.log.info('result log', result);
+        const branch = taskToBranchName(taskR);
+        previousBranch = await deps.git.branch(some(branch));
+        await deps.runWorker({ description: task }, options);
         await deps.git.commitAndPush();
         if (!await deps.git.isClean()) {
           deps.log.error("FATAL: git repo isn't clean, after commitAndPush, aborting");
@@ -462,7 +479,10 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
 // connect with global meta state - info about artifacts, queue. never ends
 export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
   next: NextTaskF,/*to take from taskmaster source code implementation*/
-  description: (t: Task) => NonEmptyString
+  description: (t: Task) => NonEmptyString,
+  git: LooperDeps['git'] & {
+    dropBranch: (name: NonEmptyString) => Promise<void>,
+  }
 }) => (state0: TasksMachine.State, save: (s: TasksMachine.State) => Promise<void>) => {
   /*task machine methods*/
   // eslint-disable-next-line functional/no-let
@@ -470,8 +490,8 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
   // eslint-disable-next-line functional/no-let
   let stateSavePromise: Promise<void> = Promise.resolve();
   // Track task failures to stop worker after repeated failures
-  // eslint-disable-next-line functional/no-let
-  let taskFailureCount = new Map<string, number>();
+
+  const taskFailureCount = new Map<string, number>();
   const MAX_TASK_FAILURES = 5; // Stop worker if same task fails 5 times
   const pullTask: LooperDeps['pullTask'] = async (options) => {
     // eslint-disable-next-line functional/no-loop-statements
@@ -483,7 +503,7 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
         continue;
       }
       const [taskId, task] = next.value;
-      
+
       // Check if this task has failed too many times
       const taskIdStr = String(taskId);
       const failureCount = taskFailureCount.get(taskIdStr) || 0;
@@ -492,7 +512,7 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
         deps.log.error('Current task queue preserved. Restart worker after manual intervention.');
         return { type: 'aborted' };
       }
-      
+
       await stateSavePromise;
       // not exactly THE point of execution started but good enough
       state = startTaskExecution(taskId)(state);
@@ -506,13 +526,14 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
   const ackTask: LooperDeps['ackTask'] = async (ok, options) => {
     await stateSavePromise;
     if (Option.isSome(ok)) {
-      // Success: mark task as completed and reset failure count
       if (state.taskExecutionState.step === 'running') {
         const [taskId] = state.taskExecutionState.task;
         const taskIdStr = String(taskId);
         taskFailureCount.delete(taskIdStr); // Reset failure count on success
       }
       state = endTaskExecution(state);
+      // here, the git pr is to be created TODO
+      state = TasksMachine.outputTaskToArtifact(castNonEmptyString(ok.value.branch))(state);
     } else {
       // Failure: put task back in queue for retry and track failure
       if (state.taskExecutionState.step === 'running') {
@@ -526,16 +547,24 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
     }
     stateSavePromise = save(state);
   };
-  const abortController = new AbortController();
-  loop({
-    ...deps,
-    pullTask,
-    ackTask
-  })({
-    signal: abortController.signal
-  }).then(() => {
-    console.log('stateful loop ended');
-  });
+  const runLoop = () => {
+    const r = new AbortController();
+    loop({
+      ...deps,
+      pullTask,
+      ackTask
+    })({
+      signal: r.signal
+    }).then(() => {
+      console.log('stateful loop ended');
+    });
+    return r;
+  }
+  let abortController = runLoop();
+  const rerunLoop = () => {
+    abortController.abort();
+    return () => abortController = runLoop();
+  };
   return {
     stop() {
       abortController.abort();
@@ -545,5 +574,38 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
       state = appendTasks(tasks)(state);
       stateSavePromise = save(state);
     },
+    editTask: async (taskId: TaskId, desc: NonEmptyString) => {
+      await stateSavePromise;
+      const [state1, removedO, prevO] = editTask(taskId, {
+        description: desc
+      })(state);
+      deps.log.info(`any tasks to remove: ${isSome(removedO)}`);
+      if (isSome(removedO)) {
+        // some tasks before the "currently being executed" were edited; the "current execution" is invalid
+        const next = rerunLoop();
+        // we have to check out to the edited task's predecessor
+        await deps.git.branch(pipe(
+          prevO,
+          Option.map(t => taskToBranchName(t[1])),
+        ))
+        const removed = removedO.value;
+        const tasks = removed.kind === 'artifact' ? removed.tasks : removed.kind === 'output' ? removed.tasks : removed.kind === 'executionCancel' ? castNonEmptyArray([removed.task]) : (() => { throw new Error('unreachable'); })();
+        deps.log.info(`tasks to drop: ${tasks.join(', ')}`);
+        const branches = tasks.map(t => taskToBranchName(t[1]));
+        for (const branch of branches) {
+          try {
+            deps.log.info(`dropping branch ${branch}`);
+            await deps.git.dropBranch(branch);
+          } catch (e) {
+            deps.log.info(`failed to drop branch ${branch}: ${e}; ignoring`);
+          }
+        }
+        next();
+      }
+      // TODO here, we cleanup rejected PRs from _artifacts
+      state = state1;
+      stateSavePromise = save(state1);
+
+    }
   };
 };

@@ -27,6 +27,7 @@ export type NextTaskF = (tasks: TasksMachine.Tasks) => Option.Option<[TaskId, Ta
 export interface GitOperations {
   readonly isClean: () => Promise<boolean>;
   readonly branch: (name: NonEmptyString) => Promise<NonEmptyString>;
+  readonly dropBranch: (name: NonEmptyString) => Promise<void>;
   readonly commitAndPush: () => Promise<void>;
   readonly cleanup: (previousBranch: NonEmptyString) => Promise<void>;
   readonly verifyBranchChain?: () => Promise<unknown>;

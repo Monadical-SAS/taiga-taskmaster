@@ -3,16 +3,14 @@ import { NonEmptyString, castNonEmptyString } from '@taiga-task-master/common';
 import type { GitOperations } from './types.js';
 import { simpleGit, type SimpleGit } from 'simple-git';
 import { cyrb53 } from '../utils/hash.js';
+import { createBranchName } from '@taiga-task-master/worker-interface';
 
 export interface GitConfig {
   readonly userConfig?: { readonly name: string; readonly email: string };
   readonly isolation?: boolean;
 }
 
-export const createBranchName = (task: NonEmptyString): NonEmptyString => {
-  const hash = cyrb53(task);
-  return castNonEmptyString(`task-${hash.toString()}`);
-};
+
 
 export const createGitDeps = (config: GitConfig = {}, workingDirectory: string): GitOperations => {
   const git: SimpleGit = simpleGit({
@@ -35,12 +33,21 @@ export const createGitDeps = (config: GitConfig = {}, workingDirectory: string):
       const status = await git.status();
       return status.isClean();
     },
-    
+
+    dropBranch: async (name: NonEmptyString) => {
+      // Discard any uncommitted changes (tracked files)
+      await git.reset(['--hard']);
+
+      // Remove untracked files and directories
+      await git.clean('f', ['-d']);
+      git.deleteLocalBranch(name, true);
+    },
+
     branch: async (name: NonEmptyString): Promise<NonEmptyString> => {
       // Store current branch for potential cleanup
       const status = await git.status();
        
-      currentBranch = castNonEmptyString(status.current || 'main');
+      currentBranch = castNonEmptyString(status.current || 'master');
       
       // Create and checkout new branch
       const branchName = createBranchName(name);
@@ -66,7 +73,7 @@ export const createGitDeps = (config: GitConfig = {}, workingDirectory: string):
       // Push if not in isolation mode
       if (!config.isolation) {
         try {
-          await git.push('origin', status.current || 'main', ['--set-upstream']);
+          await git.push('origin', status.current || 'master', ['--set-upstream']);
         } catch (error) {
           // Handle push errors
           console.error('Failed to push changes:', error);

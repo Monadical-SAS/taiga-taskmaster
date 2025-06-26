@@ -1,7 +1,5 @@
 // @vibe-generated: conforms to worker-interface
 import { simpleGit } from "simple-git";
-import { castNonEmptyString, type NonEmptyString } from "@taiga-task-master/common";
-import { createBranchName } from "../core/git-operations.js";
 import * as fs from "fs/promises";
 import * as path from "path";
 
@@ -158,15 +156,15 @@ export const createGitDebugger = (workingDir: string): GitDebugger => {
         // Verify each branch chains from the previous one
         const chainResults = await Promise.all(sortedBranches.map(async (currentBranch, i) => {
           if (i === 0) {
-            // First branch should be based on main
+            // First branch should be based on master
             try {
-              const mergeBase = await git.raw(["merge-base", "main", currentBranch]);
-              const mainCommit = await git.revparse(["main"]);
+              const mergeBase = await git.raw(["merge-base", "master", currentBranch]);
+              const mainCommit = await git.revparse(["master"]);
               const basedOnMain = mergeBase.trim() === mainCommit.trim();
-              console.log(`   ${currentBranch} ${basedOnMain ? '✅' : '❌'} chains from main`);
-              return { from: 'main', to: currentBranch, type: basedOnMain ? 'chains' as const : 'diverged' as const };
+              console.log(`   ${currentBranch} ${basedOnMain ? '✅' : '❌'} chains from master`);
+              return { from: 'master', to: currentBranch, type: basedOnMain ? 'chains' as const : 'diverged' as const };
             } catch (gitError) {
-              console.log(`   ${currentBranch} ❓ main (cannot verify: ${gitError})`);
+              console.log(`   ${currentBranch} ❓ master (cannot verify: ${gitError})`);
               return null;
             }
           } else {

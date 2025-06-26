@@ -3,14 +3,14 @@ import type { SyncTasksF } from "@taiga-task-master/tasktracker-interface";
 import {
   bang,
   castNonEmptyArray,
-  castNonNegativeInteger,
+  castNonNegativeInteger, castPositiveInteger,
   type NonEmptyString,
   type NonNegativeInteger,
-  oneOrNone,
+  oneOrNone, type PositiveInteger,
   PrdText,
   SINGLETON_PROJECT_ID,
-  type TaskId,
-} from "@taiga-task-master/common";
+  type TaskId
+} from '@taiga-task-master/common';
 import { HashSet, Option, pipe, Tuple } from 'effect';
 import { HashMap, Array } from "effect";
 import { isEmptyArray, isNonEmptyArray, type NonEmptyArray, tailNonEmpty } from 'effect/Array';
@@ -44,7 +44,9 @@ export const generateTasks =
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace TasksMachine {
-  export type Task = unknown;
+  export type Task = {
+    description: NonEmptyString;
+  };
   export type NextTaskF = (tx: Tasks) => Option.Option<[TaskId, Task]>;
   export type Tasks = HashMap.HashMap<TaskId, Task>;
   // artifact id could be generated branch name
@@ -54,7 +56,7 @@ export namespace TasksMachine {
     // invariant: artifact tasks + normal tasks constitute tasks.json content completely
     // only "completed"
     // invariant: always at least 1 (MVP: normally just 1)
-    tasks: Tasks;
+    tasks: NonEmptyArray<[TaskId, Task]>;
   };
   export const state0: State = {
     tasks: HashMap.empty(),
@@ -105,7 +107,7 @@ export namespace TasksMachine {
   };
 
   const allTasks = (s: State) =>
-    s.artifacts.reduce((a, b) => uniqAppend(a, b.tasks), s.tasks);
+    s.artifacts.reduce((a, b) => uniqAppend(a, HashMap.fromIterable(b.tasks)), s.tasks);
 
   // simplest operation, add more tasks
   export const appendTasks =
@@ -178,6 +180,7 @@ export namespace TasksMachine {
   }
 
   // only the first task in queue can be committed
+  // represents the merging of the last artifact in chain (into the previous if exists or into master if not)
   export const commitArtifact =
     (aid: ArtifactId) =>
     (s: State): State => {
@@ -189,7 +192,7 @@ export namespace TasksMachine {
       const artifacts = s.artifacts as NonEmptyArray<Artifact>;
       const artifact = bang(s.artifacts[0]);
       const tasks = artifact.tasks;
-      if (HashMap.size(tasks) === 0) {
+      if (tasks.length === 0) {
         throw new Error(
           `panic! artifact tasks size invariant violation: an artifact always has at least 1 task`
         );
@@ -206,7 +209,7 @@ export namespace TasksMachine {
       };
     };
 
-  export const addArtifact =
+  export const outputTaskToArtifact =
     (artifactId: ArtifactId) =>
     (s: State): State => {
       if (!isNonEmptyArray(s.outputTasks)) {
@@ -225,7 +228,7 @@ export namespace TasksMachine {
 
       const newArtifact: Artifact = {
         id: artifactId,
-        tasks: HashMap.make([taskId, task]),
+        tasks: [[taskId, task]],
       };
 
       return {
@@ -237,9 +240,9 @@ export namespace TasksMachine {
 
   // remove last n artifacts
   const removeArtifacts =
-    (n: NonNegativeInteger) =>
+    (n: PositiveInteger) =>
     (s: State): [State, NonEmptyArray<ArtifactId>] => {
-      if (s.artifacts.length === 0) {
+      if (isEmptyArray(s.artifacts)) {
         throw new Error(`panic! cannot remove artifacts: artifacts are empty`);
       }
       if (n > s.artifacts.length) {
@@ -252,7 +255,7 @@ export namespace TasksMachine {
         (_, i) => i < s.artifacts.length - n
       );
       const tasksToReturn = take.reduce(
-        (a, b) => uniqAppend(a, b.tasks),
+        (a, b) => uniqAppend(a, HashMap.fromIterable(b.tasks)),
         HashMap.empty() as Tasks
       );
       return [
@@ -265,10 +268,44 @@ export namespace TasksMachine {
       ];
     };
 
+  const removeOutputTasks =
+    (n: PositiveInteger) =>
+      (s: State): [State, NonEmptyArray<[TaskId, Task]>] => {
+        if (isEmptyArray(s.outputTasks)) {
+          throw new Error(`panic! cannot remove output tasks: output tasks are empty`);
+        }
+        if (n > s.outputTasks.length) {
+          throw new Error(
+            `panic! cannot remove output tasks: requested ${n} output tasks, but only ${s.outputTasks.length} available`
+          );
+        }
+        const [take, keep] = Array.partition(
+          s.outputTasks,
+          (_, i) => i < s.outputTasks.length - n
+        );
+        return [
+          {
+            ...s,
+            outputTasks: keep,
+          },
+          castNonEmptyArray(take),
+        ];
+      }
+
   // edited task checks whether it's in artifacts already: if is, the artifact and all the artifacts after it get removed.
   export const editTask =
-    (tid: TaskId, t: Task /*TODO task shape*/) =>
-    (s: State): [State, ArtifactId[]] => {
+    (tid: TaskId, t: Task) =>
+    (s: State): [State, Option.Option<{
+      kind: 'artifact',
+      artifactIds: NonEmptyArray<ArtifactId>,
+      tasks: NonEmptyArray<[TaskId, Task]>,
+    } | {
+      kind: 'output',
+      tasks: NonEmptyArray<[TaskId, Task]>,
+    } | {
+      kind: 'executionCancel',
+      task: [TaskId, Task],
+    }>, Option.Option<[TaskId, Task]>] => {
       // check if we do have a non-completed task to edit
       const task = HashMap.get(s.tasks, tid);
       if (isSome(task)) {
@@ -278,13 +315,34 @@ export namespace TasksMachine {
             ...s,
             tasks: pipe(s.tasks, HashMap.set(tid, t)),
           },
-          [],
+          Option.none(),
+          Option.none(),
         ];
+      }
+      if (s.taskExecutionState.step === 'running' && s.taskExecutionState.task[0] === tid) {
+        // it's currently in work!
+        return [
+          s, // cancelTaskExecution(s)
+          Option.some({
+            kind: 'executionCancel',
+            task: s.taskExecutionState.task
+          }),
+          // if it's running, the previous task is the last of output tasks or last of artifact tasks
+          pipe(
+            Array.last(s.outputTasks),
+            Option.orElse(() => {
+              return pipe(
+                Array.last(s.artifacts),
+                Option.map(a => Array.lastNonEmpty(a.tasks))
+              )
+            }),
+          )
+        ]
       }
       const artifact = pipe(
         s.artifacts,
         Array.filterMap((a) => {
-          const here = HashMap.get(a.tasks, tid);
+          const here = oneOrNone(Array.filter(a.tasks, ([id]) => id === tid));
           return pipe(
             here,
             Option.map((task) => ({
@@ -295,22 +353,82 @@ export namespace TasksMachine {
         }),
         oneOrNone
       );
-      if (isNone(artifact)) {
+      const outputTask = pipe(
+        s.outputTasks,
+        Array.filterMap(([id]) => id === tid ? Option.some(id) : Option.none()),
+        oneOrNone
+      );
+      if (isSome(artifact) && isSome(outputTask)) {
         throw new Error(
-          `panic! cannot edit task ${tid}: no such task in artifacts neither in current tasks`
+          `panic! cannot edit task ${tid}: task is in both artifacts and output`
         );
       }
-      // the artifact and all artifacts before it have to go
-      const tail =
-        s.artifacts.length -
-        s.artifacts.findIndex((a) => a.id === artifact.value.id);
-      return pipe(
-        removeArtifacts(castNonNegativeInteger(tail))(s),
-        TupleType.mapFirst(s => ({
-          ...s,
-          tasks: pipe(s.tasks, HashMap.set(tid, t))
-        }))
-      );
+      if (isNone(outputTask) && isNone(artifact)) {
+        throw new Error(
+          `panic! cannot edit task ${tid}: no such task in artifacts neither in output or current tasks`
+        );
+      }
+      if (isSome(artifact)) {
+        const tailSize =
+          s.artifacts.length -
+          s.artifacts.findIndex((a) => a.id === artifact.value.id);
+        return pipe(
+          removeArtifacts(castPositiveInteger(tailSize))(s),
+          TupleType.mapFirst(s => ({
+            ...s,
+            tasks: pipe(s.tasks, HashMap.set(tid, t))
+          })),
+          TupleType.mapSecond(ax => {
+            const tasks = castNonEmptyArray(s.artifacts.flatMap(a => a.tasks));
+            return Option.some({
+              kind: 'artifact' as const,
+              artifactIds: ax,
+              tasks: tasks
+            });
+          }),
+          t => {
+            const r: [...typeof t, Option.Option<[TaskId, Task]>] = [
+              ...t,
+              // it's in artifacts => we have to look in output tasks then in artifacts
+              pipe(
+                Array.last(s.outputTasks),
+                Option.orElse(() => {
+                  return pipe(
+                    Array.last(s.artifacts),
+                    Option.map(a => Array.lastNonEmpty(a.tasks))
+                  )
+                }),
+              )
+            ];
+            return r;
+          });
+      } else if (isSome(outputTask)) {
+        const index = s.outputTasks.findIndex(t => t[0] === outputTask.value);
+        const tailSize = s.outputTasks.length -
+          index;
+        return pipe(
+          removeOutputTasks(castPositiveInteger(tailSize))(s),
+          TupleType.mapFirst(s => ({
+            ...s,
+            tasks: pipe(s.tasks, HashMap.set(tid, t))
+          })),
+          TupleType.mapSecond(ax => Option.some({
+            kind: 'output' as const,
+            tasks: ax
+          })),
+          // it's in output tasks => not in artifacts yet => the only candidate is another output task
+          t => {
+            const r: [...typeof t, Option.Option<[TaskId, Task]>] = [
+              ...t,
+              index > 0 ? Array.get(index - 1)(t[0].outputTasks) : Option.none<[TaskId, Task]>()
+            ];
+            return r;
+          }
+        );
+
+      } else {
+        throw new Error(`panic! invalid state: cannot edit task ${tid}: no such task in artifacts neither in output or current tasks`);
+      }
     };
 
   // anything non-crucial

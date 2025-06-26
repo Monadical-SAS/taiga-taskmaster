@@ -249,7 +249,7 @@ describe("TasksMachine.addArtifact", () => {
     state.outputTasks = [[1 as TaskId, completedTask]];
     state.tasks = HashMap.remove(state.tasks, 1 as TaskId); // Remove from main tasks
     
-    const newState = TasksMachine.addArtifact("test-artifact")(state);
+    const newState = TasksMachine.outputTaskToArtifact("test-artifact")(state);
     
     // Should have one more artifact
     expect(newState.artifacts.length).toBe(2);
@@ -272,7 +272,7 @@ describe("TasksMachine.addArtifact", () => {
     state.outputTasks = [];
     
     expect(() => {
-      TasksMachine.addArtifact("test-artifact")(state);
+      TasksMachine.outputTaskToArtifact("test-artifact")(state);
     }).toThrow("panic! cannot create artifact test-artifact: no tasks to add");
   });
 
@@ -284,7 +284,7 @@ describe("TasksMachine.addArtifact", () => {
     state.tasks = HashMap.remove(state.tasks, 1 as TaskId);
     
     expect(() => {
-      TasksMachine.addArtifact("artifact-1")(state); // artifact-1 already exists
+      TasksMachine.outputTaskToArtifact("artifact-1")(state); // artifact-1 already exists
     }).toThrow("panic! Artifact with id artifact-1 already exists");
   });
 
@@ -295,7 +295,7 @@ describe("TasksMachine.addArtifact", () => {
     // Keep task in main tasks to create invalid state
     
     expect(() => {
-      TasksMachine.addArtifact("test-artifact")(state);
+      TasksMachine.outputTaskToArtifact("test-artifact")(state);
     }).toThrow("panic! invalid state: 1 is in non-started tasks");
   });
 });

@@ -246,7 +246,7 @@ export const executeCommand = (
     case "add_artifact": {
       try {
         const tmState = toTaskMachineState(state);
-        const updatedTmState = TasksMachine.addArtifact(
+        const updatedTmState = TasksMachine.outputTaskToArtifact(
           command.artifactId
         )(tmState);
         const updatedState = fromTaskMachineState(updatedTmState);

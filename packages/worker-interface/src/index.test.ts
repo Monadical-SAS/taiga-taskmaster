@@ -1611,8 +1611,9 @@ describe("Loop Function Tests", () => {
           isClean: async () => true,
           cleanup: async () => {},
           branch: async (name) => {
-            branchNames.push(name);
-            return castNonEmptyString("main"); // Returns previous branch name
+            if (Option.isNone(name)) throw new Error("Branch name should be defined");
+            branchNames.push(name.value);
+            return castNonEmptyString("master"); // Returns previous branch name
           },
           commitAndPush: async () => {},
         },
@@ -1647,8 +1648,9 @@ describe("Loop Function Tests", () => {
           isClean: async () => true,
           cleanup: async () => {},
           branch: async (name) => {
-            branchNames.push(name);
-            return castNonEmptyString("main"); // Returns previous branch name
+            if (Option.isNone(name)) throw new Error("Branch name should be defined");
+            branchNames.push(name.value);
+            return castNonEmptyString("master"); // Returns previous branch name
           },
           commitAndPush: async () => {},
         },

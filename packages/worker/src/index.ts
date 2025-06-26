@@ -5,6 +5,8 @@ export * from './core/logging.js';
 export * from './core/task-description.js';
 export * from './utils/hash.js';
 export * from './utils/sleep.js';
+export * from './utils/temp-utils.js';
+export * from './utils/metadata-dirs.js';
 export * from './workers/goose.js';
 export * from './testing/filesystem-mock.js';
 export * from './stateful/base-stateful.js';
