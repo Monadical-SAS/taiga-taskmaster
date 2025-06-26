@@ -1316,7 +1316,10 @@ describe("Loop Function Tests", () => {
       const deps = createMockDeps({
         git: {
           isClean: async () => true,
-          cleanup: async (branch) => { cleanupCalls.push(branch); },
+          cleanup: async (branch) => { cleanupCalls.push(pipe(
+            branch,
+            Option.getOrElse(() => "master"),
+          )); },
           branch: async () => {
             attemptCountRef3.value++;
             if (attemptCountRef3.value === 1) {

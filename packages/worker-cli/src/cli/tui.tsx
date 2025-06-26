@@ -18,6 +18,7 @@ import * as fs from "fs/promises";
 import { createNextTaskStrategies } from '@taiga-task-master/worker';
 import { startTUI } from './tui/index.js';
 import { startFallbackCLI } from './fallback-cli.js';
+import { setupGlobalLogger, cleanupGlobalLogger, getGlobalLogger } from '../utils/file-logger.js';
 
 interface UserTask {
   description: string;
@@ -114,7 +115,8 @@ async function processTaskQueue(
     metadataDirectory: metadataDirs.metadataDir,
     timeouts: {
       process: 300000, // 5 minutes per task
-    }
+    },
+    onLiveOutput: onWorkerOutput
   });
 
   // Set up the statefulLoop dependencies 
@@ -155,7 +157,7 @@ async function processTaskQueue(
       dropBranch: async (branchName: NonEmptyString) => {
         await git.reset(['--hard']);
         await git.clean('f', ['-d']);
-        await git.deleteLocalBranch(branchName);
+        await git.deleteLocalBranch(branchName, true);
       },
       
       branch: async (name: Option.Option<NonEmptyString>) => {
@@ -181,57 +183,95 @@ async function processTaskQueue(
         }
       },
 
-      cleanup: async (previousBranch: NonEmptyString) => {
+      cleanup: async (previousBranch: Option.Option<NonEmptyString>) => {
+        const logMessage = `🧹 Resetting to branch: ${previousBranch}`;
         onWorkerOutput?.({
           timestamp: Date.now(),
-          line: `🧹 Resetting to branch: ${previousBranch}`,
+          line: logMessage,
           level: 'info'
         });
+        
+        // Log git operations to file
+        const logger = getGlobalLogger();
+        if (logger) {
+          logger.logFromSource('git', 'info', logMessage).catch(() => {});
+        }
         try {
           const currentBranch = await git.branchLocal();
           const branchToDelete = currentBranch.current;
 
           
           // Discard uncommitted changes from failed task execution
+          const resetMessage = `   🧽 Discarding uncommitted changes with git reset --hard`;
           onWorkerOutput?.({
             timestamp: Date.now(),
-            line: `   🧽 Discarding uncommitted changes with git reset --hard`,
+            line: resetMessage,
             level: 'info'
           });
-          await git.reset(['--hard']);
           
-          await git.checkout(previousBranch);
+          if (logger) {
+            logger.logFromSource('git', 'info', resetMessage).catch(() => {});
+          }
+          await git.reset(['--hard']);
+          await git.clean('f', ['-d']);
+          await git.checkout(pipe(
+            previousBranch,
+            Option.getOrElse(() => 'master')
+          ));
+          const deleteMessage = `   🗑️  Attempting to delete branch '${branchToDelete}'`;
           onWorkerOutput?.({
             timestamp: Date.now(),
-            line: `   🗑️  Attempting to delete branch '${branchToDelete}'`,
+            line: deleteMessage,
             level: 'info'
           });
-          await git.deleteLocalBranch(branchToDelete);
+          
+          if (logger) {
+            logger.logFromSource('git', 'info', deleteMessage).catch(() => {});
+          }
+          await git.deleteLocalBranch(branchToDelete, true);
+          const successMessage = `   ✅ Successfully deleted branch '${branchToDelete}'`;
           onWorkerOutput?.({
             timestamp: Date.now(),
-            line: `   ✅ Successfully deleted branch '${branchToDelete}'`,
+            line: successMessage,
             level: 'info'
           });
+          
+          if (logger) {
+            logger.logFromSource('git', 'info', successMessage).catch(() => {});
+          }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
+          const warningMessage = `   ⚠️  Cleanup warning: Failed to delete branch`;
+          const detailsMessage = `   📝 Error details: ${errorMessage}`;
+          
           onWorkerOutput?.({
             timestamp: Date.now(),
-            line: `   ⚠️  Cleanup warning: Failed to delete branch`,
+            line: warningMessage,
             level: 'error'
           });
           onWorkerOutput?.({
             timestamp: Date.now(),
-            line: `   📝 Error details: ${errorMessage}`,
+            line: detailsMessage,
             level: 'error'
           });
+          
+          if (logger) {
+            logger.logFromSource('git', 'error', warningMessage).catch(() => {});
+            logger.logFromSource('git', 'error', detailsMessage).catch(() => {});
+          }
           
           // If branch deletion fails due to worktree usage, provide helpful info
           if (errorMessage.includes('used by worktree')) {
+            const infoMessage = `   💡 This may be due to active worktree usage. The branch will remain but is no longer checked out.`;
             onWorkerOutput?.({
               timestamp: Date.now(),
-              line: `   💡 This may be due to active worktree usage. The branch will remain but is no longer checked out.`,
+              line: infoMessage,
               level: 'info'
             });
+            
+            if (logger) {
+              logger.logFromSource('git', 'info', infoMessage).catch(() => {});
+            }
           }
         }
       }
@@ -269,12 +309,44 @@ async function main(options?: {
     // Create or use provided working directory
     const workingDir = options?.workingDir || (await createTempDir("task-runner-")).path;
     
+    // Setup comprehensive logging to capture all console output in package directory
+    const currentFileDir = path.dirname(new URL(import.meta.url).pathname);
+    const packageDir = path.resolve(currentFileDir, '../..');  // Go up to worker-cli package root
+    const logger = await setupGlobalLogger(packageDir);
+    console.log(`🔍 Logging all output to: ${logger.getLogFilePath()}`);
+    
+    // Setup process signal handlers for proper cleanup
+    const gracefulShutdown = async (signal: string) => {
+      console.log(`\n📡 Received ${signal}, shutting down gracefully...`);
+      await cleanupGlobalLogger();
+      process.exit(0);
+    };
+    
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('uncaughtException', (error) => {
+      console.error('💥 Uncaught Exception:', error);
+      cleanupGlobalLogger().finally(() => process.exit(1));
+    });
+    process.on('unhandledRejection', (reason) => {
+      console.error('💥 Unhandled Rejection:', reason);
+      cleanupGlobalLogger().finally(() => process.exit(1));
+    });
+    
     const queue = new TasksMachineMemoryPersistence();
     
     // Create a shared worker output handler that will be connected to TUI
     const workerOutputHandler: { current?: (line: { timestamp: number; line: string; level?: string }) => void } = {};
     
     const { stop, appendTasks, editTask } = await processTaskQueue(queue, workingDir, (line) => {
+      // Log worker output to file
+      const logger = getGlobalLogger();
+      if (logger) {
+        logger.logFromSource('worker', (line.level as 'info' | 'error' | 'warn' | 'debug') || 'info', line.line).catch(() => {
+          // Ignore logging errors to avoid infinite loops
+        });
+      }
+      
       if (workerOutputHandler.current) {
         workerOutputHandler.current(line);
       }
@@ -295,8 +367,10 @@ async function main(options?: {
         const desc = castNonEmptyString(description);
         await editTask(taskId, desc);
       },
-      onStop: () => {
+      onStop: async () => {
+        console.log('🛑 Shutting down...');
         stop();
+        await cleanupGlobalLogger();
         process.exit(0);
       },
       // Connect the worker output handler
@@ -318,10 +392,21 @@ async function main(options?: {
     } catch (error) {
       console.error("TUI failed, falling back to simple CLI:", error);
       await startFallbackCLI(interfaceOptions);
+    } finally {
+      // Show log file location before exiting
+      const logger = getGlobalLogger();
+      if (logger) {
+        console.log(`\n📋 All logs saved to: ${logger.getLogFilePath()}`);
+      }
     }
     
   } catch (error) {
     console.error(`\n🚨 Error: ${error}`);
+    const logger = getGlobalLogger();
+    if (logger) {
+      console.log(`\n📋 Error logs saved to: ${logger.getLogFilePath()}`);
+      await cleanupGlobalLogger();
+    }
     process.exit(1);
   }
 }

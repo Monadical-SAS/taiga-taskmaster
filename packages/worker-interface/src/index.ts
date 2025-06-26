@@ -403,8 +403,8 @@ export type LooperDeps = {
   git: {
     // synched with remote and has no changes pending
     isClean: () => Promise<boolean>,
-    // clean to pristine state before branch() was done
-    cleanup: (name: NonEmptyString) => Promise<void>
+    // clean to pristine state before branch() was done; basically cleanup+checkout
+    cleanup: (name: Option.Option<NonEmptyString>) => Promise<void>
     // should throw if branch isn't clean (TODO check if there's such command line args)
     branch: (name: Option.Option<NonEmptyString>) => Promise<NonEmptyString>,
     // call of isClean() right after commitAndPush should return true
@@ -431,10 +431,11 @@ const taskToBranchName = (task: Task): NonEmptyString => {
 export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: AbortSignal } | undefined): Promise<void> => {
     while (true) {
       if (options?.signal?.aborted) break;
+      // TODO doesn't REALLY know about previous branch when we restore from an existing state.
       let previousBranch: NonEmptyString | undefined;
       let taskAcknowledging = false;
       const cleanupBranch = async () => {
-        if (previousBranch) await deps.git.cleanup(previousBranch);
+        if (previousBranch) await deps.git.cleanup(some(previousBranch));
       }
       try {
         const taskR = await deps.pullTask(options);
@@ -458,6 +459,10 @@ export const loop = (deps: LooperDeps) => async (options?: { readonly signal?: A
         await deps.ackTask(Option.some({ branch }), options);
         taskAcknowledging = false;
       } catch (error) {
+        if (options?.signal?.aborted) {
+          // we don't ack() on abortion, the caller supposed to deal with state
+          return;
+        }
         deps.log.error('uncaught error in main loop: ', error);
         await cleanupBranch();
         if (!taskAcknowledging) {
@@ -583,21 +588,29 @@ export const statefulLoop = (deps: Omit<LooperDeps, 'pullTask' | 'ackTask'> & {
       if (isSome(removedO)) {
         // some tasks before the "currently being executed" were edited; the "current execution" is invalid
         const next = rerunLoop();
-        // we have to check out to the edited task's predecessor
-        await deps.git.branch(pipe(
+        const previousTaskBranch = pipe(
           prevO,
           Option.map(t => taskToBranchName(t[1])),
-        ))
+        );
+        deps.log.info('branching into previous task', pipe(prevO, Option.map(Tuple.getFirst), Option.getOrElse(() => 'none')), previousTaskBranch);
+        // we have to check out to the edited task's predecessor
+        await deps.git.cleanup(previousTaskBranch)
         const removed = removedO.value;
-        const tasks = removed.kind === 'artifact' ? removed.tasks : removed.kind === 'output' ? removed.tasks : removed.kind === 'executionCancel' ? castNonEmptyArray([removed.task]) : (() => { throw new Error('unreachable'); })();
-        deps.log.info(`tasks to drop: ${tasks.join(', ')}`);
-        const branches = tasks.map(t => taskToBranchName(t[1]));
-        for (const branch of branches) {
-          try {
-            deps.log.info(`dropping branch ${branch}`);
-            await deps.git.dropBranch(branch);
-          } catch (e) {
-            deps.log.info(`failed to drop branch ${branch}: ${e}; ignoring`);
+        deps.log.info('removed.kind = ', removed.kind);
+        if (removed.kind === 'executionCancel') {
+          deps.log.info('cancelled ongoing task', removed.task[0]);
+          // already cleaned up, it's the exact current one
+        } else {
+          const tasks = removed.kind === 'artifact' ? removed.tasks : removed.kind === 'output' ? removed.tasks : (() => { throw new Error('unreachable'); })();
+          deps.log.info(`tasks to drop: ${tasks.map(t => [t[0], t[1].description.slice(0, 30)]).join(', ')}`);
+          const branches = tasks.map(t => taskToBranchName(t[1]));
+          for (const branch of branches) {
+            try {
+              deps.log.info(`dropping branch ${branch}`);
+              await deps.git.dropBranch(branch);
+            } catch (e) {
+              deps.log.info(`failed to drop branch ${branch}: ${e}; ignoring`);
+            }
           }
         }
         next();

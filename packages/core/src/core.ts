@@ -321,18 +321,22 @@ export namespace TasksMachine {
       }
       if (s.taskExecutionState.step === 'running' && s.taskExecutionState.task[0] === tid) {
         // it's currently in work!
+        const state1 = pipe(cancelTaskExecution(s), s => ({
+          ...s,
+          tasks: pipe(s.tasks, HashMap.set(tid, t))
+        }));
         return [
-          s, // cancelTaskExecution(s)
+          state1,
           Option.some({
             kind: 'executionCancel',
             task: s.taskExecutionState.task
           }),
           // if it's running, the previous task is the last of output tasks or last of artifact tasks
           pipe(
-            Array.last(s.outputTasks),
+            Array.last(state1.outputTasks),
             Option.orElse(() => {
               return pipe(
-                Array.last(s.artifacts),
+                Array.last(state1.artifacts),
                 Option.map(a => Array.lastNonEmpty(a.tasks))
               )
             }),
@@ -389,15 +393,10 @@ export namespace TasksMachine {
           t => {
             const r: [...typeof t, Option.Option<[TaskId, Task]>] = [
               ...t,
-              // it's in artifacts => we have to look in output tasks then in artifacts
               pipe(
-                Array.last(s.outputTasks),
-                Option.orElse(() => {
-                  return pipe(
-                    Array.last(s.artifacts),
-                    Option.map(a => Array.lastNonEmpty(a.tasks))
-                  )
-                }),
+                Array.last(t[0].artifacts),
+                Option.map(a => Array.lastNonEmpty(a.tasks)),
+                Option.orElse(() => Array.last(t[0].outputTasks))
               )
             ];
             return r;

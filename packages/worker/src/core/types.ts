@@ -26,7 +26,8 @@ export type NextTaskF = (tasks: TasksMachine.Tasks) => Option.Option<[TaskId, Ta
 // Git operations interface
 export interface GitOperations {
   readonly isClean: () => Promise<boolean>;
-  readonly branch: (name: NonEmptyString) => Promise<NonEmptyString>;
+  readonly branch: (name: Option.Option<NonEmptyString>) => Promise<NonEmptyString>;
+  readonly checkout: (name: Option.Option<NonEmptyString>) => Promise<NonEmptyString>;
   readonly dropBranch: (name: NonEmptyString) => Promise<void>;
   readonly commitAndPush: () => Promise<void>;
   readonly cleanup: (previousBranch: NonEmptyString) => Promise<void>;
@@ -62,6 +63,7 @@ export interface GooseWorkerConfig extends BaseWorkerConfig {
     instructionsFile?: string;
   };
   metadataDirectory?: string;
+  onLiveOutput?: (line: { timestamp: number; line: string; level?: string }) => void;
 }
 
 export interface TestingWorkerConfig extends BaseWorkerConfig {

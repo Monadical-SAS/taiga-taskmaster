@@ -189,7 +189,7 @@ async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir
       dropBranch: async (branchName: NonEmptyString) => {
         await git.reset(['--hard']);
         await git.clean('f', ['-d']);
-        await git.deleteLocalBranch(branchName);
+        await git.deleteLocalBranch(branchName, true);
       },
       
       branch: async (name: Option.Option<NonEmptyString>) => {
@@ -220,7 +220,7 @@ async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir
         }
       },
 
-      cleanup: async (previousBranch: NonEmptyString) => {
+      cleanup: async (previousBranch: Option.Option<NonEmptyString>) => {
         log.info(`🧹 Resetting to branch: ${previousBranch}`);
         try {
           const currentBranch = await git.branchLocal();
@@ -230,10 +230,14 @@ async function processTaskQueue(queue: TasksMachineMemoryPersistence, workingDir
           // Discard uncommitted changes from failed task execution
           log.info(`   🧽 Discarding uncommitted changes with git reset --hard`);
           await git.reset(['--hard']);
+          await git.clean('f', ['-d']);
           
-          await git.checkout(previousBranch);
+          await git.checkout(pipe(
+            previousBranch,
+            Option.getOrElse(() => 'master')
+          ));
           log.info(`   🗑️  Attempting to delete branch '${branchToDelete}'`);
-          await git.deleteLocalBranch(branchToDelete);
+          await git.deleteLocalBranch(branchToDelete, true);
           log.info(`   ✅ Successfully deleted branch '${branchToDelete}'`);
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);

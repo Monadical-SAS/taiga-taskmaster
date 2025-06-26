@@ -12,6 +12,7 @@ import { useGitStatus } from '../hooks/useGitStatus.js';
 import { useTerminalDimensions } from '../hooks/useTerminalDimensions.js';
 import type { TUIProps } from '../types/tui.js';
 import type { TasksMachineMemoryPersistence } from '../hooks/useTaskMachine.js';
+import { getGlobalLogger } from '../../../utils/file-logger.js';
 
 interface AppProps extends TUIProps {
   readonly persistence: TasksMachineMemoryPersistence;
@@ -53,36 +54,70 @@ export const App: React.FC<AppProps> = ({
   }, [workerOutput.addLine]);
   
   const handleAddTask = async (description: string) => {
+    const logger = getGlobalLogger();
+    
     try {
+      if (logger) {
+        logger.logFromSource('tui', 'info', `User adding task: "${description}"`).catch(() => {});
+      }
+      
       await onAddTask(description);
+      
+      if (logger) {
+        logger.logFromSource('tui', 'info', `Task added successfully: "${description}"`).catch(() => {});
+      }
     } catch (error) {
+      const errorMessage = `Error adding task: ${error}`;
       workerOutput.addLine({
         timestamp: Date.now(),
-        line: `Error adding task: ${error}`,
+        line: errorMessage,
         level: 'error',
       });
+      
+      if (logger) {
+        logger.logFromSource('tui', 'error', errorMessage).catch(() => {});
+      }
     }
   };
 
   const handleEditTask = async (taskId: string, description: string) => {
+    const logger = getGlobalLogger();
+    
     try {
+      if (logger) {
+        logger.logFromSource('tui', 'info', `User editing task ${taskId}: "${description}"`).catch(() => {});
+      }
+      
       if (onEditTask) {
         await onEditTask(taskId, description);
+        
+        const successMessage = `✏️ Task ${taskId} updated successfully`;
         workerOutput.addLine({
           timestamp: Date.now(),
-          line: `✏️ Task ${taskId} updated successfully`,
+          line: successMessage,
           level: 'info',
         });
+        
+        if (logger) {
+          logger.logFromSource('tui', 'info', successMessage).catch(() => {});
+        }
       } else {
         throw new Error('Edit task function not available');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
+      const fullErrorMessage = `Error editing task: ${errorMessage}`;
+      
       workerOutput.addLine({
         timestamp: Date.now(),
-        line: `Error editing task: ${errorMessage}`,
+        line: fullErrorMessage,
         level: 'error',
       });
+      
+      if (logger) {
+        logger.logFromSource('tui', 'error', fullErrorMessage).catch(() => {});
+      }
+      
       throw error; // Re-throw to let InputPanel handle display
     }
   };

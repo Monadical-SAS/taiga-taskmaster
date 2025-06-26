@@ -13,7 +13,8 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
   const {
     workingDirectory,
     goose,
-    metadataDirectory
+    metadataDirectory,
+    onLiveOutput
   } = config;
   
   return async (task: { description: string }, options?: { signal?: AbortSignal }): Promise<WorkerResult> => {
@@ -53,6 +54,15 @@ export const makeGooseWorker = (config: GooseWorkerConfig) => {
       onLine: async (l) => {
         // Log to console (existing behavior)
         console.log(`${l.timestamp}: ${l.line}`);
+        
+        // Send to TUI if callback provided
+        if (onLiveOutput) {
+          onLiveOutput({
+            timestamp: l.timestamp,
+            line: l.line,
+            level: 'info'
+          });
+        }
         
         // Log to file - simple format for tail -f
         const logEntry = `[${new Date(l.timestamp).toISOString()}] ${l.line}\n`;
