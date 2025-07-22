@@ -13,7 +13,8 @@
   },
   "bin": {
     "taiga-task-runner": "./dist/cli/task-runner.js",
-    "taiga-tui": "./dist/cli/tui.js"
+    "taiga-tui": "./dist/cli/tui.js",
+    "taiga-one-shot": "./dist/cli/one-shot.js"
   },
   "scripts": {
     "build": "tsc",
@@ -24,7 +25,8 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:watch": "vitest --config vitest.integration.config.ts",
     "cli": "node dist/cli/task-runner.js",
-    "tui": "node dist/cli/tui.js"
+    "tui": "node dist/cli/tui.js",
+    "one-shot": "node dist/cli/one-shot.js"
   },
   "dependencies": {
     "@taiga-task-master/common": "workspace:*",

@@ -3,6 +3,8 @@ see @.llm-docs/PACKAGE_ORGANISATION_AND_CODE_SEPARATION_STANDARDS.md to understa
 see @.llm-docs/CODE_STYLE.md for code style specifics
 see @.llm-docs/libs/effect-schema.md for effect-schema docs
 
+see @DESIGN_DOC_AUTO_FLOW.md for product specifics
+
 after each logical step (e.g. task complete) you always have to check that it builds/lints/tests
 
 make sure not to run cli tools in watch mode (unless you really want to do it in background and have good means of how to clean it up); if it's possible to explicitly set one-shot mode then do it

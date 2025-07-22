@@ -30,31 +30,25 @@ export const step = (
   simulator: Simulator,
   command: SimulationCommand
 ): Simulator => {
-  try {
-    const currentState = getCurrentState(simulator);
-    const newState = executeCommand(currentState, command);
+  const currentState = getCurrentState(simulator);
+  const newState = executeCommand(currentState, command);
 
-    // Create new history entry (note: this is array-based, not event-sourcing)
-    // In proper implementation, we'd use event sourcing for cleaner rollback
-    const newHistory: SimulationHistory = {
-      states: [
-        ...simulator.history.states.slice(
-          0,
-          simulator.history.currentIndex + 1
-        ),
-        newState,
-      ],
-      currentIndex: simulator.history.currentIndex + 1,
-    };
+  // Create new history entry (note: this is array-based, not event-sourcing)
+  // In proper implementation, we'd use event sourcing for cleaner rollback
+  const newHistory: SimulationHistory = {
+    states: [
+      ...simulator.history.states.slice(
+        0,
+        simulator.history.currentIndex + 1
+      ),
+      newState,
+    ],
+    currentIndex: simulator.history.currentIndex + 1,
+  };
 
-    return {
-      history: newHistory,
-    };
-  } catch (error) {
-    throw new Error(
-      `Command execution failed: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
+  return {
+    history: newHistory,
+  };
 };
 
 // Reset to initial state
@@ -69,10 +63,18 @@ export const reset = (simulator: Simulator): Simulator => {
 
 // Get state summary for debugging/visualization
 export const getStateSummary = (state: SimulationState) => {
+  // Count tasks in outputTasks as completed
+  const completedInOutputTasks = state.outputTasks.length;
+  
+  // Count tasks in artifacts as completed
+  const completedInArtifacts = state.artifacts.reduce((count, artifact) => {
+    return count + HashMap.size(artifact.tasks);
+  }, 0);
+  
   const taskCounts = {
     pending: HashMap.size(state.tasks), // Tasks in main queue are "pending"
     "in-progress": state.taskExecutionState.agentExecutionState.step === "running" ? 1 : 0, // One task in execution if running
-    completed: 0, // Tasks move to artifacts, so "completed" count is always 0 in this view
+    completed: completedInOutputTasks + completedInArtifacts, // Tasks in outputTasks + tasks in artifacts
   };
 
   return {

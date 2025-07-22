@@ -1,14 +1,14 @@
 // @vibe-generated: core simulation logic
 
-import type { TaskId } from "@taiga-task-master/common";
+import type { TaskId, NonNegativeInteger } from "@taiga-task-master/common";
 import type {
   SimulationState,
   SimulationCommand,
   Tasks,
   MockTask,
 } from "./types.js";
-import { HashMap, Array } from "effect";
-import { castNonNegativeInteger, castNonEmptyString } from "@taiga-task-master/common";
+import { HashMap, Array, pipe } from "effect";
+import { castNonNegativeInteger, castNonEmptyString, castNonEmptyArray } from "@taiga-task-master/common";
 import { generateMockArtifact, mockAgentProgressTexts } from "./mock-data.js";
 import { TasksMachine } from "@taiga-task-master/core";
 
@@ -38,10 +38,13 @@ export const findNextTask = (tasks: Tasks): TaskId | null => {
 // Convert SimulationState to TasksMachine.State for core function compatibility
 const toTaskMachineState = (state: SimulationState): TasksMachine.State => ({
   tasks: HashMap.map(state.tasks, fromMockTask),
-  timestamp: state.timestamp,
   artifacts: state.artifacts.map(artifact => ({
     id: artifact.id,
-    tasks: HashMap.map(artifact.tasks, fromMockTask),
+    tasks: pipe(
+      HashMap.toEntries(artifact.tasks),
+      entries => entries.map(([taskId, task]) => [taskId, fromMockTask(task)] as [TaskId, TasksMachine.Task]),
+      castNonEmptyArray
+    ),
   })),
   outputTasks: state.outputTasks.map(([taskId, task]) => [taskId, fromMockTask(task)]),
   taskExecutionState: state.taskExecutionState.agentExecutionState.step === "running" 
@@ -54,7 +57,7 @@ const toTaskMachineState = (state: SimulationState): TasksMachine.State => ({
           task: [
             state.taskExecutionState.agentExecutionState.currentTaskId, 
             fromMockTask(state.taskExecutionState.executingTask)
-          ],
+          ] as [TaskId, TasksMachine.Task],
         };
       })()
     : { 
@@ -63,12 +66,12 @@ const toTaskMachineState = (state: SimulationState): TasksMachine.State => ({
 });
 
 // Convert TasksMachine.State back to SimulationState
-const fromTaskMachineState = (tmState: TasksMachine.State): SimulationState => ({
+const fromTaskMachineState = (tmState: TasksMachine.State, currentTimestamp: NonNegativeInteger): SimulationState => ({
   tasks: HashMap.map(tmState.tasks, toMockTask),
-  timestamp: tmState.timestamp,
+  timestamp: currentTimestamp,
   artifacts: tmState.artifacts.map(artifact => ({
     id: artifact.id,
-    tasks: HashMap.map(artifact.tasks, toMockTask),
+    tasks: HashMap.fromIterable(artifact.tasks.map(([taskId, task]) => [taskId, toMockTask(task)])),
     branchName: `branch-${artifact.id}`, // Mock branch name
     prUrl: `https://github.com/mock/repo/pull/${artifact.id}`, // Mock PR URL
     deploymentUrl: `https://deploy-${artifact.id}.example.com`, // Mock deployment URL
@@ -118,7 +121,7 @@ export const executeCommand = (
 
         const tmState = toTaskMachineState(state);
         const updatedTmState = TasksMachine.startTaskExecution(nextTaskId)(tmState);
-        const updatedState = fromTaskMachineState(updatedTmState);
+        const updatedState = fromTaskMachineState(updatedTmState, newTimestamp);
         
         return {
           ...updatedState,
@@ -179,7 +182,7 @@ export const executeCommand = (
       try {
         const tmState = toTaskMachineState(state);
         const updatedTmState = TasksMachine.endTaskExecution(tmState);
-        const updatedState = fromTaskMachineState(updatedTmState);
+        const updatedState = fromTaskMachineState(updatedTmState, newTimestamp);
         
         return {
           ...updatedState,
@@ -194,7 +197,7 @@ export const executeCommand = (
       try {
         const tmState = toTaskMachineState(state);
         const updatedTmState = TasksMachine.commitArtifact(command.artifactId)(tmState);
-        const updatedState = fromTaskMachineState(updatedTmState);
+        const updatedState = fromTaskMachineState(updatedTmState, newTimestamp);
         
         return {
           ...updatedState,
@@ -208,8 +211,9 @@ export const executeCommand = (
     case "append_tasks": {
       try {
         const tmState = toTaskMachineState(state);
-        const updatedTmState = TasksMachine.appendTasks(command.tasks)(tmState);
-        const updatedState = fromTaskMachineState(updatedTmState);
+        const coreTasks = HashMap.map(command.tasks, fromMockTask);
+        const updatedTmState = TasksMachine.appendTasks(coreTasks)(tmState);
+        const updatedState = fromTaskMachineState(updatedTmState, newTimestamp);
         
         return {
           ...updatedState,
@@ -232,7 +236,7 @@ export const executeCommand = (
           command.taskId,
           taskAsUnknown
         )(tmState);
-        const updatedState = fromTaskMachineState(updatedTmState);
+        const updatedState = fromTaskMachineState(updatedTmState, newTimestamp);
         
         return {
           ...updatedState,
@@ -249,7 +253,7 @@ export const executeCommand = (
         const updatedTmState = TasksMachine.outputTaskToArtifact(
           command.artifactId
         )(tmState);
-        const updatedState = fromTaskMachineState(updatedTmState);
+        const updatedState = fromTaskMachineState(updatedTmState, newTimestamp);
         
         return {
           ...updatedState,
